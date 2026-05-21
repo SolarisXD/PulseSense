@@ -43,7 +43,7 @@ export function buildFullReportHtml(
   profile: { full_name: string; dob: string; blood_group: string | null; sex: string | null },
   conditions: { name: string; type: string | null; severity: string | null; diagnosed_date: string | null; notes: string | null }[],
   allergies: { name: string; severity: string | null; reaction: string | null }[],
-  contacts: { name: string; relationship: string | null; phone: string }[],
+  contacts: { name: string; relationship: string | null; phone: string; contact_type?: string }[],
   medications: { prescription_date: string; prescribing_doctor: string | null; diagnosis_notes: string | null; is_active: number; items: { medicine_name: string; strength: string | null; dose_morning: number; dose_afternoon: number; dose_night: number; timing: string | null; duration: string | null }[] }[],
   alerts: { title: string; message: string; severity_level: string; created_at: string }[]
 ): string {
@@ -62,7 +62,7 @@ export function buildMedicalIdHtml(
   profile: { full_name: string; dob: string; blood_group: string | null; sex: string | null },
   conditions: { name: string; type: string | null; severity: string | null; diagnosed_date: string | null; notes: string | null }[],
   allergies: { name: string; severity: string | null; reaction: string | null }[],
-  contacts: { name: string; relationship: string | null; phone: string }[]
+  contacts: { name: string; relationship: string | null; phone: string; contact_type?: string }[]
 ): string {
   const conditionsHtml = conditions.length > 0
     ? conditions.map((c) => {
@@ -83,8 +83,11 @@ export function buildMedicalIdHtml(
     : '<tr><td colspan="3" style="text-align:center; color:#9CA3AF;">No allergies recorded</td></tr>';
 
   const contactsHtml = contacts.length > 0
-    ? contacts.map((c) => `<tr><td>${c.name}</td><td>${c.relationship || '-'}</td><td>${c.phone}</td></tr>`).join('')
-    : '<tr><td colspan="3" style="text-align:center; color:#9CA3AF;">No emergency contacts</td></tr>';
+    ? contacts.map((c) => {
+        const typeLabel = c.contact_type === 'doctor' ? 'Doctor' : 'Emergency';
+        return `<tr><td>${c.name}</td><td>${c.relationship || '-'}</td><td>${typeLabel}</td><td>${c.phone}</td></tr>`;
+      }).join('')
+    : '<tr><td colspan="4" style="text-align:center; color:#9CA3AF;">No emergency contacts</td></tr>';
 
   return `
     ${headerHtml(profile.full_name, profile.dob, profile.blood_group, profile.sex)}
@@ -93,7 +96,7 @@ export function buildMedicalIdHtml(
     ${sectionTitle('Allergies')}
     <table><thead><tr><th>Allergen</th><th>Severity</th><th>Reaction</th></tr></thead><tbody>${allergiesHtml}</tbody></table>
     ${sectionTitle('Emergency Contacts')}
-    <table><thead><tr><th>Name</th><th>Relationship</th><th>Phone</th></tr></thead><tbody>${contactsHtml}</tbody></table>
+    <table><thead><tr><th>Name</th><th>Relationship</th><th>Type</th><th>Phone</th></tr></thead><tbody>${contactsHtml}</tbody></table>
     ${footerHtml()}
   `;
 }
@@ -179,7 +182,7 @@ export function buildAlertsHtml(
   `;
 }
 
-function wrapHtml(content: string): string {
+export function wrapHtml(content: string): string {
   return `
     <html>
     <head>

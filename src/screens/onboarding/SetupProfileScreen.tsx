@@ -11,14 +11,17 @@ import {
   StyleSheet,
   Platform,
   KeyboardAvoidingView,
+  Image,
+  Alert,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 import { Button } from '../../components/ui/Button';
 import { useDateInput } from '../../hooks/useDateInput';
 import { getDB } from '../../hooks/useDB';
-import { insertProfile } from '../../db/queries/profile';
+import { insertProfile, updateProfilePhoto } from '../../db/queries/profile';
 import { setOnboardingComplete } from '../../db/queries/settings';
 import { loadStores } from '../../hooks/useDB';
 import { useSettingsStore } from '../../store/settingsStore';
@@ -41,14 +44,31 @@ export function SetupProfileScreen({ onComplete }: SetupProfileScreenProps) {
   const [sex, setSex] = useState('');
   const [bloodGroup, setBloodGroup] = useState('');
   const [showBloodPicker, setShowBloodPicker] = useState(false);
+  const [photo, setPhoto] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const canSave = name.trim().length > 0 && dobInput.value.length === 10 && sex.length > 0;
+  const canSave = name.trim().length > 0 && dobInput.value.length === 10 && sex.length > 0 && photo.length > 0;
+
+  const handlePickPhoto = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+      if (!result.canceled && result.assets[0]) {
+        setPhoto(result.assets[0].uri);
+      }
+    } catch (err) {
+      console.error('Photo pick error:', err);
+      Alert.alert('Error', 'Failed to select photo.');
+    }
+  };
 
   const handleSave = async () => {
     if (!canSave) {
-      setError('Please fill in name, date of birth, and sex.');
+      setError('Please add a profile photo, name, date of birth, and sex.');
+      return;
+    }
+    if (!photo) {
+      setError('A profile photo is required.');
       return;
     }
     setSaving(true);
@@ -60,7 +80,11 @@ export function SetupProfileScreen({ onComplete }: SetupProfileScreenProps) {
         dob: dobInput.value,
         sex,
         blood_group: bloodGroup || null,
+        photo_uri: photo,
       });
+      if (photo) {
+        await updateProfilePhoto(db, photo);
+      }
       await setOnboardingComplete(db);
       await loadStores(db);
       onComplete();
@@ -81,6 +105,28 @@ export function SetupProfileScreen({ onComplete }: SetupProfileScreenProps) {
         <View style={styles.header}>
           <Text style={styles.heading}>Set up your profile</Text>
           <Text style={styles.subtext}>This information stays on your device and is used for Medical ID exports.</Text>
+        </View>
+
+        {/* Profile Photo */}
+        <View style={styles.field}>
+          <Text style={styles.label}>PROFILE PHOTO *</Text>
+          <TouchableOpacity style={styles.photoWrapper} onPress={handlePickPhoto} activeOpacity={0.7}>
+            <View style={styles.photoCircle}>
+              {photo ? (
+                <Image source={{ uri: photo }} style={styles.photoImage} />
+              ) : (
+                <View style={styles.photoPlaceholder}>
+                  <Ionicons name="camera-outline" size={28} color={colors.primary} />
+                  <Text style={styles.photoPlaceholderText}>Tap to add photo</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+          {photo.length > 0 && (
+            <TouchableOpacity onPress={handlePickPhoto}>
+              <Text style={styles.changePhotoText}>Change Photo</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Full Name */}
@@ -199,6 +245,44 @@ const styles = StyleSheet.create({
   },
   field: {
     marginBottom: spacing.space4,
+  },
+  photoWrapper: {
+    alignItems: 'center',
+    marginBottom: spacing.space2,
+    marginTop: spacing.space2,
+  },
+  photoCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  photoImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  photoPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoPlaceholderText: {
+    fontSize: 10,
+    color: colors.primary,
+    fontFamily: fonts.body,
+    marginTop: 4,
+  },
+  changePhotoText: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '500',
+    fontFamily: fonts.body,
+    textAlign: 'center',
   },
   label: {
     fontSize: 12,

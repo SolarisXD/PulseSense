@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Alert, TextInput, Modal, KeyboardAvoidingView, Platform,
+  Alert, TextInput, Modal, KeyboardAvoidingView, Platform, Linking,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { fonts } from '../constants/typography';
 import { colors, spacing, borderRadius } from '../constants/spacing';
 import { useSettingsStore } from '../store/settingsStore';
@@ -59,6 +60,9 @@ export function SettingsScreen({ navigation }: any) {
   const settings = useSettingsStore();
   const [emergencyModalVisible, setEmergencyModalVisible] = useState(false);
   const [emergencyEditValue, setEmergencyEditValue] = useState('');
+  const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const handleChange = async (storeKey: string, dbKey: string, value: string) => {
     try {
@@ -135,19 +139,77 @@ export function SettingsScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
+      <Text style={[styles.sectionTitle, { marginTop: spacing.space6 }]}>Notifications</Text>
+      <TouchableOpacity
+        style={styles.linkRow}
+        onPress={() => {
+          setNotificationsEnabled(!notificationsEnabled);
+          Alert.alert(
+            'Notifications',
+            notificationsEnabled ? 'Notifications disabled' : 'Notifications enabled'
+          );
+        }}
+      >
+        <View style={styles.linkRowLeft}>
+          <Ionicons name="notifications-outline" size={20} color={colors.textSecondary} style={{ marginRight: spacing.space3 }} />
+          <Text style={styles.linkText}>Push Notifications</Text>
+        </View>
+        <View style={[styles.toggleDot, notificationsEnabled && styles.toggleDotActive]} />
+      </TouchableOpacity>
+
+      <Text style={[styles.sectionTitle, { marginTop: spacing.space6 }]}>Privacy & Legal</Text>
+      <TouchableOpacity
+        style={styles.linkRow}
+        onPress={() => setPrivacyModalVisible(true)}
+      >
+        <View style={styles.linkRowLeft}>
+          <Ionicons name="shield-checkmark-outline" size={20} color={colors.textSecondary} style={{ marginRight: spacing.space3 }} />
+          <Text style={styles.linkText}>Privacy Policy</Text>
+        </View>
+        <Text style={styles.linkArrow}>→</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.linkRow}
+        onPress={() => setTermsModalVisible(true)}
+      >
+        <View style={styles.linkRowLeft}>
+          <Ionicons name="document-text-outline" size={20} color={colors.textSecondary} style={{ marginRight: spacing.space3 }} />
+          <Text style={styles.linkText}>Terms of Service</Text>
+        </View>
+        <Text style={styles.linkArrow}>→</Text>
+      </TouchableOpacity>
+
+      <Text style={[styles.sectionTitle, { marginTop: spacing.space6 }]}>System</Text>
+      <TouchableOpacity
+        style={styles.linkRow}
+        onPress={() => Alert.alert('Check for Updates', 'PulseSense v1.0.0 — You are on the latest version.')}
+      >
+        <View style={styles.linkRowLeft}>
+          <Ionicons name="cloud-download-outline" size={20} color={colors.textSecondary} style={{ marginRight: spacing.space3 }} />
+          <Text style={styles.linkText}>Check for Updates</Text>
+        </View>
+        <Text style={styles.linkBadge}>v1.0.0</Text>
+      </TouchableOpacity>
+
       <Text style={[styles.sectionTitle, { marginTop: spacing.space6 }]}>Data</Text>
       <TouchableOpacity
         style={styles.linkRow}
         onPress={() => navigation.navigate('CustomVitals')}
       >
-        <Text style={styles.linkText}>Manage Custom Vitals</Text>
+        <View style={styles.linkRowLeft}>
+          <Ionicons name="pulse-outline" size={20} color={colors.textSecondary} style={{ marginRight: spacing.space3 }} />
+          <Text style={styles.linkText}>Manage Custom Vitals</Text>
+        </View>
         <Text style={styles.linkArrow}>→</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.linkRow}
         onPress={() => navigation.navigate('Export')}
       >
-        <Text style={styles.linkText}>Export All Data as PDF</Text>
+        <View style={styles.linkRowLeft}>
+          <Ionicons name="download-outline" size={20} color={colors.textSecondary} style={{ marginRight: spacing.space3 }} />
+          <Text style={styles.linkText}>Export All Data as PDF</Text>
+        </View>
         <Text style={styles.linkArrow}>→</Text>
       </TouchableOpacity>
 
@@ -211,6 +273,70 @@ export function SettingsScreen({ navigation }: any) {
                 <Text style={styles.modalSaveText}>Save</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Privacy Policy Modal */}
+      <Modal
+        visible={privacyModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPrivacyModalVisible(false)}
+      >
+        <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Privacy Policy</Text>
+            <ScrollView style={{ maxHeight: 300 }}>
+              <Text style={styles.modalBody}>
+                PulseSense respects your privacy. All health data entered into this application
+                is stored exclusively on your device using local SQLite storage.{'\n\n'}
+                No personal information, health records, or usage data is transmitted to any
+                external server, cloud service, or third party.{'\n\n'}
+                PulseSense does not collect analytics, track your activity, or share data
+                with advertisers.{'\n\n'}
+                In the event of an emergency, data shown on screen may be read by emergency
+                responders at your discretion. You are in full control of what information
+                is displayed and shared.{'\n\n'}
+                By using PulseSense, you acknowledge that the app is for informational and
+                organizational purposes only and does not replace professional medical advice.
+              </Text>
+            </ScrollView>
+            <TouchableOpacity style={styles.modalSaveBtn} onPress={() => setPrivacyModalVisible(false)}>
+              <Text style={styles.modalSaveText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Terms of Service Modal */}
+      <Modal
+        visible={termsModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setTermsModalVisible(false)}
+      >
+        <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Terms of Service</Text>
+            <ScrollView style={{ maxHeight: 300 }}>
+              <Text style={styles.modalBody}>
+                By using PulseSense you agree to the following terms:{'\n\n'}
+                1. PulseSense is a health information organizer and emergency checklist tool.
+                It does NOT provide medical diagnosis, treatment, or advice.{'\n\n'}
+                2. Always consult a qualified healthcare professional for medical decisions.
+                Never disregard professional advice due to something read in PulseSense.{'\n\n'}
+                3. You are responsible for the accuracy of data you enter. PulseSense does
+                not verify medical information.{'\n\n'}
+                4. In emergency situations, call your local emergency services immediately.
+                Do not rely solely on PulseSense guidance.{'\n\n'}
+                5. PulseSense is provided "as is" without warranty of any kind. The developers
+                shall not be liable for any damages arising from use of this software.
+              </Text>
+            </ScrollView>
+            <TouchableOpacity style={styles.modalSaveBtn} onPress={() => setTermsModalVisible(false)}>
+              <Text style={styles.modalSaveText}>Close</Text>
+            </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -319,6 +445,32 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: colors.textSecondary,
   },
+  linkRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  linkBadge: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '600',
+    fontFamily: fonts.body,
+    backgroundColor: colors.primarySurface,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  toggleDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  toggleDotActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
   aboutCard: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
@@ -363,6 +515,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     marginBottom: spacing.space4,
     textAlign: 'center',
+  },
+  modalBody: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontFamily: fonts.body,
+    lineHeight: 20,
+    marginBottom: spacing.space5,
   },
   modalInput: {
     height: 48,

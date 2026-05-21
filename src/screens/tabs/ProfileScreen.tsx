@@ -2,8 +2,8 @@
 // Shows profile info, contacts, conditions, allergies, medications
 // Updated with fonts and icons
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Linking, Platform, Image } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withDelay, Easing } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -101,6 +101,20 @@ export function ProfileScreen({ navigation }: any) {
     ]);
   };
 
+  const handleCall = useCallback((phone: string) => {
+    const url = Platform.OS === 'android' ? `tel:${phone}` : `telprompt:${phone}`;
+    Linking.canOpenURL(url).then((supported) => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        Alert.alert('Error', 'Phone calls are not supported on this device.');
+      }
+    });
+  }, []);
+
+  const doctorContacts = contacts.filter((c) => c.contact_type === 'doctor');
+  const emergencyContacts = contacts.filter((c) => c.contact_type !== 'doctor');
+
   const severityColor = (sev: string | null) => {
     switch (sev) {
       case 'severe': return colors.danger;
@@ -155,13 +169,19 @@ export function ProfileScreen({ navigation }: any) {
         {/* Profile Header */}
         <AnimatedSection index={0}>
           <View style={styles.profileHeader}>
-            <View style={styles.avatarLarge}>
-              <Text style={styles.avatarLargeText}>
-                {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
-              </Text>
-            </View>
+            {profile?.photo_uri ? (
+              <Image source={{ uri: profile.photo_uri }} style={styles.avatarLargeImage} />
+            ) : (
+              <View style={styles.avatarLarge}>
+                <Text style={styles.avatarLargeText}>
+                  {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                </Text>
+              </View>
+            )}
             <Text style={styles.profileName}>{profile?.full_name || 'User'}</Text>
-            {age ? <Text style={styles.profileAge}>{age}</Text> : null}
+            <Text style={styles.profileAge}>
+              {profile?.dob ? `DOB: ${profile.dob}  ·  ${age || ''}` : age || ''}
+            </Text>
             <View style={styles.profileMeta}>
               <Text style={styles.profileMetaText}>
                 {profile?.blood_group ? `Blood: ${profile.blood_group}` : ''}
@@ -187,26 +207,70 @@ export function ProfileScreen({ navigation }: any) {
                 </View>
               </TouchableOpacity>
             </View>
-            {contacts.length === 0 ? (
-              <Text style={styles.emptyText}>No emergency contacts added</Text>
-            ) : (
-              contacts.map((c) => (
-                <TouchableOpacity key={c.id} style={styles.contactRow} onPress={() => handleDeleteContact(c.id)} activeOpacity={0.7}>
-                  <View style={styles.contactAvatar}>
-                    <Ionicons name="person" size={20} color={colors.primary} />
-                  </View>
-                  <View style={styles.contactInfo}>
-                    <Text style={styles.contactName}>{c.name}</Text>
-                    <Text style={styles.contactDetail}>{c.relationship || ''} {c.phone}</Text>
-                  </View>
-                  {c.is_primary ? (
-                    <View style={styles.primaryBadge}>
-                      <Text style={styles.primaryBadgeText}>PRIMARY</Text>
+
+            {/* Doctors subsection */}
+            {doctorContacts.length > 0 && (
+              <>
+                <Text style={styles.subsectionLabel}>Doctors</Text>
+                {doctorContacts.map((c) => (
+                  <View key={c.id} style={styles.contactRow}>
+                    <TouchableOpacity style={styles.contactInfoArea} onPress={() => handleDeleteContact(c.id)} activeOpacity={0.7}>
+                      <View style={styles.contactAvatar}>
+                        <Ionicons name="medkit-outline" size={18} color={colors.primary} />
+                      </View>
+                      <View style={styles.contactInfo}>
+                        <Text style={styles.contactName}>{c.name}</Text>
+                        <Text style={styles.contactDetail}>{c.relationship || ''} {c.phone}</Text>
+                      </View>
+                    </TouchableOpacity>
+                    <View style={styles.contactActions}>
+                      {c.is_primary ? (
+                        <View style={styles.primaryBadge}>
+                          <Text style={styles.primaryBadgeText}>PRIMARY</Text>
+                        </View>
+                      ) : null}
+                      <TouchableOpacity style={styles.callButton} onPress={() => handleCall(c.phone)} activeOpacity={0.7}>
+                        <Ionicons name="call" size={16} color="#FFFFFF" />
+                      </TouchableOpacity>
                     </View>
-                  ) : null}
-                  <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-                </TouchableOpacity>
-              ))
+                  </View>
+                ))}
+              </>
+            )}
+
+            {/* Emergency Contacts subsection */}
+            {emergencyContacts.length > 0 && (
+              <>
+                {doctorContacts.length > 0 && <View style={styles.subsectionDivider} />}
+                <Text style={styles.subsectionLabel}>Emergency Contacts</Text>
+                {emergencyContacts.map((c) => (
+                  <View key={c.id} style={styles.contactRow}>
+                    <TouchableOpacity style={styles.contactInfoArea} onPress={() => handleDeleteContact(c.id)} activeOpacity={0.7}>
+                      <View style={styles.contactAvatar}>
+                        <Ionicons name="person" size={18} color={colors.primary} />
+                      </View>
+                      <View style={styles.contactInfo}>
+                        <Text style={styles.contactName}>{c.name}</Text>
+                        <Text style={styles.contactDetail}>{c.relationship || ''} {c.phone}</Text>
+                      </View>
+                    </TouchableOpacity>
+                    <View style={styles.contactActions}>
+                      {c.is_primary ? (
+                        <View style={styles.primaryBadge}>
+                          <Text style={styles.primaryBadgeText}>PRIMARY</Text>
+                        </View>
+                      ) : null}
+                      <TouchableOpacity style={styles.callButton} onPress={() => handleCall(c.phone)} activeOpacity={0.7}>
+                        <Ionicons name="call" size={16} color="#FFFFFF" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </>
+            )}
+
+            {contacts.length === 0 && (
+              <Text style={styles.emptyText}>No emergency contacts added</Text>
             )}
           </View>
         </AnimatedSection>
@@ -315,6 +379,12 @@ export function ProfileScreen({ navigation }: any) {
               <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
             </TouchableOpacity>
             <View style={styles.actionDivider} />
+            <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate('Settings')} activeOpacity={0.7}>
+              <Ionicons name="settings-outline" size={20} color={colors.textSecondary} />
+              <Text style={styles.actionText}>Settings</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
+            </TouchableOpacity>
+            <View style={styles.actionDivider} />
             <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate('Export', { preSelectedType: 'medical_id' })} activeOpacity={0.7}>
               <Ionicons name="document-text-outline" size={20} color={colors.textSecondary} />
               <Text style={styles.actionText}>Export Medical ID</Text>
@@ -348,6 +418,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySurface,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: spacing.space4,
+    borderWidth: 3,
+    borderColor: 'rgba(26,95,122,0.1)',
+  },
+  avatarLargeImage: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     marginBottom: spacing.space4,
     borderWidth: 3,
     borderColor: 'rgba(26,95,122,0.1)',
@@ -411,6 +489,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: fonts.body,
   },
+  subsectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    fontFamily: fonts.body,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: spacing.space2,
+    marginTop: spacing.space1,
+  },
+  subsectionDivider: {
+    height: 1,
+    backgroundColor: colors.borderLight,
+    marginVertical: spacing.space3,
+  },
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -425,6 +518,12 @@ const styles = StyleSheet.create({
     elevation: 1,
     gap: spacing.space3,
   },
+  contactInfoArea: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.space3,
+  },
   contactAvatar: {
     width: 36,
     height: 36,
@@ -435,6 +534,19 @@ const styles = StyleSheet.create({
   },
   contactInfo: {
     flex: 1,
+  },
+  contactActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.space2,
+  },
+  callButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   contactName: {
     fontSize: 15,

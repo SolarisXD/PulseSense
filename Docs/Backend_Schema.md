@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS emergency_contacts (
   name             TEXT NOT NULL,
   relationship     TEXT,                   -- 'Spouse','Parent','Child','Sibling','Friend','Doctor','Other'
   phone            TEXT NOT NULL,
+  contact_type     TEXT DEFAULT 'emergency', -- 'doctor' or 'emergency' (subtype grouping)
   is_primary       INTEGER DEFAULT 0,      -- 1 = primary ICE contact
   sort_order       INTEGER DEFAULT 0,
   created_at       TEXT DEFAULT (datetime('now'))

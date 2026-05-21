@@ -7,6 +7,7 @@ export interface EmergencyContactRow {
   name: string;
   relationship: string | null;
   phone: string;
+  contact_type: 'doctor' | 'emergency';
   is_primary: number;
   sort_order: number;
   created_at: string;
@@ -16,6 +17,7 @@ export interface EmergencyContactInput {
   name: string;
   relationship?: string | null;
   phone: string;
+  contact_type?: 'doctor' | 'emergency';
   is_primary?: number;
   sort_order?: number;
 }
@@ -36,12 +38,13 @@ export async function getPrimaryContact(db: SQLiteDatabase): Promise<EmergencyCo
 
 export async function insertContact(db: SQLiteDatabase, data: EmergencyContactInput): Promise<number> {
   const result = await db.runAsync(
-    `INSERT INTO emergency_contacts (name, relationship, phone, is_primary, sort_order)
-     VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO emergency_contacts (name, relationship, phone, contact_type, is_primary, sort_order)
+     VALUES (?, ?, ?, ?, ?, ?)`,
     [
       data.name,
       data.relationship ?? null,
       data.phone,
+      data.contact_type ?? 'emergency',
       data.is_primary ?? 0,
       data.sort_order ?? 0,
     ]
@@ -51,9 +54,9 @@ export async function insertContact(db: SQLiteDatabase, data: EmergencyContactIn
 
 export async function updateContact(db: SQLiteDatabase, id: number, data: EmergencyContactInput): Promise<void> {
   await db.runAsync(
-    `UPDATE emergency_contacts SET name = ?, relationship = ?, phone = ?, is_primary = ?, sort_order = ?
+    `UPDATE emergency_contacts SET name = ?, relationship = ?, phone = ?, contact_type = ?, is_primary = ?, sort_order = ?
      WHERE id = ?`,
-    [data.name, data.relationship ?? null, data.phone, data.is_primary ?? 0, data.sort_order ?? 0, id]
+    [data.name, data.relationship ?? null, data.phone, data.contact_type ?? 'emergency', data.is_primary ?? 0, data.sort_order ?? 0, id]
   );
 }
 

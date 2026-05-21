@@ -43,6 +43,7 @@ export function EditProfileScreen({ navigation }: any) {
 
   const handleSave = async () => {
     if (!name.trim()) { Alert.alert('Required', 'Name is required.'); return; }
+    if (!photo) { Alert.alert('Required', 'A profile photo is required. Please add one.'); return; }
     setSaving(true);
     try {
       const db = await getDB();

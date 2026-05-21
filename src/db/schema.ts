@@ -1,7 +1,7 @@
 // PulseSense — Database Schema (SQLite)
 // All CREATE TABLE statements in dependency order
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const CREATE_TABLES = [
   // 1. settings — key-value store, must exist first for db_version
@@ -34,6 +34,7 @@ export const CREATE_TABLES = [
     name TEXT NOT NULL,
     relationship TEXT,
     phone TEXT NOT NULL,
+    contact_type TEXT DEFAULT 'emergency',
     is_primary INTEGER DEFAULT 0,
     sort_order INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))

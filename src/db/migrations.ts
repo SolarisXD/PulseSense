@@ -29,6 +29,24 @@ export async function runMigrations(db: SQLiteDatabase): Promise<void> {
       await db.execAsync(stmt);
     }
 
+    // --- Version-specific migration steps ---
+    // v1 → v2: Add contact_type column to emergency_contacts
+    if (currentVersion < 2) {
+      try {
+        // Check if column already exists (safe guard)
+        const tableInfo = await db.getAllAsync<{ name: string }>(
+          "SELECT name FROM pragma_table_info('emergency_contacts') WHERE name = 'contact_type'"
+        );
+        if (tableInfo.length === 0) {
+          await db.execAsync(
+            "ALTER TABLE emergency_contacts ADD COLUMN contact_type TEXT DEFAULT 'emergency'"
+          );
+        }
+      } catch (err) {
+        console.warn('[DB] Migration v2 column add warning:', err);
+      }
+    }
+
     // Enable foreign keys — must be done per-connection and BEFORE any DML
     await db.execAsync('PRAGMA foreign_keys = ON;');
 

@@ -10,6 +10,7 @@ import {
   StyleSheet,
   RefreshControl,
   Dimensions,
+  Image,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withDelay, Easing } from 'react-native-reanimated';
@@ -310,14 +311,21 @@ export function HomeScreen({ navigation }: any) {
                 {age ? <Text style={styles.ageDot}>·</Text> : null}
                 {age ? <Text style={styles.age}>{age}</Text> : null}
               </View>
+              {profile?.dob ? (
+                <Text style={styles.dobText}>DOB: {profile.dob}</Text>
+              ) : null}
               <Text style={styles.date}>{formatTodayDisplay()}</Text>
             </View>
             <TouchableOpacity onPress={() => navigation.navigate('ProfileTab')} activeOpacity={0.7}>
-              <View style={styles.avatarCircle}>
-                <Text style={styles.avatarText}>
-                  {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                </Text>
-              </View>
+              {profile?.photo_uri ? (
+                <Image source={{ uri: profile.photo_uri }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatarCircle}>
+                  <Text style={styles.avatarText}>
+                    {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         </AnimatedSection>
@@ -434,6 +442,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontFamily: fonts.body,
   },
+  dobText: {
+    fontSize: 12,
+    color: colors.textDisabled,
+    fontFamily: fonts.body,
+    marginTop: 2,
+  },
   date: {
     fontSize: 12,
     color: colors.textDisabled,
@@ -447,6 +461,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySurface,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(26,95,122,0.1)',
+  },
+  avatarImage: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     borderWidth: 2,
     borderColor: 'rgba(26,95,122,0.1)',
   },
