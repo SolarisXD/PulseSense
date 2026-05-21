@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "pulsesense-temp",
-    "slug": "pulsesense-temp",
+    "name": "PulseSense",
+    "slug": "pulsesense",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,21 +10,40 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1A5F7A"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "PulseSense needs camera access to set your profile photo.",
+        "NSPhotoLibraryUsageDescription": "PulseSense needs photo library access to set your profile photo.",
+        "NSLocationWhenInUseUsageDescription": "PulseSense uses your location to show your address on the emergency action screen."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1A5F7A"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "package": "com.anonymous.pulsesense"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "updates": {
+      "enabled": false
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-location",
+      "expo-font"
+    ]
   }
 }
