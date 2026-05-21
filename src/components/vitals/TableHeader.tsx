@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { fonts } from '../../constants/typography';
 import { colors, spacing } from '../../constants/spacing';
 
 interface TableHeaderProps {
@@ -50,6 +51,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
 });

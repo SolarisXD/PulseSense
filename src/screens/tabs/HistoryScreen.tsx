@@ -1,7 +1,8 @@
 // PulseSense — History Screen
 // Filterable tabular view of vitals with color-coded status
+// Updated with motion and refined typography
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,7 +12,10 @@ import {
   FlatList,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, Easing } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { fonts } from '../../constants/typography';
 import { TableHeader } from '../../components/vitals/TableHeader';
 import { TableRow } from '../../components/vitals/TableRow';
 import { getDB } from '../../hooks/useDB';
@@ -23,22 +27,24 @@ import {
   type VitalStatus,
 } from '../../utils/vitalStatus';
 import { Button } from '../../components/ui/Button';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 const ALL_VITALS = 'all';
 const VITAL_OPTIONS = [
-  { key: ALL_VITALS, label: 'All Vitals' },
-  { key: 'bp', label: 'Blood Pressure' },
-  { key: 'pulse', label: 'Pulse' },
-  { key: 'spo2', label: 'SpO2' },
-  { key: 'glucose', label: 'Glucose' },
-  { key: 'temp', label: 'Temperature' },
-  { key: 'weight', label: 'Weight' },
-  { key: 'pain', label: 'Pain' },
+  { key: ALL_VITALS, label: 'All Vitals', icon: 'grid-outline' as const },
+  { key: 'bp', label: 'BP', icon: 'heart-half' as const },
+  { key: 'pulse', label: 'Pulse', icon: 'pulse' as const },
+  { key: 'spo2', label: 'SpO2', icon: 'analytics-outline' as const },
+  { key: 'glucose', label: 'Glucose', icon: 'water-outline' as const },
+  { key: 'temp', label: 'Temp', icon: 'thermometer-outline' as const },
+  { key: 'weight', label: 'Weight', icon: 'scale-outline' as const },
+  { key: 'pain', label: 'Pain', icon: 'bandage-outline' as const },
 ];
 
 export function HistoryScreen({ navigation }: any) {
   const [selectedFilter, setSelectedFilter] = useState(ALL_VITALS);
   const [vitalLogs, setVitalLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
@@ -47,6 +53,7 @@ export function HistoryScreen({ navigation }: any) {
   );
 
   const loadVitals = async () => {
+    setLoading(true);
     try {
       const db = await getDB();
       const range = getLast30DaysRange();
@@ -54,6 +61,8 @@ export function HistoryScreen({ navigation }: any) {
       setVitalLogs(logs);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -124,6 +133,30 @@ export function HistoryScreen({ navigation }: any) {
     return hasData[selectedFilter] || false;
   });
 
+  // ---------- Skeleton Loading State ----------
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        {/* Filter bar skeleton */}
+        <View style={styles.filterBar}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton.Box key={i} width={72} height={30} borderRadius={15} style={{ marginRight: 8 }} />
+            ))}
+          </ScrollView>
+        </View>
+        {/* Table rows skeleton */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+          {/* Table header skeleton */}
+          <Skeleton.Box width="100%" height={32} borderRadius={6} style={{ marginBottom: 8 }} />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton.Box key={i} width="100%" height={44} borderRadius={6} style={{ marginBottom: 4 }} />
+          ))}
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {/* Filter Bar */}
@@ -134,7 +167,14 @@ export function HistoryScreen({ navigation }: any) {
               key={opt.key}
               style={[styles.filterChip, selectedFilter === opt.key && styles.filterChipSelected]}
               onPress={() => setSelectedFilter(opt.key)}
+              activeOpacity={0.7}
             >
+              <Ionicons
+                name={opt.icon}
+                size={13}
+                color={selectedFilter === opt.key ? '#FFFFFF' : colors.textSecondary}
+                style={{ marginRight: 4 }}
+              />
               <Text style={[styles.filterText, selectedFilter === opt.key && styles.filterTextSelected]}>
                 {opt.label}
               </Text>
@@ -159,11 +199,13 @@ export function HistoryScreen({ navigation }: any) {
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
+            <Ionicons name="analytics-outline" size={48} color={colors.textDisabled} />
             <Text style={styles.emptyText}>No vitals recorded in the last 30 days</Text>
             <Text style={styles.emptyHint}>Log your first vital from the Log tab</Text>
           </View>
         }
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
       />
 
       {/* Export Button */}
@@ -191,10 +233,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.space3,
     paddingHorizontal: spacing.space4,
     backgroundColor: colors.surface,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.5,
     borderBottomColor: colors.borderLight,
   },
   filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: spacing.space2,
     paddingHorizontal: spacing.space4,
     borderRadius: borderRadius.full,
@@ -208,7 +252,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   filterTextSelected: {
     color: '#FFFFFF',
@@ -217,25 +261,26 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.space12,
   },
   empty: {
-    padding: spacing.space8,
+    padding: spacing.space12,
     alignItems: 'center',
+    gap: spacing.space2,
   },
   emptyText: {
     fontSize: 15,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     fontWeight: '500',
   },
   emptyHint: {
     fontSize: 12,
     color: colors.textDisabled,
-    fontFamily: 'Inter',
-    marginTop: spacing.space2,
+    fontFamily: fonts.body,
+    marginTop: spacing.space1,
   },
   exportBar: {
     padding: spacing.space4,
     backgroundColor: colors.surface,
-    borderTopWidth: 1,
+    borderTopWidth: 0.5,
     borderTopColor: colors.borderLight,
     alignItems: 'center',
   },

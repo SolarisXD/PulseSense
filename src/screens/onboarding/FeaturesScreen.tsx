@@ -2,7 +2,9 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { fonts } from '../../constants/typography';
 import { Button } from '../../components/ui/Button';
 
 interface FeaturesScreenProps {
@@ -10,10 +12,10 @@ interface FeaturesScreenProps {
 }
 
 const features = [
-  { icon: '🚨', title: 'Emergency Triage', desc: 'Guided step-by-step action for medical emergencies — offline.' },
-  { icon: '❤️', title: 'Vitals Tracking', desc: 'Log BP, SpO2, glucose, temperature, weight, pain — one at a time or together.' },
-  { icon: '💊', title: 'Medications', desc: 'Track prescriptions with structured dosage in Morning/Afternoon/Night format.' },
-  { icon: '📋', title: 'PDF Export', desc: 'Generate lab-report-quality PDFs — Medical ID, vitals history, and more.' },
+  { icon: 'alert-circle' as const, title: 'Emergency Triage', desc: 'Guided step-by-step action for medical emergencies — offline.', color: colors.danger },
+  { icon: 'pulse' as const, title: 'Vitals Tracking', desc: 'Log BP, SpO2, glucose, temperature, weight, pain — one at a time or together.', color: colors.primary },
+  { icon: 'medkit-outline' as const, title: 'Medications', desc: 'Track prescriptions with structured dosage in Morning/Afternoon/Night format.', color: colors.primaryLight },
+  { icon: 'document-text-outline' as const, title: 'PDF Export', desc: 'Generate lab-report-quality PDFs — Medical ID, vitals history, and more.', color: colors.primary },
 ];
 
 export function FeaturesScreen({ onNext }: FeaturesScreenProps) {
@@ -26,7 +28,9 @@ export function FeaturesScreen({ onNext }: FeaturesScreenProps) {
       <View style={styles.featuresList}>
         {features.map((f, idx) => (
           <View key={idx} style={styles.featureRow}>
-            <Text style={styles.featureIcon}>{f.icon}</Text>
+            <View style={[styles.featureIconContainer, { backgroundColor: f.color + '15' }]}>
+              <Ionicons name={f.icon} size={24} color={f.color} />
+            </View>
             <View style={styles.featureContent}>
               <Text style={styles.featureTitle}>{f.title}</Text>
               <Text style={styles.featureDesc}>{f.desc}</Text>
@@ -57,7 +61,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textPrimary,
     lineHeight: 32,
-    fontFamily: 'Inter',
+    fontFamily: fonts.display,
+    letterSpacing: -0.3,
     marginBottom: spacing.space3,
     textAlign: 'center',
   },
@@ -65,7 +70,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   featuresList: {
     flex: 2,
@@ -76,8 +81,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: spacing.space5,
   },
-  featureIcon: {
-    fontSize: 28,
+  featureIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.space4,
     marginTop: 2,
   },
@@ -88,14 +97,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.display,
     marginBottom: spacing.space1,
   },
   featureDesc: {
     fontSize: 13,
     color: colors.textSecondary,
     lineHeight: 18,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   footer: {
     paddingBottom: spacing.space12,

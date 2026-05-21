@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { fonts } from '../../constants/typography';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
 import { VitalStatusBadge } from '../ui/VitalStatusBadge';
 import type { VitalStatus } from '../../utils/vitalStatus';
@@ -65,7 +66,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -87,14 +88,14 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: colors.textPrimary,
-    fontFamily: 'RobotoMono',
+    fontFamily: fonts.mono,
     paddingVertical: 0,
     height: '100%',
   },
   unit: {
     fontSize: 12,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginLeft: spacing.space2,
   },
 });

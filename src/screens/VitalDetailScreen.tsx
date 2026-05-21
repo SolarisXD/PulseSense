@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
 import { useFocusEffect } from '@react-navigation/native';
+import { fonts } from '../constants/typography';
 import { colors, spacing, borderRadius } from '../constants/spacing';
 import { getDB } from '../hooks/useDB';
 import { getVitalLogsByDateRange } from '../db/queries/vitals';
@@ -300,7 +301,7 @@ const styles = StyleSheet.create({
   notFound: {
     fontSize: 16,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   header: {
     backgroundColor: colors.surface,
@@ -313,12 +314,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   time: {
     fontSize: 14,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginTop: spacing.space1,
   },
   vitalsGrid: {
@@ -344,7 +345,7 @@ const styles = StyleSheet.create({
   vitalLabel: {
     fontSize: 12,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -352,13 +353,13 @@ const styles = StyleSheet.create({
   vitalValue: {
     fontSize: 22,
     fontWeight: '700',
-    fontFamily: 'RobotoMono',
+    fontFamily: fonts.mono,
     marginTop: spacing.space1,
   },
   vitalStatus: {
     fontSize: 12,
     color: colors.textDisabled,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginTop: 2,
   },
   trendsLabel: {
@@ -367,7 +368,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space3,
   },
   emptyCard: {
@@ -380,7 +381,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   notesSection: {
     backgroundColor: colors.surfaceAlt,
@@ -392,7 +393,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: spacing.space2,
@@ -400,7 +401,7 @@ const styles = StyleSheet.create({
   notesText: {
     fontSize: 14,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     lineHeight: 20,
   },
   nearbySection: {
@@ -410,7 +411,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space3,
   },
   nearbyRow: {
@@ -423,12 +424,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   nearbySummary: {
     fontSize: 12,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginTop: 2,
   },
 });

@@ -1,5 +1,6 @@
 // PulseSense — App Navigator
 // Root Stack → Splash → Onboarding OR Main Tabs
+// Glassmorphism tab bar + animated splash
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, Animated, Dimensions } from 'react-native';
@@ -7,7 +8,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing } from '../constants/spacing';
+import { fonts } from '../constants/typography';
 
 // Screens
 import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
@@ -40,47 +43,99 @@ import { useSettingsStore } from '../store/settingsStore';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
+const { width, height } = Dimensions.get('window');
+
 // ----------- Splash Screen -----------
 function SplashScreen({ onFinish }: { onFinish: () => void }) {
-  const [scaleAnim] = useState(new Animated.Value(0.85));
-  const [opacityAnim] = useState(new Animated.Value(0));
+  const logoScale = useRef(new Animated.Value(0.8)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const taglineOpacity = useRef(new Animated.Value(0)).current;
+  const pulseScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    // Logo entrance
     Animated.parallel([
-      Animated.spring(scaleAnim, {
+      Animated.spring(logoScale, {
         toValue: 1,
         useNativeDriver: true,
-        damping: 10,
+        damping: 12,
         stiffness: 100,
       }),
-      Animated.timing(opacityAnim, {
+      Animated.timing(logoOpacity, {
         toValue: 1,
-        duration: 600,
+        duration: 700,
         useNativeDriver: true,
       }),
     ]).start();
 
+    // Tagline fade in (delayed)
+    Animated.timing(taglineOpacity, {
+      toValue: 1,
+      duration: 500,
+      delay: 500,
+      useNativeDriver: true,
+    }).start();
+
+    // Pulse animation on the ECG line
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseScale, {
+          toValue: 1.03,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseScale, {
+          toValue: 1,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulseLoop.start();
+
     const timer = setTimeout(() => {
-      Animated.timing(opacityAnim, {
+      Animated.timing(logoOpacity, {
         toValue: 0,
-        duration: 300,
+        duration: 350,
         useNativeDriver: true,
       }).start(() => onFinish());
-    }, 1800);
+    }, 2000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      pulseLoop.stop();
+    };
   }, []);
 
   return (
-    <Animated.View style={[styles.splash, { opacity: opacityAnim }]}>
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <View style={styles.splashLogo}>
-          <Text style={styles.splashIcon}>❤️</Text>
+    <LinearGradient
+      colors={['#1A5F7A', '#154A61', '#0F3A4D']}
+      style={styles.splash}
+    >
+      <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }] }}>
+        {/* Logo icon */}
+        <View style={styles.splashLogoContainer}>
+          <Animated.View style={[styles.splashRing, { transform: [{ scale: pulseScale }] }]} />
+          <View style={styles.splashLogoInner}>
+            <Ionicons name="heart" size={36} color="#FFFFFF" />
+          </View>
         </View>
         <Text style={styles.splashTitle}>PulseSense</Text>
-        <Text style={styles.splashTagline}>Your personal health companion</Text>
+        <Animated.Text style={[styles.splashTagline, { opacity: taglineOpacity }]}>
+          Your personal health companion
+        </Animated.Text>
       </Animated.View>
-    </Animated.View>
+
+      {/* Decorative dots */}
+      <View style={styles.splashDots}>
+        {[0, 1, 2].map((i) => (
+          <View
+            key={i}
+            style={[styles.splashDot, { opacity: 0.3 + i * 0.15 }]}
+          />
+        ))}
+      </View>
+    </LinearGradient>
   );
 }
 
@@ -173,32 +228,40 @@ function TabNavigator() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textDisabled,
         tabBarStyle: {
-          backgroundColor: 'rgba(255,255,255,0.92)',
-          borderTopColor: 'rgba(233,237,242,0.8)',
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 4,
+          backgroundColor: colors.tabBarBg,
+          borderTopColor: colors.tabBarBorder,
+          borderTopWidth: 0.5,
+          height: 68,
+          paddingBottom: 10,
+          paddingTop: 6,
+          // Frosted glass effect
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
+          shadowOffset: { width: 0, height: -3 },
           shadowOpacity: 0.06,
-          shadowRadius: 8,
-          elevation: 8,
+          shadowRadius: 12,
+          elevation: 10,
         },
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '500',
-          fontFamily: 'Inter',
+          fontFamily: fonts.body,
+          letterSpacing: 0.3,
         },
         headerStyle: {
           backgroundColor: colors.surface,
           shadowColor: 'transparent',
           elevation: 0,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.borderLight,
         },
         headerTitleStyle: {
           fontSize: 18,
           fontWeight: '600',
           color: colors.textPrimary,
-          fontFamily: 'Inter',
+          fontFamily: fonts.display,
+        },
+        headerTitleContainerStyle: {
+          paddingHorizontal: spacing.space4,
         },
       })}
     >
@@ -230,7 +293,6 @@ export function AppNavigator() {
     }
   }, [isLoading, isReady, profileExists, onboardingComplete]);
 
-  // If store was updated (onboarding just completed), switch to main
   useEffect(() => {
     if (onboardingComplete && initialRoute === 'onboarding') {
       setInitialRoute('main');
@@ -266,8 +328,8 @@ export function AppNavigator() {
         ) : (
           <>
             <Stack.Screen name="Main" component={TabNavigator} />
-            <Stack.Screen name="EmergencyCheck" component={EmergencyCheckScreen} options={{ headerShown: true, title: 'Emergency Check', headerTintColor: colors.danger, headerStyle: { backgroundColor: colors.surface, shadowColor: 'transparent', elevation: 0 } }} />
-            <Stack.Screen name="EmergencyAction" component={EmergencyActionScreen} options={{ headerShown: true, title: 'Action Required', headerTintColor: '#FFFFFF', headerStyle: { backgroundColor: colors.danger, shadowColor: 'transparent', elevation: 0 } }} />
+            <Stack.Screen name="EmergencyCheck" component={EmergencyCheckScreen} options={{ headerShown: true, title: 'Emergency Check', headerTintColor: colors.danger, headerStyle: { backgroundColor: colors.surface, shadowColor: 'transparent', elevation: 0, borderBottomWidth: 0.5, borderBottomColor: colors.borderLight }, headerTitleStyle: { fontFamily: fonts.display, fontSize: 18, fontWeight: '600', color: colors.textPrimary }, headerTitleContainerStyle: { paddingHorizontal: spacing.space4 } }} />
+            <Stack.Screen name="EmergencyAction" component={EmergencyActionScreen} options={{ headerShown: true, title: 'Action Required', headerTintColor: '#FFFFFF', headerStyle: { backgroundColor: colors.danger, shadowColor: 'transparent', elevation: 0 }, headerTitleStyle: { fontFamily: fonts.display, fontSize: 18, fontWeight: '700', color: '#FFFFFF' } }} />
             <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: true, title: 'Settings' }} />
             <Stack.Screen name="Export" component={ExportScreen} options={{ headerShown: true, title: 'Export' }} />
             <Stack.Screen name="AddContact" component={AddContactScreen} options={{ headerShown: true, title: 'Add Contact' }} />
@@ -289,36 +351,62 @@ export function AppNavigator() {
 const styles = StyleSheet.create({
   splash: {
     flex: 1,
-    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  splashLogo: {
+  splashLogoContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: spacing.space5,
+  },
+  splashRing: {
+    position: 'absolute',
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  splashLogoInner: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.space4,
-    alignSelf: 'center',
-  },
-  splashIcon: {
-    fontSize: 44,
   },
   splashTitle: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: 36,
+    fontWeight: '800',
     color: '#FFFFFF',
-    fontFamily: 'Inter',
+    fontFamily: fonts.display,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   splashTagline: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
-    fontFamily: 'Inter',
+    color: 'rgba(255,255,255,0.7)',
+    fontFamily: fonts.body,
     textAlign: 'center',
     marginTop: spacing.space2,
+    letterSpacing: 0.3,
+  },
+  splashDots: {
+    position: 'absolute',
+    bottom: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  splashDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFFFFF',
   },
   loading: {
     flex: 1,
@@ -330,13 +418,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.danger,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space2,
   },
   errorDetail: {
     fontSize: 13,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   tabIndicator: {
     width: 5,

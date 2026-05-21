@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { fonts } from '../../constants/typography';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
 
 interface DosageDisplayProps {
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     marginHorizontal: 2,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   slot: {
     width: 22,
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
   slotLabel: {
     fontSize: 10,
     fontWeight: '700',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   slotLabelActive: {
     color: '#FFFFFF',

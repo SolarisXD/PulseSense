@@ -12,7 +12,9 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { fonts } from '../../constants/typography';
 import { Button } from '../../components/ui/Button';
 import { useDateInput } from '../../hooks/useDateInput';
 import { getDB } from '../../hooks/useDB';
@@ -183,7 +185,8 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '700',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.display,
+    letterSpacing: -0.3,
     marginBottom: spacing.space3,
     textAlign: 'center',
   },
@@ -191,7 +194,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     lineHeight: 18,
   },
   field: {
@@ -203,7 +206,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space2,
   },
   input: {
@@ -214,14 +217,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.space3,
     fontSize: 15,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     justifyContent: 'center',
     backgroundColor: colors.surface,
   },
   inputText: {
     fontSize: 15,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   placeholder: {
     color: colors.textDisabled,
@@ -246,7 +249,7 @@ const styles = StyleSheet.create({
   pickerText: {
     fontSize: 14,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   pickerTextSelected: {
     color: colors.primary,
@@ -255,7 +258,7 @@ const styles = StyleSheet.create({
   error: {
     fontSize: 12,
     color: colors.danger,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     textAlign: 'center',
     marginTop: spacing.space2,
   },

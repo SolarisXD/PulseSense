@@ -2,7 +2,9 @@
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { fonts } from '../../constants/typography';
 import type { SeverityLevel } from '../../constants/rules';
 
 interface AlertRowProps {
@@ -14,15 +16,15 @@ interface AlertRowProps {
   onPress?: () => void;
 }
 
-const severityColors: Record<SeverityLevel, { icon: string; color: string; bg: string }> = {
-  EMERGENCY_NOW: { icon: '🔴', color: colors.danger, bg: colors.dangerSurface },
-  URGENT_SAME_DAY: { icon: '🟠', color: colors.urgent, bg: colors.warningSurface },
-  MONITOR_CLOSELY: { icon: '🔵', color: colors.primary, bg: colors.primarySurface },
-  LOG_ONLY: { icon: '🟢', color: colors.success, bg: colors.successSurface },
+const severityConfig: Record<SeverityLevel, { icon: keyof typeof Ionicons.glyphMap; color: string; bg: string }> = {
+  EMERGENCY_NOW: { icon: 'alert-circle', color: colors.danger, bg: colors.dangerSurface },
+  URGENT_SAME_DAY: { icon: 'warning', color: colors.urgent, bg: colors.warningSurface },
+  MONITOR_CLOSELY: { icon: 'information-circle', color: colors.primary, bg: colors.primarySurface },
+  LOG_ONLY: { icon: 'checkmark-circle', color: colors.success, bg: colors.successSurface },
 };
 
 export function AlertRow({ title, message, severity, timestamp, isResolved, onPress }: AlertRowProps) {
-  const config = severityColors[severity] || severityColors.LOG_ONLY;
+  const config = severityConfig[severity] || severityConfig.LOG_ONLY;
 
   return (
     <TouchableOpacity
@@ -32,8 +34,8 @@ export function AlertRow({ title, message, severity, timestamp, isResolved, onPr
       disabled={!onPress}
     >
       <View style={styles.header}>
-        <Text style={styles.icon}>{config.icon}</Text>
-        <Text style={[styles.title, isResolved && styles.resolved]}>{title}</Text>
+        <Ionicons name={config.icon} size={16} color={config.color} />
+        <Text style={[styles.title, isResolved && styles.resolved]} numberOfLines={1}>{title}</Text>
         {isResolved && <Text style={styles.resolvedBadge}>Resolved</Text>}
       </View>
       <Text style={styles.message} numberOfLines={2}>{message}</Text>
@@ -61,7 +63,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.space1,
   },
   icon: {
-    fontSize: 12,
     marginRight: spacing.space2,
   },
   title: {
@@ -69,7 +70,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   resolved: {
     textDecorationLine: 'line-through',
@@ -78,7 +79,7 @@ const styles = StyleSheet.create({
   resolvedBadge: {
     fontSize: 10,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     backgroundColor: colors.surfaceAlt,
     paddingHorizontal: 6,
     paddingVertical: 1,
@@ -87,12 +88,12 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 12,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space1,
   },
   timestamp: {
     fontSize: 10,
     color: colors.textDisabled,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
 });

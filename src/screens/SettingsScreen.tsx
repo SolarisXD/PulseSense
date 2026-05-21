@@ -5,6 +5,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   Alert, TextInput, Modal, KeyboardAvoidingView, Platform,
 } from 'react-native';
+import { fonts } from '../constants/typography';
 import { colors, spacing, borderRadius } from '../constants/spacing';
 import { useSettingsStore } from '../store/settingsStore';
 import { getDB } from '../hooks/useDB';
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space4,
   },
   settingGroup: {
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space3,
   },
   optionsRow: {
@@ -265,7 +266,7 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 13,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   optionTextSelected: {
     color: colors.primary,
@@ -287,13 +288,13 @@ const styles = StyleSheet.create({
   editRowValue: {
     fontSize: 16,
     color: colors.textPrimary,
-    fontFamily: 'RobotoMono',
+    fontFamily: fonts.mono,
   },
   editRowAction: {
     fontSize: 13,
     color: colors.primary,
     fontWeight: '500',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   linkRow: {
     flexDirection: 'row',
@@ -312,7 +313,7 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: 15,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   linkArrow: {
     fontSize: 18,
@@ -327,14 +328,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space3,
   },
   aboutPrivacy: {
     fontSize: 12,
     color: colors.textSecondary,
     lineHeight: 18,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   modalOverlay: {
     flex: 1,
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space4,
     textAlign: 'center',
   },
@@ -371,7 +372,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.space3,
     fontSize: 18,
     color: colors.textPrimary,
-    fontFamily: 'RobotoMono',
+    fontFamily: fonts.mono,
     backgroundColor: colors.surfaceAlt,
     textAlign: 'center',
     marginBottom: spacing.space5,
@@ -394,7 +395,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   modalSaveBtn: {
     flex: 1,
@@ -409,6 +410,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#FFFFFF',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
 });

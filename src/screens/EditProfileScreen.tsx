@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { fonts } from '../constants/typography';
 import { colors, spacing, borderRadius } from '../constants/spacing';
 import { Button } from '../components/ui/Button';
 import { useProfileStore } from '../store/profileStore';
@@ -111,15 +112,15 @@ const styles = StyleSheet.create({
   content: { padding: spacing.space4 },
   photoContainer: { alignItems: 'center', marginBottom: spacing.space6 },
   photoCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primarySurface, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.space2 },
-  photoInitial: { fontSize: 32, fontWeight: '700', color: colors.primary, fontFamily: 'Inter' },
+  photoInitial: { fontSize: 32, fontWeight: '700', color: colors.primary, fontFamily: fonts.body },
   photoImage: { width: 80, height: 80, borderRadius: 40 },
   photoEmoji: { fontSize: 32 },
-  photoLabel: { fontSize: 13, color: colors.primary, fontWeight: '500', fontFamily: 'Inter' },
-  label: { fontSize: 12, fontWeight: '500', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: 'Inter', marginBottom: spacing.space2, marginTop: spacing.space4 },
-  input: { height: 48, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 15, color: colors.textPrimary, fontFamily: 'Inter', backgroundColor: colors.surface, justifyContent: 'center', marginBottom: spacing.space2 },
-  inputText: { fontSize: 15, color: colors.textPrimary, fontFamily: 'Inter' },
+  photoLabel: { fontSize: 13, color: colors.primary, fontWeight: '500', fontFamily: fonts.body },
+  label: { fontSize: 12, fontWeight: '500', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: fonts.body, marginBottom: spacing.space2, marginTop: spacing.space4 },
+  input: { height: 48, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 15, color: colors.textPrimary, fontFamily: fonts.body, backgroundColor: colors.surface, justifyContent: 'center', marginBottom: spacing.space2 },
+  inputText: { fontSize: 15, color: colors.textPrimary, fontFamily: fonts.body },
   pickerOption: { paddingVertical: spacing.space3, paddingHorizontal: spacing.space4, borderBottomWidth: 1, borderBottomColor: colors.borderLight, backgroundColor: colors.surface },
   pickerSelected: { backgroundColor: colors.primarySurface },
-  pickerText: { fontSize: 14, color: colors.textPrimary, fontFamily: 'Inter' },
+  pickerText: { fontSize: 14, color: colors.textPrimary, fontFamily: fonts.body },
   pickerTextSelected: { color: colors.primary, fontWeight: '600' },
 });

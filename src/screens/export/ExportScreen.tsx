@@ -11,18 +11,20 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { fonts } from '../../constants/typography';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/ui/Button';
 import { ExportTypeCard } from '../../components/export/ExportTypeCard';
 import { generateExport, sharePdf } from '../../export/exportService';
 import type { ExportType } from '../../export/exportService';
 
-const EXPORT_TYPES: { type: ExportType; icon: string; title: string; desc: string }[] = [
-  { type: 'medical_id', icon: '🆔', title: 'Medical ID', desc: 'Name, DOB, blood group, conditions, allergies, emergency contacts — one page' },
-  { type: 'vitals_report', icon: '📊', title: 'Vitals Report', desc: 'Tabular history of selected vitals with date range' },
-  { type: 'medications', icon: '💊', title: 'Medications', desc: 'All active prescriptions with dosage table' },
-  { type: 'alerts', icon: '🔔', title: 'Emergency Alerts', desc: 'Log of emergency events with severity and timestamp' },
-  { type: 'full_report', icon: '📋', title: 'Full Report', desc: 'All of the above combined' },
+const EXPORT_TYPES: { type: ExportType; iconName: keyof typeof Ionicons.glyphMap; title: string; desc: string }[] = [
+  { type: 'medical_id', iconName: 'card-outline', title: 'Medical ID', desc: 'Name, DOB, blood group, conditions, allergies, emergency contacts — one page' },
+  { type: 'vitals_report', iconName: 'analytics-outline', title: 'Vitals Report', desc: 'Tabular history of selected vitals with date range' },
+  { type: 'medications', iconName: 'medkit-outline', title: 'Medications', desc: 'All active prescriptions with dosage table' },
+  { type: 'alerts', iconName: 'notifications-outline', title: 'Emergency Alerts', desc: 'Log of emergency events with severity and timestamp' },
+  { type: 'full_report', iconName: 'document-text-outline', title: 'Full Report', desc: 'All of the above combined' },
 ];
 
 const VITAL_TYPES = [
@@ -101,7 +103,7 @@ export function ExportScreen({ route }: any) {
           key={et.type}
           title={et.title}
           description={et.desc}
-          icon={et.icon}
+          iconName={et.iconName}
           selected={selectedType === et.type}
           onPress={() => setSelectedType(et.type)}
         />
@@ -129,7 +131,7 @@ export function ExportScreen({ route }: any) {
 
       {/* Generate */}
       <Button
-        title={generating ? 'Generating PDF...' : '📄  Generate PDF'}
+        title={generating ? 'Generating PDF...' : 'Generate PDF'}
         onPress={handleGenerate}
         disabled={!selectedType || generating}
         loading={generating}
@@ -139,10 +141,10 @@ export function ExportScreen({ route }: any) {
       {/* Share after generation */}
       {pdfUri && !generating && (
         <View style={styles.successCard}>
-          <Text style={styles.successIcon}>✅</Text>
+          <Ionicons name="checkmark-circle" size={36} color={colors.success} style={{ marginBottom: spacing.space3 }} />
           <Text style={styles.successText}>PDF generated successfully!</Text>
           <Button
-            title="📤  Share PDF"
+            title="Share PDF"
             onPress={handleShare}
             variant="primary"
           />
@@ -163,16 +165,17 @@ const styles = StyleSheet.create({
     padding: spacing.space4,
   },
   heading: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.display,
+    letterSpacing: -0.3,
     marginBottom: spacing.space2,
   },
   subtext: {
     fontSize: 13,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space5,
   },
   sectionLabel: {
@@ -181,7 +184,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space3,
     marginTop: spacing.space4,
   },
@@ -209,7 +212,7 @@ const styles = StyleSheet.create({
   vitalChipText: {
     fontSize: 12,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   vitalChipTextSelected: {
     color: colors.primary,
@@ -223,14 +226,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.space5,
   },
   successIcon: {
-    fontSize: 36,
     marginBottom: spacing.space3,
   },
   successText: {
     fontSize: 15,
     fontWeight: '600',
     color: '#065F46',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space4,
   },
 });

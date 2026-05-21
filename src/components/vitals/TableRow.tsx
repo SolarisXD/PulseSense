@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { fonts } from '../../constants/typography';
 import { colors, spacing } from '../../constants/spacing';
 import { VitalStatusBadge } from '../ui/VitalStatusBadge';
 import type { VitalStatus } from '../../utils/vitalStatus';
@@ -67,12 +68,12 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 11,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   time: {
     fontSize: 11,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   cell: {
     flex: 1,
@@ -83,6 +84,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: colors.textPrimary,
-    fontFamily: 'RobotoMono',
+    fontFamily: fonts.mono,
   },
 });

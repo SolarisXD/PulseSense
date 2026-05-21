@@ -1,5 +1,5 @@
 // PulseSense — Vitals Log Screen (Tab entry point)
-// Shows vital selector and logs vitals
+// Shows vital selector and logs vitals — with motion, proper icons, refined UI
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
@@ -15,8 +15,13 @@ import {
   Animated,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import AnimatedRN, { useSharedValue, useAnimatedStyle, withSpring, withTiming, Easing } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { fonts } from '../../constants/typography';
 import { Button } from '../../components/ui/Button';
+import { Skeleton } from '../../components/ui/Skeleton';
 import { VitalInputField } from '../../components/vitals/VitalInputField';
 import { PainSlider } from '../../components/vitals/PainSlider';
 import { VitalStatusBadge } from '../../components/ui/VitalStatusBadge';
@@ -33,7 +38,7 @@ import { useSettingsStore } from '../../store/settingsStore';
 interface VitalToggle {
   key: string;
   label: string;
-  icon: string;
+  iconName: keyof typeof Ionicons.glyphMap;
   selected: boolean;
 }
 
@@ -61,6 +66,15 @@ export function VitalsScreen({ navigation }: any) {
   const [generalNotes, setGeneralNotes] = useState('');
   const [customDefs, setCustomDefs] = useState<any[]>([]);
   const [customValues, setCustomValues] = useState<Record<number, string>>({});
+  const [loading, setLoading] = useState(true);
+
+  // Entrance animation
+  const pageOpacity = useSharedValue(0);
+  useEffect(() => {
+    pageOpacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.ease) });
+  }, []);
+
+  const pageStyle = useAnimatedStyle(() => ({ opacity: pageOpacity.value }));
 
   useFocusEffect(
     useCallback(() => {
@@ -69,23 +83,26 @@ export function VitalsScreen({ navigation }: any) {
   );
 
   const loadCustomDefs = async () => {
+    setLoading(true);
     try {
       const db = await getDB();
       const defs = await getCustomVitalDefinitions(db);
       setCustomDefs(defs);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const vitalOptions: VitalToggle[] = [
-    { key: 'bp', label: 'Blood Pressure', icon: '❤️', selected: selectedVitals.includes('bp') },
-    { key: 'pulse', label: 'Pulse', icon: '💓', selected: selectedVitals.includes('pulse') },
-    { key: 'spo2', label: 'SpO2', icon: '🫁', selected: selectedVitals.includes('spo2') },
-    { key: 'glucose', label: 'Glucose', icon: '🩸', selected: selectedVitals.includes('glucose') },
-    { key: 'temp', label: 'Temperature', icon: '🌡️', selected: selectedVitals.includes('temp') },
-    { key: 'weight', label: 'Weight', icon: '⚖️', selected: selectedVitals.includes('weight') },
-    { key: 'pain', label: 'Pain Level', icon: '🤕', selected: selectedVitals.includes('pain') },
+    { key: 'bp', label: 'Blood Pressure', iconName: 'heart-half', selected: selectedVitals.includes('bp') },
+    { key: 'pulse', label: 'Pulse', iconName: 'pulse', selected: selectedVitals.includes('pulse') },
+    { key: 'spo2', label: 'SpO2', iconName: 'analytics-outline', selected: selectedVitals.includes('spo2') },
+    { key: 'glucose', label: 'Glucose', iconName: 'water-outline', selected: selectedVitals.includes('glucose') },
+    { key: 'temp', label: 'Temperature', iconName: 'thermometer-outline', selected: selectedVitals.includes('temp') },
+    { key: 'weight', label: 'Weight', iconName: 'scale-outline', selected: selectedVitals.includes('weight') },
+    { key: 'pain', label: 'Pain Level', iconName: 'bandage-outline', selected: selectedVitals.includes('pain') },
   ];
 
   const toggleVital = (key: string) => {
@@ -107,7 +124,6 @@ export function VitalsScreen({ navigation }: any) {
 
     setSaving(true);
     try {
-      // Parse and validate numeric inputs — guard against NaN
       const parsedBpSys = bpSys ? parseInt(bpSys, 10) : null;
       const parsedBpDia = bpDia ? parseInt(bpDia, 10) : null;
       const parsedPulse = pulse ? parseInt(pulse, 10) : null;
@@ -147,7 +163,6 @@ export function VitalsScreen({ navigation }: any) {
         notes: generalNotes || null,
       });
 
-      // Save custom vitals (guard against NaN)
       for (const def of customDefs) {
         const val = customValues[def.id];
         if (val) {
@@ -167,7 +182,6 @@ export function VitalsScreen({ navigation }: any) {
         }
       }
 
-      // Check threshold alerts (reuse already-parsed values)
       const alert = evaluateVitalThresholds({
         bp_sys: parsedBpSys,
         bp_dia: parsedBpDia,
@@ -223,14 +237,16 @@ export function VitalsScreen({ navigation }: any) {
 
   if (saved) {
     return (
-      <View style={styles.savedContainer}>
+      <LinearGradient colors={['#F0F4F8', '#E8EEF4']} style={styles.savedContainer}>
         <Animated.View
           style={[
             styles.savedCard,
             { opacity: savedOpacity, transform: [{ scale: savedScale }] },
           ]}
         >
-          <Text style={styles.savedIcon}>✅</Text>
+          <View style={styles.savedIconContainer}>
+            <Ionicons name="checkmark-circle" size={56} color={colors.success} />
+          </View>
           <Text style={styles.savedTitle}>Reading Saved!</Text>
           <Text style={styles.savedSub}>Vitals have been recorded successfully.</Text>
           <View style={styles.savedButtons}>
@@ -239,7 +255,7 @@ export function VitalsScreen({ navigation }: any) {
             <Button title="Back to Home" onPress={() => { navigation.navigate('HomeTab'); }} variant="primary" size="medium" />
           </View>
         </Animated.View>
-      </View>
+      </LinearGradient>
     );
   }
 
@@ -248,200 +264,261 @@ export function VitalsScreen({ navigation }: any) {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        {/* Vital Selector */}
-        {showSelector ? (
-          <View>
-            <Text style={styles.heading}>What would you like to log?</Text>
-            <Text style={styles.subtext}>Select one or more vitals</Text>
-            <View style={styles.vitalGrid}>
-              {vitalOptions.map((v) => (
-                <TouchableOpacity
-                  key={v.key}
-                  style={[styles.vitalChip, v.selected && styles.vitalChipSelected]}
-                  onPress={() => toggleVital(v.key)}
-                >
-                  <Text style={styles.vitalChipIcon}>{v.icon}</Text>
-                  <Text style={[styles.vitalChipLabel, v.selected && styles.vitalChipLabelSelected]}>
-                    {v.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {customDefs.length > 0 && (
-              <View style={styles.customSection}>
-                <Text style={styles.sectionLabel}>CUSTOM VITALS</Text>
+      <AnimatedRN.View style={[{ flex: 1 }, pageStyle]}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          {/* Vital Selector */}
+          {showSelector ? (
+            loading ? (
+              <View>
+                <Skeleton.Box width={220} height={26} style={{ marginBottom: 8 }} />
+                <Skeleton.Box width={160} height={14} style={{ marginBottom: 24 }} />
                 <View style={styles.vitalGrid}>
-                  {customDefs.map((def) => (
-                    <TouchableOpacity
-                      key={def.id}
-                      style={[styles.vitalChip, selectedVitals.includes(`custom_${def.id}`) && styles.vitalChipSelected]}
-                      onPress={() => toggleVital(`custom_${def.id}`)}
-                    >
-                      <Text style={styles.vitalChipLabel}>{def.name}</Text>
-                    </TouchableOpacity>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <Skeleton.Box key={i} width={100} height={38} borderRadius={19} style={{ marginRight: 8, marginBottom: 8 }} />
                   ))}
                 </View>
+                <Skeleton.Box width="100%" height={48} borderRadius={10} />
               </View>
-            )}
-
-            <Button
-              title="Log Selected"
-              onPress={() => setShowSelector(false)}
-              disabled={selectedVitals.length === 0}
-            />
-          </View>
-        ) : (
-          /* Vital Form */
-          <View>
-            <TouchableOpacity onPress={() => setShowSelector(true)} style={styles.changeSelection}>
-              <Text style={styles.changeSelectionText}>← Change selection</Text>
-            </TouchableOpacity>
-
-            {/* Date/Time Field */}
-            <View style={styles.field}>
-              <Text style={styles.label}>READING TAKEN AT</Text>
-              <View style={styles.dateInputRow}>
-                <Text style={styles.clockIcon}>🕐</Text>
-                <TextInput
-                  style={styles.dateInput}
-                  value={dateTime}
-                  onChangeText={setDateTime}
-                  placeholder="DD/MM/YYYY HH:MM"
-                  placeholderTextColor={colors.textDisabled}
-                  keyboardType="default"
-                />
+            ) : (
+            <View>
+              <Text style={styles.heading}>What would you like to log?</Text>
+              <Text style={styles.subtext}>Select one or more vitals</Text>
+              <View style={styles.vitalGrid}>
+                {vitalOptions.map((v) => (
+                  <TouchableOpacity
+                    key={v.key}
+                    style={[styles.vitalChip, v.selected && styles.vitalChipSelected]}
+                    onPress={() => toggleVital(v.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name={v.iconName}
+                      size={18}
+                      color={v.selected ? colors.primary : colors.textSecondary}
+                      style={{ marginRight: spacing.space2 }}
+                    />
+                    <Text style={[styles.vitalChipLabel, v.selected && styles.vitalChipLabelSelected]}>
+                      {v.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-            </View>
 
-            {selectedVitals.includes('bp') && (
-              <View style={styles.vitalSection}>
-                <Text style={styles.vitalSectionTitle}>Blood Pressure</Text>
-                <View style={styles.bpRow}>
-                  <VitalInputField
-                    label="Systolic"
-                    value={bpSys}
-                    onChangeText={setBpSys}
-                    unit="mmHg"
-                    placeholder="120"
-                    status={bpSys ? getBpStatus(parseInt(bpSys, 10), bpDia ? parseInt(bpDia, 10) : null) : undefined}
-                  />
-                  <View style={{ width: 12 }} />
-                  <VitalInputField
-                    label="Diastolic"
-                    value={bpDia}
-                    onChangeText={setBpDia}
-                    unit="mmHg"
-                    placeholder="80"
-                    status={bpDia ? getBpStatus(bpSys ? parseInt(bpSys, 10) : null, parseInt(bpDia, 10)) : undefined}
-                  />
+              {customDefs.length > 0 && (
+                <View style={styles.customSection}>
+                  <Text style={styles.sectionLabel}>CUSTOM VITALS</Text>
+                  <View style={styles.vitalGrid}>
+                    {customDefs.map((def) => (
+                      <TouchableOpacity
+                        key={def.id}
+                        style={[styles.vitalChip, selectedVitals.includes(`custom_${def.id}`) && styles.vitalChipSelected]}
+                        onPress={() => toggleVital(`custom_${def.id}`)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="flask-outline" size={18} color={selectedVitals.includes(`custom_${def.id}`) ? colors.primary : colors.textSecondary} style={{ marginRight: spacing.space2 }} />
+                        <Text style={styles.vitalChipLabel}>{def.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 </View>
-                <TouchableOpacity
-                  style={styles.dropdown}
-                  onPress={() => {
-                    const options: Array<'sitting' | 'standing' | 'lying'> = ['sitting', 'standing', 'lying'];
-                    const next = options[(options.indexOf(bpPosition) + 1) % options.length];
-                    setBpPosition(next);
-                  }}
-                >
-                  <Text style={styles.dropdownLabel}>Position</Text>
-                  <Text style={styles.dropdownValue}>{bpPosition}</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+              )}
 
-            {selectedVitals.includes('pulse') && (
-              <View style={styles.vitalSection}>
-                <VitalInputField
-                  label="Pulse"
-                  value={pulse}
-                  onChangeText={setPulse}
-                  unit="bpm"
-                  placeholder="72"
-                  status={pulse ? getPulseStatus(parseInt(pulse, 10)) : undefined}
-                />
-              </View>
-            )}
-
-            {selectedVitals.includes('spo2') && (
-              <View style={styles.vitalSection}>
-                <VitalInputField
-                  label="SpO2"
-                  value={spo2}
-                  onChangeText={setSpo2}
-                  unit="%"
-                  placeholder="98"
-                  status={spo2 ? getSpo2Status(parseFloat(spo2)) : undefined}
-                />
-              </View>
-            )}
-
-            {selectedVitals.includes('glucose') && (
-              <View style={styles.vitalSection}>
-                <VitalInputField label="Glucose" value={glucose} onChangeText={setGlucose} unit={settings.glucoseUnit} placeholder="100" />
-                <TouchableOpacity style={styles.dropdown} onPress={() => {
-                  const options = ['fasting', 'post_meal', 'random', 'pre_meal'];
-                  const idx = options.indexOf(glucoseContext);
-                  setGlucoseContext(options[(idx + 1) % options.length]);
-                }}>
-                  <Text style={styles.dropdownLabel}>Context</Text>
-                  <Text style={styles.dropdownValue}>{glucoseContext.replace('_', ' ')}</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {selectedVitals.includes('temp') && (
-              <View style={styles.vitalSection}>
-                <VitalInputField label="Temperature" value={temp} onChangeText={setTemp} unit={`°${settings.tempUnit}`} placeholder="36.6" status={temp ? getTempStatus(parseFloat(temp)) : undefined} />
-              </View>
-            )}
-
-            {selectedVitals.includes('weight') && (
-              <View style={styles.vitalSection}>
-                <VitalInputField label="Weight" value={weight} onChangeText={setWeight} unit={settings.weightUnit} placeholder="70" />
-              </View>
-            )}
-
-            {selectedVitals.includes('pain') && (
-              <View style={styles.vitalSection}>
-                <PainSlider value={painLevel} onChange={setPainLevel} />
-                <VitalInputField label="Location of Pain" value={painLocation} onChangeText={setPainLocation} placeholder="e.g. Lower back" keyboardType="default" />
-                <VitalInputField label="Pain Notes" value={painNotes} onChangeText={setPainNotes} placeholder="Any details about the pain" keyboardType="default" />
-              </View>
-            )}
-
-            {/* Custom vitals form */}
-            {customDefs.filter((d) => selectedVitals.includes(`custom_${d.id}`)).map((def) => (
-              <View key={def.id} style={styles.vitalSection}>
-                <VitalInputField
-                  label={def.name}
-                  value={customValues[def.id] || ''}
-                  onChangeText={(t) => setCustomValues((prev) => ({ ...prev, [def.id]: t }))}
-                  unit={def.unit}
-                  placeholder={`Normal: ${def.normal_min || '-'} - ${def.normal_max || '-'}`}
-                />
-              </View>
-            ))}
-
-            {/* General Notes */}
-            <View style={styles.field}>
-              <Text style={styles.label}>NOTES (optional)</Text>
-              <TextInput
-                style={[styles.input, styles.multilineInput]}
-                value={generalNotes}
-                onChangeText={setGeneralNotes}
-                placeholder="General notes for this reading"
-                placeholderTextColor={colors.textDisabled}
-                multiline
-                numberOfLines={3}
+              <Button
+                title="Log Selected"
+                onPress={() => setShowSelector(false)}
+                disabled={selectedVitals.length === 0}
               />
             </View>
+          )
+        ) : (
+            /* Vital Form */
+            <View>
+              <TouchableOpacity onPress={() => setShowSelector(true)} style={styles.changeSelection}>
+                <Ionicons name="arrow-back" size={16} color={colors.primary} />
+                <Text style={styles.changeSelectionText}> Change selection</Text>
+              </TouchableOpacity>
 
-            <Button title={saving ? 'Saving...' : 'Save Reading'} onPress={handleSave} loading={saving} />
-          </View>
-        )}
-      </ScrollView>
+              {/* Date/Time Field */}
+              <View style={styles.field}>
+                <Text style={styles.label}>READING TAKEN AT</Text>
+                <View style={styles.dateInputRow}>
+                  <Ionicons name="time-outline" size={18} color={colors.textSecondary} style={{ marginRight: spacing.space2 }} />
+                  <TextInput
+                    style={styles.dateInput}
+                    value={dateTime}
+                    onChangeText={setDateTime}
+                    placeholder="DD/MM/YYYY HH:MM"
+                    placeholderTextColor={colors.textDisabled}
+                    keyboardType="default"
+                  />
+                </View>
+              </View>
+
+              {selectedVitals.includes('bp') && (
+                <View style={styles.vitalSection}>
+                  <View style={styles.vitalSectionHeader}>
+                    <Ionicons name="heart-half" size={18} color={colors.primary} />
+                    <Text style={styles.vitalSectionTitle}>Blood Pressure</Text>
+                  </View>
+                  <View style={styles.bpRow}>
+                    <VitalInputField
+                      label="Systolic"
+                      value={bpSys}
+                      onChangeText={setBpSys}
+                      unit="mmHg"
+                      placeholder="120"
+                      status={bpSys ? getBpStatus(parseInt(bpSys, 10), bpDia ? parseInt(bpDia, 10) : null) : undefined}
+                    />
+                    <View style={{ width: 12 }} />
+                    <VitalInputField
+                      label="Diastolic"
+                      value={bpDia}
+                      onChangeText={setBpDia}
+                      unit="mmHg"
+                      placeholder="80"
+                      status={bpDia ? getBpStatus(bpSys ? parseInt(bpSys, 10) : null, parseInt(bpDia, 10)) : undefined}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={styles.dropdown}
+                    onPress={() => {
+                      const options: Array<'sitting' | 'standing' | 'lying'> = ['sitting', 'standing', 'lying'];
+                      const next = options[(options.indexOf(bpPosition) + 1) % options.length];
+                      setBpPosition(next);
+                    }}
+                  >
+                    <Text style={styles.dropdownLabel}>Position</Text>
+                    <View style={styles.dropdownValueRow}>
+                      <Text style={styles.dropdownValue}>{bpPosition}</Text>
+                      <Ionicons name="chevron-down" size={14} color={colors.textSecondary} />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {selectedVitals.includes('pulse') && (
+                <View style={styles.vitalSection}>
+                  <View style={styles.vitalSectionHeader}>
+                    <Ionicons name="pulse" size={18} color={colors.primary} />
+                    <Text style={styles.vitalSectionTitle}>Pulse</Text>
+                  </View>
+                  <VitalInputField
+                    label="Pulse"
+                    value={pulse}
+                    onChangeText={setPulse}
+                    unit="bpm"
+                    placeholder="72"
+                    status={pulse ? getPulseStatus(parseInt(pulse, 10)) : undefined}
+                  />
+                </View>
+              )}
+
+              {selectedVitals.includes('spo2') && (
+                <View style={styles.vitalSection}>
+                  <View style={styles.vitalSectionHeader}>
+                    <Ionicons name="analytics-outline" size={18} color={colors.primary} />
+                    <Text style={styles.vitalSectionTitle}>SpO2</Text>
+                  </View>
+                  <VitalInputField
+                    label="SpO2"
+                    value={spo2}
+                    onChangeText={setSpo2}
+                    unit="%"
+                    placeholder="98"
+                    status={spo2 ? getSpo2Status(parseFloat(spo2)) : undefined}
+                  />
+                </View>
+              )}
+
+              {selectedVitals.includes('glucose') && (
+                <View style={styles.vitalSection}>
+                  <View style={styles.vitalSectionHeader}>
+                    <Ionicons name="water-outline" size={18} color={colors.primary} />
+                    <Text style={styles.vitalSectionTitle}>Glucose</Text>
+                  </View>
+                  <VitalInputField label="Glucose" value={glucose} onChangeText={setGlucose} unit={settings.glucoseUnit} placeholder="100" />
+                  <TouchableOpacity style={styles.dropdown} onPress={() => {
+                    const options = ['fasting', 'post_meal', 'random', 'pre_meal'];
+                    const idx = options.indexOf(glucoseContext);
+                    setGlucoseContext(options[(idx + 1) % options.length]);
+                  }}>
+                    <Text style={styles.dropdownLabel}>Context</Text>
+                    <View style={styles.dropdownValueRow}>
+                      <Text style={styles.dropdownValue}>{glucoseContext.replace('_', ' ')}</Text>
+                      <Ionicons name="chevron-down" size={14} color={colors.textSecondary} />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {selectedVitals.includes('temp') && (
+                <View style={styles.vitalSection}>
+                  <View style={styles.vitalSectionHeader}>
+                    <Ionicons name="thermometer-outline" size={18} color={colors.primary} />
+                    <Text style={styles.vitalSectionTitle}>Temperature</Text>
+                  </View>
+                  <VitalInputField label="Temperature" value={temp} onChangeText={setTemp} unit={`°${settings.tempUnit}`} placeholder="36.6" status={temp ? getTempStatus(parseFloat(temp)) : undefined} />
+                </View>
+              )}
+
+              {selectedVitals.includes('weight') && (
+                <View style={styles.vitalSection}>
+                  <View style={styles.vitalSectionHeader}>
+                    <Ionicons name="scale-outline" size={18} color={colors.primary} />
+                    <Text style={styles.vitalSectionTitle}>Weight</Text>
+                  </View>
+                  <VitalInputField label="Weight" value={weight} onChangeText={setWeight} unit={settings.weightUnit} placeholder="70" />
+                </View>
+              )}
+
+              {selectedVitals.includes('pain') && (
+                <View style={styles.vitalSection}>
+                  <View style={styles.vitalSectionHeader}>
+                    <Ionicons name="bandage-outline" size={18} color={colors.primary} />
+                    <Text style={styles.vitalSectionTitle}>Pain Level</Text>
+                  </View>
+                  <PainSlider value={painLevel} onChange={setPainLevel} />
+                  <VitalInputField label="Location of Pain" value={painLocation} onChangeText={setPainLocation} placeholder="e.g. Lower back" keyboardType="default" />
+                  <VitalInputField label="Pain Notes" value={painNotes} onChangeText={setPainNotes} placeholder="Any details about the pain" keyboardType="default" />
+                </View>
+              )}
+
+              {/* Custom vitals form */}
+              {customDefs.filter((d) => selectedVitals.includes(`custom_${d.id}`)).map((def) => (
+                <View key={def.id} style={styles.vitalSection}>
+                  <View style={styles.vitalSectionHeader}>
+                    <Ionicons name="flask-outline" size={18} color={colors.primary} />
+                    <Text style={styles.vitalSectionTitle}>{def.name}</Text>
+                  </View>
+                  <VitalInputField
+                    label={def.name}
+                    value={customValues[def.id] || ''}
+                    onChangeText={(t) => setCustomValues((prev) => ({ ...prev, [def.id]: t }))}
+                    unit={def.unit}
+                    placeholder={`Normal: ${def.normal_min || '-'} - ${def.normal_max || '-'}`}
+                  />
+                </View>
+              ))}
+
+              {/* General Notes */}
+              <View style={styles.field}>
+                <Text style={styles.label}>NOTES (optional)</Text>
+                <TextInput
+                  style={[styles.input, styles.multilineInput]}
+                  value={generalNotes}
+                  onChangeText={setGeneralNotes}
+                  placeholder="General notes for this reading"
+                  placeholderTextColor={colors.textDisabled}
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
+
+              <Button title={saving ? 'Saving...' : 'Save Reading'} onPress={handleSave} loading={saving} />
+            </View>
+          )}
+        </ScrollView>
+      </AnimatedRN.View>
     </KeyboardAvoidingView>
   );
 }
@@ -456,16 +533,17 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.space12,
   },
   heading: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.display,
+    letterSpacing: -0.3,
     marginBottom: spacing.space2,
   },
   subtext: {
     fontSize: 13,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space5,
   },
   vitalGrid: {
@@ -489,14 +567,10 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: colors.primarySurface,
   },
-  vitalChipIcon: {
-    marginRight: spacing.space2,
-    fontSize: 16,
-  },
   vitalChipLabel: {
     fontSize: 13,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     fontWeight: '500',
   },
   vitalChipLabelSelected: {
@@ -511,17 +585,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.textSecondary,
     letterSpacing: 0.5,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space2,
   },
   changeSelection: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: spacing.space5,
   },
   changeSelectionText: {
     fontSize: 14,
     color: colors.primary,
     fontWeight: '500',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   field: {
     marginBottom: spacing.space4,
@@ -532,7 +608,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space2,
   },
   dateInputRow: {
@@ -545,15 +621,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.space3,
   },
-  clockIcon: {
-    fontSize: 16,
-    marginRight: spacing.space2,
-  },
   dateInput: {
     flex: 1,
     fontSize: 15,
     color: colors.textPrimary,
-    fontFamily: 'RobotoMono',
+    fontFamily: fonts.mono,
     paddingVertical: 0,
   },
   input: {
@@ -565,7 +637,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.space3,
     fontSize: 15,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   multilineInput: {
     height: 80,
@@ -583,12 +655,17 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
+  vitalSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.space3,
+    gap: spacing.space2,
+  },
   vitalSectionTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
-    marginBottom: spacing.space3,
+    fontFamily: fonts.display,
   },
   bpRow: {
     flexDirection: 'row',
@@ -608,17 +685,21 @@ const styles = StyleSheet.create({
   dropdownLabel: {
     fontSize: 12,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
+  },
+  dropdownValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   dropdownValue: {
     fontSize: 14,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     textTransform: 'capitalize',
   },
   savedContainer: {
     flex: 1,
-    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.space6,
@@ -633,22 +714,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 4,
+    width: '100%',
+    maxWidth: 320,
   },
-  savedIcon: {
-    fontSize: 48,
+  savedIconContainer: {
     marginBottom: spacing.space4,
   },
   savedTitle: {
     fontSize: 22,
     fontWeight: '700',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.display,
     marginBottom: spacing.space2,
   },
   savedSub: {
     fontSize: 14,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space6,
     textAlign: 'center',
   },

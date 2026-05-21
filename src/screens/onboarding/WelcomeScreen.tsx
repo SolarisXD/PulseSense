@@ -2,7 +2,9 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { fonts } from '../../constants/typography';
 import { Button } from '../../components/ui/Button';
 
 const { width } = Dimensions.get('window');
@@ -16,7 +18,7 @@ export function WelcomeScreen({ onNext }: WelcomeScreenProps) {
     <View style={styles.container}>
       <View style={styles.illustrationContainer}>
         <View style={styles.logoCircle}>
-          <Text style={styles.logoIcon}>❤️</Text>
+          <Ionicons name="heart" size={44} color={colors.primary} />
         </View>
         <Text style={styles.appName}>PulseSense</Text>
       </View>
@@ -60,7 +62,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: colors.primary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.display,
   },
   content: {
     flex: 1,
@@ -71,7 +73,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textPrimary,
     lineHeight: 34,
-    fontFamily: 'Inter',
+    fontFamily: fonts.display,
+    letterSpacing: -0.3,
     marginBottom: spacing.space4,
     textAlign: 'center',
   },
@@ -80,7 +83,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 22,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     paddingHorizontal: spacing.space4,
   },
   footer: {

@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { fonts } from '../constants/typography';
 import { colors, spacing, borderRadius } from '../constants/spacing';
 import { Button } from '../components/ui/Button';
 import { getDB } from '../hooks/useDB';
@@ -120,18 +121,18 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.space4, marginBottom: spacing.space3, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 2, elevation: 1 },
   cardInactive: { opacity: 0.5 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardName: { fontSize: 15, fontWeight: '600', color: colors.textPrimary, fontFamily: 'Inter' },
-  cardUnit: { fontSize: 13, color: colors.textSecondary, fontFamily: 'Inter' },
-  cardRange: { fontSize: 12, color: colors.textSecondary, fontFamily: 'Inter', marginTop: spacing.space1 },
-  cardNotes: { fontSize: 11, color: colors.textDisabled, fontFamily: 'Inter', marginTop: spacing.space1, fontStyle: 'italic' },
+  cardName: { fontSize: 15, fontWeight: '600', color: colors.textPrimary, fontFamily: fonts.body },
+  cardUnit: { fontSize: 13, color: colors.textSecondary, fontFamily: fonts.body },
+  cardRange: { fontSize: 12, color: colors.textSecondary, fontFamily: fonts.body, marginTop: spacing.space1 },
+  cardNotes: { fontSize: 11, color: colors.textDisabled, fontFamily: fonts.body, marginTop: spacing.space1, fontStyle: 'italic' },
   cardActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: spacing.space3, gap: spacing.space4 },
-  actionText: { fontSize: 12, color: colors.primary, fontWeight: '500', fontFamily: 'Inter' },
+  actionText: { fontSize: 12, color: colors.primary, fontWeight: '500', fontFamily: fonts.body },
   empty: { padding: spacing.space12, alignItems: 'center' },
-  emptyText: { fontSize: 14, color: colors.textSecondary, fontFamily: 'Inter' },
+  emptyText: { fontSize: 14, color: colors.textSecondary, fontFamily: fonts.body },
   form: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.surface, padding: spacing.space4, borderTopLeftRadius: borderRadius.lg, borderTopRightRadius: borderRadius.lg, shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 10 },
-  input: { height: 44, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 14, color: colors.textPrimary, fontFamily: 'Inter', marginBottom: spacing.space2, backgroundColor: colors.surface },
+  input: { height: 44, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 14, color: colors.textPrimary, fontFamily: fonts.body, marginBottom: spacing.space2, backgroundColor: colors.surface },
   row: { flexDirection: 'row' },
   formButtons: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: spacing.space2 },
   addBtn: { position: 'absolute', bottom: 20, left: spacing.space4, right: spacing.space4, backgroundColor: colors.primary, borderRadius: borderRadius.md, padding: spacing.space4, alignItems: 'center' },
-  addBtnText: { fontSize: 15, fontWeight: '600', color: '#FFFFFF', fontFamily: 'Inter' },
+  addBtnText: { fontSize: 15, fontWeight: '600', color: '#FFFFFF', fontFamily: fonts.body },
 });

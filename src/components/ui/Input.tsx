@@ -10,6 +10,7 @@ import {
   ViewStyle,
   TextInputProps,
 } from 'react-native';
+import { fonts } from '../../constants/typography';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
 
 interface InputProps extends TextInputProps {
@@ -67,7 +68,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: spacing.space2,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -82,20 +83,20 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     paddingVertical: 0,
     height: '100%',
   },
   unit: {
     fontSize: 12,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginLeft: spacing.space2,
   },
   error: {
     fontSize: 11,
     color: colors.danger,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginTop: spacing.space1,
   },
 });

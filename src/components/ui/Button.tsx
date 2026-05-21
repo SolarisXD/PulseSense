@@ -1,16 +1,19 @@
 // PulseSense — Button Component
 // Variants: primary, danger, outline, ghost, disabled
+// Animated with Moti — scale on press, fade entrance
 
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
-  TouchableOpacity,
+  TouchableWithoutFeedback,
   Text,
   StyleSheet,
   ActivityIndicator,
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { colors, spacing, borderRadius, minTapTarget } from '../../constants/spacing';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
+import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { fonts } from '../../constants/typography';
 
 interface ButtonProps {
   title: string;
@@ -36,6 +39,23 @@ export function Button({
   accessibilityLabel,
 }: ButtonProps) {
   const isDisabled = disabled || variant === 'disabled';
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  const handlePressIn = useCallback(() => {
+    if (!isDisabled && !loading) {
+      scale.value = withSpring(0.97, { damping: 15, stiffness: 200 });
+    }
+  }, [isDisabled, loading]);
+
+  const handlePressOut = useCallback(() => {
+    scale.value = withSpring(1, { damping: 12, stiffness: 250 });
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
 
   const containerStyles = [
     styles.base,
@@ -53,23 +73,25 @@ export function Button({
   ];
 
   return (
-    <TouchableOpacity
-      style={containerStyles}
+    <TouchableWithoutFeedback
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       onPress={onPress}
       disabled={isDisabled || loading}
       accessibilityLabel={accessibilityLabel || title}
       accessibilityRole="button"
-      activeOpacity={0.8}
     >
-      {loading ? (
-        <ActivityIndicator
-          color={variant === 'primary' || variant === 'danger' ? '#FFFFFF' : colors.primary}
-          size="small"
-        />
-      ) : (
-        <Text style={textStyles}>{title}</Text>
-      )}
-    </TouchableOpacity>
+      <Animated.View style={[containerStyles, animatedStyle]}>
+        {loading ? (
+          <ActivityIndicator
+            color={variant === 'primary' || variant === 'danger' ? '#FFFFFF' : colors.primary}
+            size="small"
+          />
+        ) : (
+          <Text style={textStyles}>{title}</Text>
+        )}
+      </Animated.View>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -84,6 +106,11 @@ const styles = StyleSheet.create({
   },
   variant_danger: {
     backgroundColor: colors.danger,
+    shadowColor: colors.danger,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   variant_outline: {
     backgroundColor: 'transparent',
@@ -109,9 +136,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   text: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
+    letterSpacing: 0.3,
   },
   text_primary: {
     color: '#FFFFFF',

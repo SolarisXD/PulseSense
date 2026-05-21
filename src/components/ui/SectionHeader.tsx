@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing } from '../../constants/spacing';
+import { fonts } from '../../constants/typography';
 
 interface SectionHeaderProps {
   title: string;
@@ -36,12 +37,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.display,
   },
   action: {
     fontSize: 13,
     color: colors.primary,
     fontWeight: '500',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
 });

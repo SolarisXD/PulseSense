@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
+import { fonts } from '../../constants/typography';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
 
 interface PainSliderProps {
@@ -93,12 +94,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   level: {
     fontSize: 20,
     fontWeight: '700',
-    fontFamily: 'RobotoMono',
+    fontFamily: fonts.mono,
   },
   descriptorRow: {
     marginBottom: spacing.space2,
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
   descriptor: {
     fontSize: 15,
     fontWeight: '600',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   slider: {
     width: '100%',
@@ -120,12 +121,12 @@ const styles = StyleSheet.create({
   scaleText: {
     fontSize: 11,
     color: colors.textDisabled,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   description: {
     fontSize: 11,
     color: colors.textSecondary,
     fontStyle: 'italic',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
 });

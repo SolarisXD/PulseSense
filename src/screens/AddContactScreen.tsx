@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { fonts } from '../constants/typography';
 import { colors, spacing, borderRadius } from '../constants/spacing';
 import { Button } from '../components/ui/Button';
 import { getDB, loadStores } from '../hooks/useDB';
@@ -58,11 +59,11 @@ export function AddContactScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.space4 },
-  label: { fontSize: 12, fontWeight: '500', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: 'Inter', marginBottom: spacing.space2, marginTop: spacing.space4 },
-  input: { height: 48, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 15, color: colors.textPrimary, fontFamily: 'Inter', backgroundColor: colors.surface, marginBottom: spacing.space2 },
+  label: { fontSize: 12, fontWeight: '500', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: fonts.body, marginBottom: spacing.space2, marginTop: spacing.space4 },
+  input: { height: 48, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 15, color: colors.textPrimary, fontFamily: fonts.body, backgroundColor: colors.surface, marginBottom: spacing.space2 },
   primaryRow: { flexDirection: 'row', alignItems: 'center', marginVertical: spacing.space5 },
   checkbox: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', marginRight: spacing.space3 },
   checkboxSelected: { borderColor: colors.primary, backgroundColor: colors.primary },
   checkmark: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
-  primaryLabel: { fontSize: 14, color: colors.textPrimary, fontFamily: 'Inter' },
+  primaryLabel: { fontSize: 14, color: colors.textPrimary, fontFamily: fonts.body },
 });

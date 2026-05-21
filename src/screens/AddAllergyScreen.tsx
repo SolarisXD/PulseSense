@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { fonts } from '../constants/typography';
 import { colors, spacing, borderRadius } from '../constants/spacing';
 import { Button } from '../components/ui/Button';
 import { getDB, loadStores } from '../hooks/useDB';
@@ -72,11 +73,11 @@ export function AddAllergyScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.space4 },
-  label: { fontSize: 12, fontWeight: '500', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: 'Inter', marginBottom: spacing.space2, marginTop: spacing.space4 },
-  input: { height: 48, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 15, color: colors.textPrimary, fontFamily: 'Inter', backgroundColor: colors.surface, marginBottom: spacing.space2 },
+  label: { fontSize: 12, fontWeight: '500', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: fonts.body, marginBottom: spacing.space2, marginTop: spacing.space4 },
+  input: { height: 48, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 15, color: colors.textPrimary, fontFamily: fonts.body, backgroundColor: colors.surface, marginBottom: spacing.space2 },
   optionsRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: spacing.space2 },
   chip: { paddingVertical: spacing.space2, paddingHorizontal: spacing.space4, borderRadius: borderRadius.full, borderWidth: 1.5, borderColor: colors.border, marginRight: spacing.space2, marginBottom: spacing.space2 },
   chipSelected: { borderColor: colors.primary },
-  chipText: { fontSize: 12, color: colors.textPrimary, fontFamily: 'Inter' },
+  chipText: { fontSize: 12, color: colors.textPrimary, fontFamily: fonts.body },
   chipTextSelected: { fontWeight: '600', color: colors.primary },
 });

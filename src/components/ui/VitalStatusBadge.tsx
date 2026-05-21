@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { fonts } from '../../constants/typography';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
 import type { VitalStatus } from '../../utils/vitalStatus';
 
@@ -58,7 +59,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 10,
     fontWeight: '600',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   labelSmall: {
     fontSize: 9,

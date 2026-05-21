@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { fonts } from '../../constants/typography';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
 import { DosageDisplay } from '../../components/medications/DosageDisplay';
 import { getDB } from '../../hooks/useDB';
@@ -95,22 +96,22 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.space4, marginBottom: spacing.space3, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 2, elevation: 1 },
   cardInactive: { opacity: 0.6 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.space2 },
-  date: { fontSize: 14, fontWeight: '600', color: colors.textPrimary, fontFamily: 'Inter' },
-  doctor: { fontSize: 12, color: colors.textSecondary, fontFamily: 'Inter', marginTop: 2 },
-  statusBadge: { fontSize: 10, fontWeight: '700', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, fontFamily: 'Inter' },
+  date: { fontSize: 14, fontWeight: '600', color: colors.textPrimary, fontFamily: fonts.body },
+  doctor: { fontSize: 12, color: colors.textSecondary, fontFamily: fonts.body, marginTop: 2 },
+  statusBadge: { fontSize: 10, fontWeight: '700', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, fontFamily: fonts.body },
   activeBadge: { color: colors.success, backgroundColor: colors.successSurface },
   inactiveBadge: { color: colors.textSecondary, backgroundColor: colors.surfaceAlt },
-  diagnosis: { fontSize: 12, color: colors.textSecondary, fontFamily: 'Inter', marginBottom: spacing.space3, fontStyle: 'italic' },
+  diagnosis: { fontSize: 12, color: colors.textSecondary, fontFamily: fonts.body, marginBottom: spacing.space3, fontStyle: 'italic' },
   medItem: { paddingVertical: spacing.space2, borderTopWidth: 1, borderTopColor: colors.borderLight },
   medInfo: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.space1 },
-  medName: { fontSize: 14, fontWeight: '500', color: colors.textPrimary, fontFamily: 'Inter' },
-  medStrength: { fontSize: 12, color: colors.textSecondary, fontFamily: 'Inter', marginLeft: spacing.space2 },
-  medTiming: { fontSize: 11, color: colors.textSecondary, fontFamily: 'Inter', marginTop: 2 },
-  medDuration: { fontSize: 11, color: colors.textSecondary, fontFamily: 'Inter' },
+  medName: { fontSize: 14, fontWeight: '500', color: colors.textPrimary, fontFamily: fonts.body },
+  medStrength: { fontSize: 12, color: colors.textSecondary, fontFamily: fonts.body, marginLeft: spacing.space2 },
+  medTiming: { fontSize: 11, color: colors.textSecondary, fontFamily: fonts.body, marginTop: 2 },
+  medDuration: { fontSize: 11, color: colors.textSecondary, fontFamily: fonts.body },
   deleteBtn: { marginTop: spacing.space3, alignItems: 'flex-end' },
-  deleteText: { fontSize: 12, color: colors.danger, fontFamily: 'Inter' },
+  deleteText: { fontSize: 12, color: colors.danger, fontFamily: fonts.body },
   empty: { padding: spacing.space12, alignItems: 'center' },
-  emptyText: { fontSize: 16, fontWeight: '500', color: colors.textSecondary, fontFamily: 'Inter' },
-  emptyHint: { fontSize: 12, color: colors.textDisabled, fontFamily: 'Inter', marginTop: spacing.space2 },
+  emptyText: { fontSize: 16, fontWeight: '500', color: colors.textSecondary, fontFamily: fonts.body },
+  emptyHint: { fontSize: 12, color: colors.textDisabled, fontFamily: fonts.body, marginTop: spacing.space2 },
   fab: { position: 'absolute', bottom: 20, left: spacing.space4, right: spacing.space4 },
 });

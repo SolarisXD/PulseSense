@@ -13,6 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import * as Location from 'expo-location';
+import { fonts } from '../../constants/typography';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
 import { SeverityBanner } from '../../components/ui/SeverityBanner';
 import { ActionStep } from '../../components/ui/ActionStep';
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
   noResultText: {
     fontSize: 16,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space5,
   },
   section: {
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space3,
   },
   triggerRow: {
@@ -263,7 +264,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textPrimary,
     textTransform: 'capitalize',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   evidenceNote: {
     backgroundColor: colors.surfaceAlt,
@@ -275,7 +276,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textSecondary,
     fontStyle: 'italic',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     lineHeight: 16,
   },
   quickActions: {
@@ -308,12 +309,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   locationAddress: {
     fontSize: 13,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginTop: 2,
   },
   refreshButton: {

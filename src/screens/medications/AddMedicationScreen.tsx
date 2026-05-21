@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { fonts } from '../../constants/typography';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
 import { Button } from '../../components/ui/Button';
 import { DosageDisplay } from '../../components/medications/DosageDisplay';
@@ -157,23 +158,23 @@ export function AddMedicationScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.space4, paddingBottom: spacing.space12 },
-  label: { fontSize: 12, fontWeight: '500', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: 'Inter', marginBottom: spacing.space2, marginTop: spacing.space4 },
-  subLabel: { fontSize: 11, color: colors.textSecondary, fontFamily: 'Inter', marginBottom: spacing.space1, marginTop: spacing.space3 },
-  input: { height: 44, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 14, color: colors.textPrimary, fontFamily: 'Inter', backgroundColor: colors.surface, marginBottom: spacing.space2 },
+  label: { fontSize: 12, fontWeight: '500', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: fonts.body, marginBottom: spacing.space2, marginTop: spacing.space4 },
+  subLabel: { fontSize: 11, color: colors.textSecondary, fontFamily: fonts.body, marginBottom: spacing.space1, marginTop: spacing.space3 },
+  input: { height: 44, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 14, color: colors.textPrimary, fontFamily: fonts.body, backgroundColor: colors.surface, marginBottom: spacing.space2 },
   multiline: { height: 60, paddingTop: spacing.space3, textAlignVertical: 'top' },
   medicineCard: { backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.space4, marginBottom: spacing.space4, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 2, elevation: 1 },
   medHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.space3 },
-  medNumber: { fontSize: 14, fontWeight: '600', color: colors.textPrimary, fontFamily: 'Inter' },
-  removeText: { fontSize: 12, color: colors.danger, fontFamily: 'Inter' },
+  medNumber: { fontSize: 14, fontWeight: '600', color: colors.textPrimary, fontFamily: fonts.body },
+  removeText: { fontSize: 12, color: colors.danger, fontFamily: fonts.body },
   dosageRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   dosageButtons: { flexDirection: 'row' },
   doseBtn: { width: 32, height: 32, borderRadius: 6, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', marginLeft: spacing.space2 },
   doseBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  doseBtnText: { fontSize: 12, fontWeight: '700', color: colors.textSecondary, fontFamily: 'Inter' },
+  doseBtnText: { fontSize: 12, fontWeight: '700', color: colors.textSecondary, fontFamily: fonts.body },
   doseBtnTextActive: { color: '#FFFFFF' },
   optionsRow: { flexDirection: 'row', flexWrap: 'wrap' },
   tinyChip: { paddingVertical: spacing.space1 + 2, paddingHorizontal: spacing.space2 + 2, borderRadius: borderRadius.full, borderWidth: 1, borderColor: colors.border, marginRight: spacing.space1, marginBottom: spacing.space1 },
-  tinyChipText: { fontSize: 10, color: colors.textPrimary, fontFamily: 'Inter' },
+  tinyChipText: { fontSize: 10, color: colors.textPrimary, fontFamily: fonts.body },
   chipSelected: { borderColor: colors.primary, backgroundColor: colors.primarySurface },
   chipTextSelected: { color: colors.primary, fontWeight: '600' },
 });

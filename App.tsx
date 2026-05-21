@@ -5,7 +5,8 @@ import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreenExpo from 'expo-splash-screen';
-import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import { useFonts, Syne_400Regular, Syne_500Medium, Syne_600SemiBold, Syne_700Bold, Syne_800ExtraBold } from '@expo-google-fonts/syne';
+import { Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold } from '@expo-google-fonts/outfit';
 import { RobotoMono_400Regular, RobotoMono_500Medium } from '@expo-google-fonts/roboto-mono';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppNavigator } from './src/navigation/AppNavigator';
@@ -15,11 +16,17 @@ SplashScreenExpo.preventAutoHideAsync();
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
-    Inter: Inter_400Regular,
-    Inter_400: Inter_400Regular,
-    Inter_500: Inter_500Medium,
-    Inter_600: Inter_600SemiBold,
-    Inter_700: Inter_700Bold,
+    Syne: Syne_400Regular,
+    Syne_400: Syne_400Regular,
+    Syne_500: Syne_500Medium,
+    Syne_600: Syne_600SemiBold,
+    Syne_700: Syne_700Bold,
+    Syne_800: Syne_800ExtraBold,
+    Outfit: Outfit_400Regular,
+    Outfit_400: Outfit_400Regular,
+    Outfit_500: Outfit_500Medium,
+    Outfit_600: Outfit_600SemiBold,
+    Outfit_700: Outfit_700Bold,
     RobotoMono: RobotoMono_400Regular,
     RobotoMono_400: RobotoMono_400Regular,
     RobotoMono_500: RobotoMono_500Medium,
@@ -34,7 +41,7 @@ export default function App() {
   if (!fontsLoaded && !fontError) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#1A5F7A" />
+        <ActivityIndicator size="large" color="#FFFFFF" />
       </View>
     );
   }

@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { fonts } from '../../constants/typography';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
 
 interface ActionStepProps {
@@ -45,13 +46,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: colors.primary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   text: {
     flex: 1,
     fontSize: 14,
     color: colors.textPrimary,
     lineHeight: 20,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
 });

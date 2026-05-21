@@ -3,7 +3,9 @@
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { fonts } from '../../constants/typography';
 
 interface ConditionCardProps {
   name: string;
@@ -42,7 +44,7 @@ export function ConditionCard({
         <Text style={styles.name}>{name}</Text>
         {onArchive && (
           <TouchableOpacity onPress={onArchive} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={styles.archiveIcon}>📦</Text>
+            <Ionicons name="archive-outline" size={18} color={colors.textDisabled} />
           </TouchableOpacity>
         )}
       </View>
@@ -87,13 +89,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     flex: 1,
-  },
-  archiveIcon: {
-    fontSize: 16,
-    marginLeft: spacing.space2,
-    padding: spacing.space1,
   },
   metaRow: {
     flexDirection: 'row',
@@ -104,7 +101,7 @@ const styles = StyleSheet.create({
   meta: {
     fontSize: 12,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   metaSep: {
     fontSize: 12,
@@ -120,13 +117,13 @@ const styles = StyleSheet.create({
   severityText: {
     fontSize: 10,
     fontWeight: '600',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     textTransform: 'capitalize',
   },
   notes: {
     fontSize: 12,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginTop: spacing.space1,
   },
 });

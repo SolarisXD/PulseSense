@@ -1,10 +1,14 @@
 // PulseSense — Alerts Screen
 // History of all alerts with severity indicators
+// Updated with icons and motion
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, Easing } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '../../constants/spacing';
+import { fonts } from '../../constants/typography';
 import { AlertRow } from '../../components/ui/AlertRow';
 import { getDB } from '../../hooks/useDB';
 import { getAllAlerts, resolveAlert } from '../../db/queries/emergency';
@@ -58,7 +62,9 @@ export function AlertsScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>🔔</Text>
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="notifications-off-outline" size={48} color={colors.textDisabled} />
+            </View>
             <Text style={styles.emptyText}>No alerts yet</Text>
             <Text style={styles.emptyHint}>
               Alerts will appear when vital readings are outside normal range or after emergency checks.
@@ -66,6 +72,7 @@ export function AlertsScreen() {
           </View>
         }
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
@@ -84,21 +91,26 @@ const styles = StyleSheet.create({
     padding: spacing.space12,
     alignItems: 'center',
   },
-  emptyIcon: {
-    fontSize: 48,
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.space4,
   },
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.display,
     marginBottom: spacing.space3,
   },
   emptyHint: {
     fontSize: 13,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     textAlign: 'center',
     lineHeight: 18,
     paddingHorizontal: spacing.space8,

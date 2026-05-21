@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.2.0",
+    "@expo-google-fonts/outfit": "^0.4.3",
     "@expo-google-fonts/roboto-mono": "^0.2.0",
+    "@expo-google-fonts/syne": "^0.4.2",
+    "@expo/cli": "^55.0.32",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-community/slider": "5.0.1",
     "@react-navigation/bottom-tabs": "^7.0.0",

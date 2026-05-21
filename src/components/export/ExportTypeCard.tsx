@@ -1,19 +1,22 @@
 // PulseSense — Export Type Card Component
-// Selectable card for export type picker
+// Selectable card for export type picker with Ionicons
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { fonts } from '../../constants/typography';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
 
 interface ExportTypeCardProps {
   title: string;
   description: string;
-  icon: string;
+  iconName: keyof typeof Ionicons.glyphMap;
+  iconColor?: string;
   selected: boolean;
   onPress: () => void;
 }
 
-export function ExportTypeCard({ title, description, icon, selected, onPress }: ExportTypeCardProps) {
+export function ExportTypeCard({ title, description, iconName, iconColor, selected, onPress }: ExportTypeCardProps) {
   return (
     <TouchableOpacity
       style={[styles.card, selected && styles.cardSelected]}
@@ -21,14 +24,18 @@ export function ExportTypeCard({ title, description, icon, selected, onPress }: 
       activeOpacity={0.7}
     >
       <View style={[styles.iconContainer, selected && styles.iconContainerSelected]}>
-        <Text style={styles.icon}>{icon}</Text>
+        <Ionicons
+          name={iconName}
+          size={20}
+          color={selected ? '#FFFFFF' : iconColor || colors.primary}
+        />
       </View>
       <View style={styles.textContainer}>
         <Text style={[styles.title, selected && styles.titleSelected]}>{title}</Text>
         <Text style={styles.description}>{description}</Text>
       </View>
       <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
-        {selected && <Text style={styles.checkmark}>✓</Text>}
+        {selected && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
       </View>
     </TouchableOpacity>
   );
@@ -66,9 +73,6 @@ const styles = StyleSheet.create({
   iconContainerSelected: {
     backgroundColor: colors.primary,
   },
-  icon: {
-    fontSize: 20,
-  },
   textContainer: {
     flex: 1,
   },
@@ -76,7 +80,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   titleSelected: {
     color: colors.primary,
@@ -84,7 +88,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 11,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginTop: 2,
   },
   checkbox: {
@@ -99,10 +103,5 @@ const styles = StyleSheet.create({
   checkboxSelected: {
     borderColor: colors.primary,
     backgroundColor: colors.primary,
-  },
-  checkmark: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
   },
 });

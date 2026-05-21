@@ -1,5 +1,6 @@
 // PulseSense — Emergency Check Screen
 // Symptom checklist by category with optional quick vitals
+// Updated with proper icons and typography
 
 import React, { useState } from 'react';
 import {
@@ -11,7 +12,10 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { fonts } from '../../constants/typography';
 import { Button } from '../../components/ui/Button';
 import { evaluateSymptoms } from '../../engine/ruleEngine';
 import { getDB } from '../../hooks/useDB';
@@ -24,7 +28,8 @@ const CATEGORIES = [
   {
     id: 'stroke',
     label: 'Possible Stroke',
-    icon: '🧠',
+    icon: 'fitness-outline' as const,
+    color: colors.danger,
     symptoms: [
       { key: 'balance_loss', label: 'Balance loss / dizziness' },
       { key: 'vision_change', label: 'Vision change / blurring' },
@@ -36,7 +41,8 @@ const CATEGORIES = [
   {
     id: 'heart',
     label: 'Chest Pain / Heart Attack',
-    icon: '❤️',
+    icon: 'heart-half' as const,
+    color: colors.danger,
     symptoms: [
       { key: 'chest_discomfort', label: 'Chest discomfort / pressure' },
       { key: 'upper_body_pain', label: 'Pain in arm, back, neck, jaw' },
@@ -50,7 +56,8 @@ const CATEGORIES = [
   {
     id: 'breathing',
     label: 'Trouble Breathing',
-    icon: '🫁',
+    icon: 'analytics-outline' as const,
+    color: colors.urgent,
     symptoms: [
       { key: 'shortness_breath', label: 'Sudden severe breathlessness' },
     ],
@@ -58,7 +65,8 @@ const CATEGORIES = [
   {
     id: 'consciousness',
     label: 'Unconscious / Not Breathing',
-    icon: '🆘',
+    icon: 'medkit-outline' as const,
+    color: colors.danger,
     symptoms: [
       { key: 'unconscious', label: 'Unconscious / unresponsive' },
       { key: 'not_breathing', label: 'Not breathing normally' },
@@ -67,7 +75,8 @@ const CATEGORIES = [
   {
     id: 'bleeding',
     label: 'Severe Bleeding',
-    icon: '🩸',
+    icon: 'water-outline' as const,
+    color: colors.danger,
     symptoms: [
       { key: 'severe_bleeding', label: 'Severe / uncontrolled bleeding' },
     ],
@@ -75,7 +84,8 @@ const CATEGORIES = [
   {
     id: 'allergy',
     label: 'Severe Allergic Reaction',
-    icon: '⚠️',
+    icon: 'warning-outline' as const,
+    color: colors.urgent,
     symptoms: [
       { key: 'anaphylaxis', label: 'Signs of anaphylaxis (swelling, hives, wheezing)' },
     ],
@@ -83,7 +93,8 @@ const CATEGORIES = [
   {
     id: 'other',
     label: 'Other / Not Sure',
-    icon: '❓',
+    icon: 'help-circle-outline' as const,
+    color: colors.textSecondary,
     symptoms: [
       { key: 'fainting', label: 'Fainting / collapsed' },
       { key: 'seizure', label: 'Seizure / convulsions' },
@@ -114,7 +125,6 @@ export function EmergencyCheckScreen({ navigation }: any) {
 
     setChecking(true);
     try {
-      // Validate numeric inputs — guard against NaN from invalid text
       const parsedSpo2 = spo2 ? parseFloat(spo2) : undefined;
       const parsedPulse = pulse ? parseInt(pulse, 10) : undefined;
       const parsedBpSys = bpSys ? parseInt(bpSys, 10) : undefined;
@@ -137,12 +147,10 @@ export function EmergencyCheckScreen({ navigation }: any) {
 
       const results = evaluateSymptoms(input);
 
-      // Save to DB
       const db = await getDB();
       const eventId = await insertSymptomEvent(db, input, nowIso());
       await insertRuleTriggers(db, eventId, results);
 
-      // Create alert for highest severity
       const highest = results[0];
       if (highest && highest.severity !== 'LOG_ONLY') {
         await insertAlert(db, {
@@ -157,7 +165,6 @@ export function EmergencyCheckScreen({ navigation }: any) {
         });
       }
 
-      // Update alert store
       useAlertStore.getState().setLastEmergencyResult(results);
       useAlertStore.getState().setLastEmergencyEventId(eventId);
 
@@ -173,18 +180,20 @@ export function EmergencyCheckScreen({ navigation }: any) {
   const selectedCount = Object.values(symptoms).filter(Boolean).length;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <Text style={styles.heading}>What is happening?</Text>
       <Text style={styles.subtext}>Select all symptoms that apply</Text>
 
       {CATEGORIES.map((cat) => (
         <View key={cat.id} style={styles.categoryContainer}>
           <TouchableOpacity
-            style={styles.categoryCard}
+            style={[styles.categoryCard, expandedCategory === cat.id && { borderColor: cat.color }]}
             onPress={() => setExpandedCategory(expandedCategory === cat.id ? null : cat.id)}
             activeOpacity={0.7}
           >
-            <Text style={styles.categoryIcon}>{cat.icon}</Text>
+            <View style={[styles.categoryIconContainer, { backgroundColor: cat.color + '12' }]}>
+              <Ionicons name={cat.icon} size={22} color={cat.color} />
+            </View>
             <View style={styles.categoryInfo}>
               <Text style={styles.categoryLabel}>{cat.label}</Text>
               {expandedCategory === cat.id && (
@@ -193,36 +202,33 @@ export function EmergencyCheckScreen({ navigation }: any) {
                 </Text>
               )}
             </View>
-            <Text style={styles.expandIcon}>{expandedCategory === cat.id ? '▲' : '▼'}</Text>
+            <Ionicons
+              name={expandedCategory === cat.id ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={colors.textSecondary}
+            />
           </TouchableOpacity>
 
           {expandedCategory === cat.id && (
             <View style={styles.symptomList}>
-              {cat.symptoms.map((symp) => (
-                <TouchableOpacity
-                  key={symp.key}
-                  style={[
-                    styles.symptomRow,
-                    symptoms[symp.key as keyof SymptomInput] ? styles.symptomRowSelected : undefined,
-                  ]}
-                  onPress={() => toggleSymptom(symp.key as keyof SymptomInput)}
-                >
-                  <View style={[
-                    styles.checkbox,
-                    symptoms[symp.key as keyof SymptomInput] ? styles.checkboxSelected : undefined,
-                  ]}>
-                    {symptoms[symp.key as keyof SymptomInput] && (
-                      <Text style={styles.checkmark}>✓</Text>
-                    )}
-                  </View>
-                  <Text style={[
-                    styles.symptomLabel,
-                    symptoms[symp.key as keyof SymptomInput] ? styles.symptomLabelSelected : undefined,
-                  ]}>
-                    {symp.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {cat.symptoms.map((symp) => {
+                const isChecked = !!symptoms[symp.key as keyof SymptomInput];
+                return (
+                  <TouchableOpacity
+                    key={symp.key}
+                    style={[styles.symptomRow, isChecked && styles.symptomRowSelected]}
+                    onPress={() => toggleSymptom(symp.key as keyof SymptomInput)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.checkbox, isChecked && styles.checkboxSelected]}>
+                      {isChecked && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+                    </View>
+                    <Text style={[styles.symptomLabel, isChecked && styles.symptomLabelSelected]}>
+                      {symp.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           )}
         </View>
@@ -307,16 +313,17 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.space12,
   },
   heading: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.display,
+    letterSpacing: -0.3,
     marginBottom: spacing.space2,
   },
   subtext: {
     fontSize: 13,
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space5,
   },
   categoryContainer: {
@@ -328,14 +335,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.space4,
+    borderWidth: 1.5,
+    borderColor: colors.borderLight,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 1,
   },
-  categoryIcon: {
-    fontSize: 24,
+  categoryIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.space3,
   },
   categoryInfo: {
@@ -345,26 +358,24 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   selectedCount: {
     fontSize: 11,
     color: colors.primary,
     fontWeight: '500',
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginTop: 2,
-  },
-  expandIcon: {
-    fontSize: 12,
-    color: colors.textSecondary,
   },
   symptomList: {
     backgroundColor: colors.surface,
     borderBottomLeftRadius: borderRadius.md,
     borderBottomRightRadius: borderRadius.md,
     padding: spacing.space3,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
+    borderLeftWidth: 1.5,
+    borderRightWidth: 1.5,
+    borderBottomWidth: 1.5,
+    borderColor: colors.borderLight,
   },
   symptomRow: {
     flexDirection: 'row',
@@ -390,15 +401,10 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: colors.primary,
   },
-  checkmark: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
   symptomLabel: {
     fontSize: 14,
     color: colors.textPrimary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
   },
   symptomLabelSelected: {
     fontWeight: '600',
@@ -409,6 +415,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     padding: spacing.space4,
     marginBottom: spacing.space5,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -419,7 +427,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space3,
   },
   vitalsRow: {
@@ -434,7 +442,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '500',
     color: colors.textSecondary,
-    fontFamily: 'Inter',
+    fontFamily: fonts.body,
     marginBottom: spacing.space1,
   },
   vitalInputField: {
@@ -445,6 +453,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.space3,
     fontSize: 16,
     color: colors.textPrimary,
-    fontFamily: 'RobotoMono',
+    fontFamily: fonts.mono,
   },
 });
