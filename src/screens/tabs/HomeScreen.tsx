@@ -1,5 +1,4 @@
 // PulseSense — Home Screen
-// Gradient atmosphere, staggered motion entrance, proper icons, refined hierarchy
 
 import React, { useMemo, useState, useCallback } from 'react';
 import {
@@ -15,7 +14,9 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
+import { colorsDark } from '../../constants/colorsDark';
+import { useThemeStore } from '../../store/themeStore';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 import { useProfileStore } from '../../store/profileStore';
@@ -42,6 +43,8 @@ import { InsightCard } from '../../components/health/InsightCard';
 const { width } = Dimensions.get('window');
 
 export function HomeScreen({ navigation }: any) {
+  const c = useColors();
+  const isDark = useThemeStore((s) => s.isDark);
   const profile = useProfileStore((s) => s.profile);
   const age = useAgeCalculator();
   const activeAlerts = useAlertStore((s) => s.activeAlerts);
@@ -49,6 +52,11 @@ export function HomeScreen({ navigation }: any) {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const { insights, loading: insightsLoading } = useHealthInsights();
+
+  const gradientColors = useMemo(
+    () => (isDark ? colorsDark.bgGradientHome : ['#F0F4F8', '#E8EEF4', '#E4ECF2'] as const) as readonly string[],
+    [isDark],
+  );
 
   const loadVitals = useCallback(async () => {
     setLoading(true);
@@ -146,12 +154,10 @@ export function HomeScreen({ navigation }: any) {
     });
   });
 
-  // ---------- Skeleton Loading State ----------
   if (loading) {
     return (
       <LinearGradient colors={['#F0F4F8', '#E8EEF4', '#E4ECF2']} style={styles.gradient}>
         <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Greeting skeleton */}
           <View style={styles.greetingRow}>
             <View style={{ flex: 1 }}>
               <Skeleton.Box width={120} height={14} style={{ marginBottom: 8 }} />
@@ -160,11 +166,7 @@ export function HomeScreen({ navigation }: any) {
             </View>
             <Skeleton.Circle size={46} />
           </View>
-
-          {/* Emergency button skeleton */}
           <Skeleton.Box width="100%" height={64} borderRadius={10} style={{ marginBottom: 24 }} />
-
-          {/* Latest Vitals skeleton */}
           <View style={styles.sectionHeader}>
             <Skeleton.Box width={16} height={16} borderRadius={8} />
             <Skeleton.Box width={120} height={16} />
@@ -174,8 +176,6 @@ export function HomeScreen({ navigation }: any) {
             <Skeleton.Box width={135} height={110} borderRadius={10} style={{ marginRight: 12 }} />
             <Skeleton.Box width={135} height={110} borderRadius={10} />
           </ScrollView>
-
-          {/* Log a Vital skeleton */}
           <Skeleton.Box width="100%" height={48} borderRadius={10} />
         </ScrollView>
       </LinearGradient>
@@ -184,36 +184,35 @@ export function HomeScreen({ navigation }: any) {
 
   return (
     <LinearGradient
-      colors={['#F0F4F8', '#E8EEF4', '#E4ECF2']}
+      colors={gradientColors as any}
       style={styles.gradient}
     >
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
         showsVerticalScrollIndicator={false}
       >
-        {/* Greeting Header */}
         <AnimatedSection index={0}>
           <View style={styles.greetingRow}>
             <View>
-              <Text style={styles.greetingSub}>{greeting}</Text>
+              <Text style={[styles.greetingSub, { color: c.textSecondary }]}>{greeting}</Text>
               <View style={styles.nameRow}>
-                <Text style={styles.name}>{profile?.full_name || 'User'}</Text>
-                {age ? <Text style={styles.ageDot}>·</Text> : null}
-                {age ? <Text style={styles.age}>{age}</Text> : null}
+                <Text style={[styles.name, { color: c.textPrimary }]}>{profile?.full_name || 'User'}</Text>
+                {age ? <Text style={[styles.ageDot, { color: c.textDisabled }]}>·</Text> : null}
+                {age ? <Text style={[styles.age, { color: c.textSecondary }]}>{age}</Text> : null}
               </View>
               {profile?.dob ? (
-                <Text style={styles.dobText}>DOB: {profile.dob}</Text>
+                <Text style={[styles.dobText, { color: c.textDisabled }]}>DOB: {profile.dob}</Text>
               ) : null}
-              <Text style={styles.date}>{formatTodayDisplay()}</Text>
+              <Text style={[styles.date, { color: c.textDisabled }]}>{formatTodayDisplay()}</Text>
             </View>
             <TouchableOpacity onPress={() => navigation.navigate('ProfileTab')} activeOpacity={0.7}>
               {profile?.photo_uri ? (
                 <Image source={{ uri: profile.photo_uri }} style={styles.avatarImage} />
               ) : (
-                <View style={styles.avatarCircle}>
-                  <Text style={styles.avatarText}>
+                <View style={[styles.avatarCircle, { backgroundColor: c.primarySurface }]}>
+                  <Text style={[styles.avatarText, { color: c.primary }]}>
                     {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
                   </Text>
                 </View>
@@ -222,19 +221,17 @@ export function HomeScreen({ navigation }: any) {
           </View>
         </AnimatedSection>
 
-        {/* Emergency Button */}
         <AnimatedSection index={1}>
           <EmergencyButton onPress={() => navigation.navigate('EmergencyCheck')} />
         </AnimatedSection>
 
-        {/* Active Alerts */}
         {unresolvedEmergencies.length > 0 && (
           <AnimatedSection index={2}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="notifications" size={16} color={colors.danger} />
-              <Text style={styles.sectionTitle}>Active Alerts</Text>
-              <View style={styles.alertCount}>
-                <Text style={styles.alertCountText}>{unresolvedEmergencies.length}</Text>
+              <Ionicons name="notifications" size={16} color={c.danger} />
+              <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Active Alerts</Text>
+              <View style={[styles.alertCount, { backgroundColor: c.dangerSurface }]}>
+                <Text style={[styles.alertCountText, { color: c.danger }]}>{unresolvedEmergencies.length}</Text>
               </View>
             </View>
             {unresolvedEmergencies.slice(0, 3).map((alert) => (
@@ -250,11 +247,10 @@ export function HomeScreen({ navigation }: any) {
           </AnimatedSection>
         )}
 
-        {/* Health Insights */}
         <AnimatedSection index={3}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="bulb" size={16} color={colors.primaryLight} />
-            <Text style={styles.sectionTitle}>Health Insights</Text>
+            <Ionicons name="bulb" size={16} color={c.primaryLight} />
+            <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Health Insights</Text>
           </View>
           {insightsLoading ? (
             <Skeleton.Box width="100%" height={80} borderRadius={10} style={{ marginBottom: 12 }} />
@@ -264,35 +260,33 @@ export function HomeScreen({ navigation }: any) {
             ))
           ) : (
             <View style={styles.emptyInsights}>
-              <Ionicons name="bulb-outline" size={24} color={colors.textDisabled} />
-              <Text style={styles.emptyInsightsText}>No insights yet — keep logging your vitals!</Text>
+              <Ionicons name="bulb-outline" size={24} color={c.textDisabled} />
+              <Text style={[styles.emptyInsightsText, { color: c.textSecondary }]}>No insights yet — keep logging your vitals!</Text>
             </View>
           )}
         </AnimatedSection>
 
-        {/* Latest Vitals */}
         <AnimatedSection index={4}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="pulse" size={16} color={colors.primary} />
-            <Text style={styles.sectionTitle}>Latest Vitals</Text>
+            <Ionicons name="pulse" size={16} color={c.primary} />
+            <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Latest Vitals</Text>
             <TouchableOpacity onPress={() => navigation.navigate('HistoryTab')}>
-              <Text style={styles.viewAll}>View All</Text>
+              <Text style={[styles.viewAll, { color: c.primary }]}>View All</Text>
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.vitalsScroll}>
             {vitalCards.length > 0 ? (
               vitalCards.map((vc) => vc.component)
             ) : (
-              <View style={styles.emptyVitals}>
-                <Ionicons name="heart-outline" size={28} color={colors.textDisabled} />
-                <Text style={styles.emptyText}>No vitals logged yet</Text>
-                <Text style={styles.emptyHint}>Tap "Log a Vital" to get started</Text>
+              <View style={[styles.emptyVitals, { backgroundColor: c.surface, borderColor: c.borderLight }]}>
+                <Ionicons name="heart-outline" size={28} color={c.textDisabled} />
+                <Text style={[styles.emptyText, { color: c.textSecondary }]}>No vitals logged yet</Text>
+                <Text style={[styles.emptyHint, { color: c.textDisabled }]}>Tap "Log a Vital" to get started</Text>
               </View>
             )}
           </ScrollView>
         </AnimatedSection>
 
-        {/* Quick Log Button */}
         <AnimatedSection index={5}>
           <Button
             title="+ Log a Vital"
@@ -327,7 +321,6 @@ const styles = StyleSheet.create({
   },
   greetingSub: {
     fontSize: 14,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     marginBottom: 2,
   },
@@ -339,30 +332,25 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 26,
     fontWeight: '700',
-    color: colors.textPrimary,
     fontFamily: fonts.display,
     letterSpacing: -0.3,
   },
   ageDot: {
     fontSize: 18,
-    color: colors.textDisabled,
     fontFamily: fonts.body,
     marginHorizontal: 6,
   },
   age: {
     fontSize: 14,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
   },
   dobText: {
     fontSize: 12,
-    color: colors.textDisabled,
     fontFamily: fonts.body,
     marginTop: 2,
   },
   date: {
     fontSize: 12,
-    color: colors.textDisabled,
     fontFamily: fonts.body,
     marginTop: 2,
   },
@@ -370,7 +358,6 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: colors.primarySurface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -386,7 +373,6 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.primary,
     fontFamily: fonts.display,
   },
   sectionHeader: {
@@ -398,12 +384,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
     fontFamily: fonts.display,
     flex: 1,
   },
   alertCount: {
-    backgroundColor: colors.dangerSurface,
     paddingHorizontal: 7,
     paddingVertical: 1,
     borderRadius: 9,
@@ -414,12 +398,10 @@ const styles = StyleSheet.create({
   alertCountText: {
     fontSize: 11,
     fontWeight: '700',
-    color: colors.danger,
     fontFamily: fonts.body,
   },
   viewAll: {
     fontSize: 13,
-    color: colors.primary,
     fontWeight: '500',
     fontFamily: fonts.body,
   },
@@ -431,16 +413,13 @@ const styles = StyleSheet.create({
     height: 120,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.borderLight,
     borderStyle: 'dashed',
     gap: spacing.space1,
   },
   emptyText: {
     fontSize: 14,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     fontWeight: '500',
   },
@@ -453,13 +432,11 @@ const styles = StyleSheet.create({
   },
   emptyInsightsText: {
     fontSize: 13,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     textAlign: 'center',
   },
   emptyHint: {
     fontSize: 11,
-    color: colors.textDisabled,
     fontFamily: fonts.body,
   },
 });

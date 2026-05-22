@@ -16,24 +16,24 @@ import { AlertsScreen } from '../screens/tabs/AlertsScreen';
 
 const Tab = createBottomTabNavigator();
 
-function HomeTabScreen() {
-  return <ErrorBoundary><HomeScreen /></ErrorBoundary>;
+function HomeTabScreen(props: any) {
+  return <ErrorBoundary><HomeScreen {...props} /></ErrorBoundary>;
 }
 
-function VitalsTabScreen() {
-  return <ErrorBoundary><VitalsScreen /></ErrorBoundary>;
+function VitalsTabScreen(props: any) {
+  return <ErrorBoundary><VitalsScreen {...props} /></ErrorBoundary>;
 }
 
-function HistoryTabScreen() {
-  return <ErrorBoundary iconName="bar-chart-outline" title="History Error"><HistoryScreen /></ErrorBoundary>;
+function HistoryTabScreen(props: any) {
+  return <ErrorBoundary iconName="bar-chart-outline" title="History Error"><HistoryScreen {...props} /></ErrorBoundary>;
 }
 
-function ProfileTabScreen() {
-  return <ErrorBoundary iconName="person-circle-outline" title="Profile Error"><ProfileScreen /></ErrorBoundary>;
+function ProfileTabScreen(props: any) {
+  return <ErrorBoundary iconName="person-circle-outline" title="Profile Error"><ProfileScreen {...props} /></ErrorBoundary>;
 }
 
-function AlertsTabScreen() {
-  return <ErrorBoundary iconName="notifications-outline" title="Alerts Error"><AlertsScreen /></ErrorBoundary>;
+function AlertsTabScreen(props: any) {
+  return <ErrorBoundary iconName="notifications-outline" title="Alerts Error"><AlertsScreen {...props} /></ErrorBoundary>;
 }
 
 export function TabNavigator() {

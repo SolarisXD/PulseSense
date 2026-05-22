@@ -2,7 +2,7 @@
 // Manages dark mode state and persists preference to SQLite settings table
 
 import { create } from 'zustand';
-import { getDB } from '../hooks/useDB';
+import { getDB } from '../db/database';
 import { setSetting } from '../db/queries/settings';
 
 interface ThemeState {

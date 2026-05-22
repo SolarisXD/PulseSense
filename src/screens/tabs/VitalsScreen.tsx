@@ -1,7 +1,6 @@
-// PulseSense — Vitals Log Screen (Tab entry point)
-// Shows vital selector and logs vitals — with motion, proper icons, refined UI
+// PulseSense — Vitals Log Screen
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,7 +17,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import AnimatedRN, { useSharedValue, useAnimatedStyle, withSpring, withTiming, Easing } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
+import { useThemeStore } from '../../store/themeStore';
+import { colorsDark } from '../../constants/colorsDark';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 import { Button } from '../../components/ui/Button';
@@ -39,14 +40,9 @@ import { tryParseNumber, tryParseInt, hasInvalidNumber } from '../../utils/vital
 import { nowDisplay, isFutureDate, displayToIso } from '../../utils/dateUtils';
 import { useSettingsStore } from '../../store/settingsStore';
 
-interface VitalToggle {
-  key: string;
-  label: string;
-  iconName: keyof typeof Ionicons.glyphMap;
-  selected: boolean;
-}
-
 export function VitalsScreen({ navigation }: any) {
+  const c = useColors();
+  const isDark = useThemeStore((s) => s.isDark);
   const settings = useSettingsStore();
   const [showSelector, setShowSelector] = useState(true);
   const [selectedVitals, setSelectedVitals] = useState<string[]>([]);
@@ -54,7 +50,6 @@ export function VitalsScreen({ navigation }: any) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Form values
   const [bpSys, setBpSys] = useState('');
   const [bpDia, setBpDia] = useState('');
   const [bpPosition, setBpPosition] = useState(settings.bpDefaultPosition);
@@ -72,7 +67,11 @@ export function VitalsScreen({ navigation }: any) {
   const [customValues, setCustomValues] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
 
-  // Entrance animation
+  const gradientColors = useMemo(
+    () => (isDark ? colorsDark.bgGradientVitals : ['#F0F4F8', '#E8EEF4'] as const) as readonly string[],
+    [isDark],
+  );
+
   const pageOpacity = useSharedValue(0);
   useEffect(() => {
     pageOpacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.ease) });
@@ -99,7 +98,7 @@ export function VitalsScreen({ navigation }: any) {
     }
   };
 
-  const vitalOptions: VitalToggle[] = [
+  const vitalOptions: Array<{ key: string; label: string; iconName: keyof typeof Ionicons.glyphMap; selected: boolean }> = [
     { key: 'bp', label: 'Blood Pressure', iconName: 'heart-half', selected: selectedVitals.includes('bp') },
     { key: 'pulse', label: 'Pulse', iconName: 'pulse', selected: selectedVitals.includes('pulse') },
     { key: 'spo2', label: 'SpO2', iconName: 'analytics-outline', selected: selectedVitals.includes('spo2') },
@@ -242,18 +241,18 @@ export function VitalsScreen({ navigation }: any) {
 
   if (saved) {
     return (
-      <LinearGradient colors={['#F0F4F8', '#E8EEF4']} style={styles.savedContainer}>
+      <LinearGradient colors={gradientColors as any} style={styles.savedContainer}>
         <Animated.View
           style={[
             styles.savedCard,
-            { opacity: savedOpacity, transform: [{ scale: savedScale }] },
+            { opacity: savedOpacity, transform: [{ scale: savedScale }], backgroundColor: c.surface },
           ]}
         >
           <View style={styles.savedIconContainer}>
-            <Ionicons name="checkmark-circle" size={56} color={colors.success} />
+            <Ionicons name="checkmark-circle" size={56} color={c.success} />
           </View>
-          <Text style={styles.savedTitle}>Reading Saved!</Text>
-          <Text style={styles.savedSub}>Vitals have been recorded successfully.</Text>
+          <Text style={[styles.savedTitle, { color: c.textPrimary }]}>Reading Saved!</Text>
+          <Text style={[styles.savedSub, { color: c.textSecondary }]}>Vitals have been recorded successfully.</Text>
           <View style={styles.savedButtons}>
             <Button title="Log Another" onPress={() => { setSaved(false); resetForm(); }} variant="outline" size="medium" />
             <View style={{ width: 12 }} />
@@ -266,12 +265,11 @@ export function VitalsScreen({ navigation }: any) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <AnimatedRN.View style={[{ flex: 1 }, pageStyle]}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          {/* Vital Selector */}
           {showSelector ? (
             loading ? (
               <View>
@@ -286,23 +284,27 @@ export function VitalsScreen({ navigation }: any) {
               </View>
             ) : (
             <View>
-              <Text style={styles.heading}>What would you like to log?</Text>
-              <Text style={styles.subtext}>Select one or more vitals</Text>
+              <Text style={[styles.heading, { color: c.textPrimary }]}>What would you like to log?</Text>
+              <Text style={[styles.subtext, { color: c.textSecondary }]}>Select one or more vitals</Text>
               <View style={styles.vitalGrid}>
                 {vitalOptions.map((v) => (
                   <TouchableOpacity
                     key={v.key}
-                    style={[styles.vitalChip, v.selected && styles.vitalChipSelected]}
+                    style={[
+                      styles.vitalChip,
+                      { borderColor: c.border, backgroundColor: c.surface },
+                      v.selected && { borderColor: c.primary, backgroundColor: c.primarySurface },
+                    ]}
                     onPress={() => toggleVital(v.key)}
                     activeOpacity={0.7}
                   >
                     <Ionicons
                       name={v.iconName}
                       size={18}
-                      color={v.selected ? colors.primary : colors.textSecondary}
+                      color={v.selected ? c.primary : c.textSecondary}
                       style={{ marginRight: spacing.space2 }}
                     />
-                    <Text style={[styles.vitalChipLabel, v.selected && styles.vitalChipLabelSelected]}>
+                    <Text style={[styles.vitalChipLabel, { color: c.textPrimary }, v.selected && { color: c.primary }]}>
                       {v.label}
                     </Text>
                   </TouchableOpacity>
@@ -311,17 +313,21 @@ export function VitalsScreen({ navigation }: any) {
 
               {customDefs.length > 0 && (
                 <View style={styles.customSection}>
-                  <Text style={styles.sectionLabel}>CUSTOM VITALS</Text>
+                  <Text style={[styles.sectionLabel, { color: c.textSecondary }]}>CUSTOM VITALS</Text>
                   <View style={styles.vitalGrid}>
                     {customDefs.map((def) => (
                       <TouchableOpacity
                         key={def.id}
-                        style={[styles.vitalChip, selectedVitals.includes(`custom_${def.id}`) && styles.vitalChipSelected]}
+                        style={[
+                          styles.vitalChip,
+                          { borderColor: c.border, backgroundColor: c.surface },
+                          selectedVitals.includes(`custom_${def.id}`) && { borderColor: c.primary, backgroundColor: c.primarySurface },
+                        ]}
                         onPress={() => toggleVital(`custom_${def.id}`)}
                         activeOpacity={0.7}
                       >
-                        <Ionicons name="flask-outline" size={18} color={selectedVitals.includes(`custom_${def.id}`) ? colors.primary : colors.textSecondary} style={{ marginRight: spacing.space2 }} />
-                        <Text style={styles.vitalChipLabel}>{def.name}</Text>
+                        <Ionicons name="flask-outline" size={18} color={selectedVitals.includes(`custom_${def.id}`) ? c.primary : c.textSecondary} style={{ marginRight: spacing.space2 }} />
+                        <Text style={[styles.vitalChipLabel, { color: c.textPrimary }]}>{def.name}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -336,24 +342,22 @@ export function VitalsScreen({ navigation }: any) {
             </View>
           )
         ) : (
-            /* Vital Form */
             <View>
               <TouchableOpacity onPress={() => setShowSelector(true)} style={styles.changeSelection}>
-                <Ionicons name="arrow-back" size={16} color={colors.primary} />
-                <Text style={styles.changeSelectionText}> Change selection</Text>
+                <Ionicons name="arrow-back" size={16} color={c.primary} />
+                <Text style={[styles.changeSelectionText, { color: c.primary }]}> Change selection</Text>
               </TouchableOpacity>
 
-              {/* Date/Time Field */}
               <View style={styles.field}>
-                <Text style={styles.label}>READING TAKEN AT</Text>
-                <View style={styles.dateInputRow}>
-                  <Ionicons name="time-outline" size={18} color={colors.textSecondary} style={{ marginRight: spacing.space2 }} />
+                <Text style={[styles.label, { color: c.textSecondary }]}>READING TAKEN AT</Text>
+                <View style={[styles.dateInputRow, { borderColor: c.border, backgroundColor: c.surface }]}>
+                  <Ionicons name="time-outline" size={18} color={c.textSecondary} style={{ marginRight: spacing.space2 }} />
                   <TextInput
-                    style={styles.dateInput}
+                    style={[styles.dateInput, { color: c.textPrimary }]}
                     value={dateTime}
                     onChangeText={setDateTime}
                     placeholder="DD/MM/YYYY HH:MM"
-                    placeholderTextColor={colors.textDisabled}
+                    placeholderTextColor={c.textDisabled}
                     keyboardType="default"
                   />
                 </View>
@@ -460,15 +464,14 @@ export function VitalsScreen({ navigation }: any) {
                 </VitalFormSection>
               ))}
 
-              {/* General Notes */}
               <View style={styles.field}>
-                <Text style={styles.label}>NOTES (optional)</Text>
+                <Text style={[styles.label, { color: c.textSecondary }]}>NOTES (optional)</Text>
                 <TextInput
-                  style={[styles.input, styles.multilineInput]}
+                  style={[styles.input, styles.multilineInput, { borderColor: c.border, backgroundColor: c.surface, color: c.textPrimary }]}
                   value={generalNotes}
                   onChangeText={setGeneralNotes}
                   placeholder="General notes for this reading"
-                  placeholderTextColor={colors.textDisabled}
+                  placeholderTextColor={c.textDisabled}
                   multiline
                   numberOfLines={3}
                 />
@@ -486,7 +489,6 @@ export function VitalsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollContent: {
     padding: spacing.space4,
@@ -495,14 +497,12 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.textPrimary,
     fontFamily: fonts.display,
     letterSpacing: -0.3,
     marginBottom: spacing.space2,
   },
   subtext: {
     fontSize: 13,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     marginBottom: spacing.space5,
   },
@@ -518,24 +518,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.space4,
     borderRadius: borderRadius.full,
     borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
     marginRight: spacing.space2,
     marginBottom: spacing.space2,
   },
-  vitalChipSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySurface,
-  },
   vitalChipLabel: {
     fontSize: 13,
-    color: colors.textPrimary,
     fontFamily: fonts.body,
     fontWeight: '500',
-  },
-  vitalChipLabelSelected: {
-    color: colors.primary,
-    fontWeight: '600',
   },
   customSection: {
     marginBottom: spacing.space4,
@@ -543,7 +532,6 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.textSecondary,
     letterSpacing: 0.5,
     fontFamily: fonts.body,
     marginBottom: spacing.space2,
@@ -555,7 +543,6 @@ const styles = StyleSheet.create({
   },
   changeSelectionText: {
     fontSize: 14,
-    color: colors.primary,
     fontWeight: '500',
     fontFamily: fonts.body,
   },
@@ -565,7 +552,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '500',
-    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     fontFamily: fonts.body,
@@ -576,27 +562,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 48,
     borderWidth: 1.5,
-    borderColor: colors.border,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.surface,
     paddingHorizontal: spacing.space3,
   },
   dateInput: {
     flex: 1,
     fontSize: 15,
-    color: colors.textPrimary,
     fontFamily: fonts.mono,
     paddingVertical: 0,
   },
   input: {
     height: 48,
     borderWidth: 1.5,
-    borderColor: colors.border,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.surface,
     paddingHorizontal: spacing.space3,
     fontSize: 15,
-    color: colors.textPrimary,
     fontFamily: fonts.body,
   },
   multilineInput: {
@@ -614,7 +594,6 @@ const styles = StyleSheet.create({
     padding: spacing.space6,
   },
   savedCard: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.space8,
     alignItems: 'center',
@@ -632,13 +611,11 @@ const styles = StyleSheet.create({
   savedTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.textPrimary,
     fontFamily: fonts.display,
     marginBottom: spacing.space2,
   },
   savedSub: {
     fontSize: 14,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     marginBottom: spacing.space6,
     textAlign: 'center',

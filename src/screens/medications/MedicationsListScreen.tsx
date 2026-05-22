@@ -3,8 +3,8 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useColors } from '../../hooks/useColors';
 import { fonts } from '../../constants/typography';
-import { colors } from '../../constants/colors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { DosageDisplay } from '../../components/medications/DosageDisplay';
 import { getDB } from '../../hooks/useDB';
@@ -12,6 +12,7 @@ import { getMedications, toggleMedicationActive, deleteMedication } from '../../
 import { Button } from '../../components/ui/Button';
 
 export function MedicationsListScreen({ navigation }: any) {
+  const c = useColors();
   const [medications, setMedications] = useState<any[]>([]);
 
   useFocusEffect(useCallback(() => { loadMeds(); }, []));
@@ -42,44 +43,44 @@ export function MedicationsListScreen({ navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
       <FlatList
         data={medications}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
-          <View style={[styles.card, !item.is_active && styles.cardInactive]}>
+          <View style={[styles.card, { backgroundColor: c.surface }, !item.is_active && styles.cardInactive]}>
             <View style={styles.cardHeader}>
               <View>
-                <Text style={styles.date}>Rx: {item.prescription_date}</Text>
-                <Text style={styles.doctor}>Dr. {item.prescribing_doctor || 'Unknown'}</Text>
+                <Text style={[styles.date, { color: c.textPrimary }]}>Rx: {item.prescription_date}</Text>
+                <Text style={[styles.doctor, { color: c.textSecondary }]}>Dr. {item.prescribing_doctor || 'Unknown'}</Text>
               </View>
               <TouchableOpacity onPress={() => handleToggle(item.id)}>
-                <Text style={[styles.statusBadge, item.is_active ? styles.activeBadge : styles.inactiveBadge]}>
+                <Text style={[styles.statusBadge, item.is_active ? [styles.activeBadge, { color: c.success, backgroundColor: c.successSurface }] : [styles.inactiveBadge, { color: c.textSecondary, backgroundColor: c.surfaceAlt }]]}>
                   {item.is_active ? 'Active' : 'Inactive'}
                 </Text>
               </TouchableOpacity>
             </View>
-            {item.diagnosis_notes && <Text style={styles.diagnosis}>{item.diagnosis_notes}</Text>}
+            {item.diagnosis_notes && <Text style={[styles.diagnosis, { color: c.textSecondary }]}>{item.diagnosis_notes}</Text>}
             {item.items.map((med: any) => (
-              <View key={med.id} style={styles.medItem}>
+              <View key={med.id} style={[styles.medItem, { borderTopColor: c.borderLight }]}>
                 <View style={styles.medInfo}>
-                  <Text style={styles.medName}>{med.medicine_name}</Text>
-                  <Text style={styles.medStrength}>{med.strength || ''}</Text>
+                  <Text style={[styles.medName, { color: c.textPrimary }]}>{med.medicine_name}</Text>
+                  <Text style={[styles.medStrength, { color: c.textSecondary }]}>{med.strength || ''}</Text>
                 </View>
                 <DosageDisplay morning={med.dose_morning} afternoon={med.dose_afternoon} night={med.dose_night} />
-                {med.timing && <Text style={styles.medTiming}>{med.timing.replace('_', ' ')}</Text>}
-                {med.duration && <Text style={styles.medDuration}>{med.duration}</Text>}
+                {med.timing && <Text style={[styles.medTiming, { color: c.textSecondary }]}>{med.timing.replace('_', ' ')}</Text>}
+                {med.duration && <Text style={[styles.medDuration, { color: c.textSecondary }]}>{med.duration}</Text>}
               </View>
             ))}
             <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item.id)}>
-              <Text style={styles.deleteText}>Delete</Text>
+              <Text style={[styles.deleteText, { color: c.danger }]}>Delete</Text>
             </TouchableOpacity>
           </View>
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>No prescriptions yet</Text>
-            <Text style={styles.emptyHint}>Tap below to add your first prescription</Text>
+            <Text style={[styles.emptyText, { color: c.textSecondary }]}>No prescriptions yet</Text>
+            <Text style={[styles.emptyHint, { color: c.textDisabled }]}>Tap below to add your first prescription</Text>
           </View>
         }
         contentContainerStyle={styles.listContent}
@@ -92,27 +93,27 @@ export function MedicationsListScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1 },
   listContent: { padding: spacing.space4, paddingBottom: 100 },
-  card: { backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.space4, marginBottom: spacing.space3, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 2, elevation: 1 },
+  card: { borderRadius: borderRadius.md, padding: spacing.space4, marginBottom: spacing.space3, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 2, elevation: 1 },
   cardInactive: { opacity: 0.6 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.space2 },
-  date: { fontSize: 14, fontWeight: '600', color: colors.textPrimary, fontFamily: fonts.body },
-  doctor: { fontSize: 12, color: colors.textSecondary, fontFamily: fonts.body, marginTop: 2 },
+  date: { fontSize: 14, fontWeight: '600', fontFamily: fonts.body },
+  doctor: { fontSize: 12, fontFamily: fonts.body, marginTop: 2 },
   statusBadge: { fontSize: 10, fontWeight: '700', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, fontFamily: fonts.body },
-  activeBadge: { color: colors.success, backgroundColor: colors.successSurface },
-  inactiveBadge: { color: colors.textSecondary, backgroundColor: colors.surfaceAlt },
-  diagnosis: { fontSize: 12, color: colors.textSecondary, fontFamily: fonts.body, marginBottom: spacing.space3, fontStyle: 'italic' },
-  medItem: { paddingVertical: spacing.space2, borderTopWidth: 1, borderTopColor: colors.borderLight },
+  activeBadge: {},
+  inactiveBadge: {},
+  diagnosis: { fontSize: 12, fontFamily: fonts.body, marginBottom: spacing.space3, fontStyle: 'italic' },
+  medItem: { paddingVertical: spacing.space2, borderTopWidth: 1 },
   medInfo: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.space1 },
-  medName: { fontSize: 14, fontWeight: '500', color: colors.textPrimary, fontFamily: fonts.body },
-  medStrength: { fontSize: 12, color: colors.textSecondary, fontFamily: fonts.body, marginLeft: spacing.space2 },
-  medTiming: { fontSize: 11, color: colors.textSecondary, fontFamily: fonts.body, marginTop: 2 },
-  medDuration: { fontSize: 11, color: colors.textSecondary, fontFamily: fonts.body },
+  medName: { fontSize: 14, fontWeight: '500', fontFamily: fonts.body },
+  medStrength: { fontSize: 12, fontFamily: fonts.body, marginLeft: spacing.space2 },
+  medTiming: { fontSize: 11, fontFamily: fonts.body, marginTop: 2 },
+  medDuration: { fontSize: 11, fontFamily: fonts.body },
   deleteBtn: { marginTop: spacing.space3, alignItems: 'flex-end' },
-  deleteText: { fontSize: 12, color: colors.danger, fontFamily: fonts.body },
+  deleteText: { fontSize: 12, fontFamily: fonts.body },
   empty: { padding: spacing.space12, alignItems: 'center' },
-  emptyText: { fontSize: 16, fontWeight: '500', color: colors.textSecondary, fontFamily: fonts.body },
-  emptyHint: { fontSize: 12, color: colors.textDisabled, fontFamily: fonts.body, marginTop: spacing.space2 },
+  emptyText: { fontSize: 16, fontWeight: '500', fontFamily: fonts.body },
+  emptyHint: { fontSize: 12, fontFamily: fonts.body, marginTop: spacing.space2 },
   fab: { position: 'absolute', bottom: 20, left: spacing.space4, right: spacing.space4 },
 });

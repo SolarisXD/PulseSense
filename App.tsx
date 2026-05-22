@@ -11,6 +11,7 @@ import { RobotoMono_400Regular, RobotoMono_500Medium } from '@expo-google-fonts/
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { initializeNotificationHandler } from './src/services/notificationService';
+import { useThemeStore } from './src/store/themeStore';
 
 // Prevent native splash from auto-hiding
 SplashScreenExpo.preventAutoHideAsync();
@@ -34,6 +35,7 @@ export default function App() {
     RobotoMono_400: RobotoMono_400Regular,
     RobotoMono_500: RobotoMono_500Medium,
   });
+  const isDark = useThemeStore((s) => s.isDark);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
@@ -50,8 +52,8 @@ export default function App() {
   }
 
   return (
-    <GestureHandlerRootView style={styles.root}>
-      <StatusBar style="dark" />
+    <GestureHandlerRootView style={[styles.root, isDark && styles.rootDark]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <AppNavigator />
     </GestureHandlerRootView>
   );
@@ -61,6 +63,9 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: '#F5F7FA',
+  },
+  rootDark: {
+    backgroundColor: '#0D1117',
   },
   loading: {
     flex: 1,

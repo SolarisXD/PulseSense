@@ -1,11 +1,12 @@
 // PulseSense — Settings Screen
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet,
   Alert, TextInput, Modal, KeyboardAvoidingView, Platform, Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 import { fonts } from '../constants/typography';
 import { colors } from '../constants/colors';
 import { spacing, borderRadius } from '../constants/spacing';
@@ -94,7 +95,14 @@ export function SettingsScreen({ navigation }: any) {
   const [emergencyEditValue, setEmergencyEditValue] = useState('');
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
   const [termsModalVisible, setTermsModalVisible] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Notifications.getPermissionsAsync();
+      setNotificationsEnabled(status === 'granted');
+    })();
+  }, []);
 
   const activeColors = isDark ? { ...colors, ...colorsDark } : colors;
 
@@ -213,11 +221,16 @@ export function SettingsScreen({ navigation }: any) {
       <Text style={[styles.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Notifications</Text>
       <TouchableOpacity
         style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
-        onPress={() => {
-          setNotificationsEnabled(!notificationsEnabled);
+        onPress={async () => {
+          if (notificationsEnabled) {
+            Alert.alert('Notifications', 'Push notifications are enabled. To disable, go to your device Settings.');
+            return;
+          }
+          const granted = await requestNotificationPermissions();
+          setNotificationsEnabled(granted);
           Alert.alert(
             'Notifications',
-            notificationsEnabled ? 'Notifications disabled' : 'Notifications enabled'
+            granted ? 'Push notifications enabled' : 'Permission denied. Enable in Settings.'
           );
         }}
       >

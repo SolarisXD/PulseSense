@@ -1,6 +1,4 @@
 // PulseSense — Button Component
-// Variants: primary, danger, outline, ghost, disabled
-// Animated with Moti — scale on press, fade entrance
 
 import React, { useCallback, useRef } from 'react';
 import {
@@ -12,7 +10,7 @@ import {
   TextStyle,
 } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 
@@ -39,6 +37,7 @@ export function Button({
   textStyle,
   accessibilityLabel,
 }: ButtonProps) {
+  const c = useColors();
   const isDisabled = disabled || variant === 'disabled';
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
@@ -58,17 +57,44 @@ export function Button({
     opacity: opacity.value,
   }));
 
+  const variantStyles: Record<string, any> = {
+    primary: { backgroundColor: c.primary },
+    danger: {
+      backgroundColor: c.danger,
+      shadowColor: c.danger,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    outline: {
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: c.primary,
+    },
+    ghost: { backgroundColor: 'transparent' },
+    disabled: { backgroundColor: c.borderLight },
+  };
+
+  const textVariantStyles: Record<string, any> = {
+    primary: { color: '#FFFFFF' },
+    danger: { color: '#FFFFFF' },
+    outline: { color: c.primary },
+    ghost: { color: c.textSecondary },
+    disabled: { color: c.textDisabled },
+  };
+
   const containerStyles = [
     styles.base,
-    styles[`variant_${variant}`],
     styles[`size_${size}`],
+    variantStyles[variant],
     isDisabled && styles.disabled,
     style,
   ];
 
   const textStyles = [
     styles.text,
-    styles[`text_${variant}`],
+    textVariantStyles[variant],
     size === 'small' && styles.textSmall,
     textStyle,
   ];
@@ -85,7 +111,7 @@ export function Button({
       <Animated.View style={[containerStyles, animatedStyle]}>
         {loading ? (
           <ActivityIndicator
-            color={variant === 'primary' || variant === 'danger' ? '#FFFFFF' : colors.primary}
+            color={variant === 'primary' || variant === 'danger' ? '#FFFFFF' : c.primary}
             size="small"
           />
         ) : (
@@ -101,28 +127,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: borderRadius.md,
-  },
-  variant_primary: {
-    backgroundColor: colors.primary,
-  },
-  variant_danger: {
-    backgroundColor: colors.danger,
-    shadowColor: colors.danger,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  variant_outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-  },
-  variant_ghost: {
-    backgroundColor: 'transparent',
-  },
-  variant_disabled: {
-    backgroundColor: colors.borderLight,
   },
   size_full: {
     width: '100%',
@@ -141,21 +145,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: fonts.body,
     letterSpacing: 0.3,
-  },
-  text_primary: {
-    color: '#FFFFFF',
-  },
-  text_danger: {
-    color: '#FFFFFF',
-  },
-  text_outline: {
-    color: colors.primary,
-  },
-  text_ghost: {
-    color: colors.textSecondary,
-  },
-  text_disabled: {
-    color: colors.textDisabled,
   },
   textSmall: {
     fontSize: 12,

@@ -2,8 +2,8 @@
 // Opens SQLite DB, runs migrations, seeds settings, and hydrates stores
 
 import { useEffect, useState, useCallback } from 'react';
-import * as SQLite from 'expo-sqlite';
-import { runMigrations } from '../db/migrations';
+import type { SQLiteDatabase } from 'expo-sqlite';
+import { getDB, initializeDatabase, getDBInstance } from '../db/database';
 import { getProfile, hasProfile } from '../db/queries/profile';
 import { getContacts } from '../db/queries/contacts';
 import { getConditions } from '../db/queries/conditions';
@@ -15,21 +15,9 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useThemeStore } from '../store/themeStore';
 import { useAlertStore } from '../store/alertStore';
 
-let dbInstance: SQLite.SQLiteDatabase | null = null;
+export { getDB, initializeDatabase };
 
-export async function getDB(): Promise<SQLite.SQLiteDatabase> {
-  if (dbInstance) return dbInstance;
-  dbInstance = await SQLite.openDatabaseAsync('pulsesense.db');
-  return dbInstance;
-}
-
-export async function initializeDatabase(): Promise<SQLite.SQLiteDatabase> {
-  const db = await getDB();
-  await runMigrations(db);
-  return db;
-}
-
-export async function loadStores(db: SQLite.SQLiteDatabase): Promise<void> {
+export async function loadStores(db: SQLiteDatabase): Promise<void> {
   const [profile, contacts, conditions, allergies, settings, alerts] = await Promise.all([
     getProfile(db),
     getContacts(db),
@@ -77,10 +65,10 @@ export function useDB() {
     init();
   }, [init]);
 
-  return { isReady, isLoading: profileLoading, error, db: dbInstance };
+  return { isReady, isLoading: profileLoading, error, db: getDBInstance() };
 }
 
-export async function checkOnboardingStatus(db: SQLite.SQLiteDatabase): Promise<boolean> {
+export async function checkOnboardingStatus(db: SQLiteDatabase): Promise<boolean> {
   const profile = await hasProfile(db);
   const { onboardingComplete } = useSettingsStore.getState();
   return profile && onboardingComplete;

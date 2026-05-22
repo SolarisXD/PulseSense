@@ -7,14 +7,13 @@ import { getDB } from '../hooks/useDB';
 import { getActiveMedications } from '../db/queries/medications';
 
 // ─── Notification Handler Setup ───────────────────────────────────────────
-// Must be called once at app startup (module-level or early init)
 export function initializeNotificationHandler(): void {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowBanner: true,
       shouldShowList: true,
-      shouldPlaySound: false,
-      shouldSetBadge: false,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
     }),
   });
 }
@@ -28,17 +27,19 @@ async function ensureAndroidChannel(): Promise<void> {
       name: 'Medication Reminders',
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
+      sound: 'default',
     });
   }
 }
 
 // ─── Permissions ──────────────────────────────────────────────────────────
 export async function requestNotificationPermissions(): Promise<boolean> {
+  await ensureAndroidChannel();
+
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
 
   if (existingStatus !== 'granted') {
-    await ensureAndroidChannel();
     const { status } = await Notifications.requestPermissionsAsync({
       ios: {
         allowAlert: true,
@@ -100,13 +101,15 @@ async function scheduleSlot(
   minute: number,
   timing: string | null,
 ): Promise<void> {
+  await ensureAndroidChannel();
+
   const label = slot.charAt(0).toUpperCase() + slot.slice(1);
   const ids = reminderIdentifiers(identifier);
 
   await Notifications.scheduleNotificationAsync({
     identifier: ids[slot],
     content: {
-      title: '💊 Medication Reminder',
+      title: 'Medication Reminder',
       body: `Time to take ${medicineName}${timingLabel(timing)} — ${label} dose`,
       data: {
         type: 'medication-reminder',
@@ -114,6 +117,7 @@ async function scheduleSlot(
         slot,
         medicineName,
       },
+      sound: 'default',
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -139,7 +143,6 @@ export async function scheduleMedicationReminder(
   const granted = await requestNotificationPermissions();
   if (!granted) return;
 
-  // Cancel any existing notifications for this medication first
   await cancelMedicationReminders(identifier);
 
   const morning = parseTime(morningTime);
@@ -183,16 +186,13 @@ export async function cancelMedicationReminders(identifier: string): Promise<voi
 }
 
 // ─── Reschedule All Active Medications ─────────────────────────────────────
-// Used when settings change (times updated or reminders toggled on)
 export async function rescheduleAllMedicationReminders(
   morningTime: string,
   afternoonTime: string,
   nightTime: string,
 ): Promise<void> {
-  // Cancel everything first
   await cancelAllMedicationReminders();
 
-  // Fetch active medications from DB
   const db = await getDB();
   const medications = await getActiveMedications(db);
 

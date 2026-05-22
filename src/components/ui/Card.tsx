@@ -1,10 +1,9 @@
 // PulseSense — Card Component
-// Basic white card with optional shadow, left accent border, and Moti entrance animation
 
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ViewStyle, TouchableOpacity } from 'react-native';
+import { View, ViewStyle, TouchableOpacity } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withDelay, Easing } from 'react-native-reanimated';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 
 interface CardProps {
@@ -24,6 +23,7 @@ const shadows: Record<number, ViewStyle> = {
 };
 
 export function Card({ children, style, onPress, accentColor, shadowLevel = 1, index = 0 }: CardProps) {
+  const c = useColors();
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(20);
 
@@ -40,7 +40,7 @@ export function Card({ children, style, onPress, accentColor, shadowLevel = 1, i
 
   const cardContent = (
     <Animated.View style={[
-      styles.card,
+      { backgroundColor: c.surface, borderRadius: borderRadius.md, padding: spacing.space4, marginBottom: spacing.space3 },
       shadows[shadowLevel],
       accentColor ? { borderLeftWidth: 4, borderLeftColor: accentColor } : {},
       animatedStyle,
@@ -60,12 +60,3 @@ export function Card({ children, style, onPress, accentColor, shadowLevel = 1, i
 
   return cardContent;
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.space4,
-    marginBottom: spacing.space3,
-  },
-});
