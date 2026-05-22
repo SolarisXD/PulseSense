@@ -4,7 +4,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { fonts } from '../../constants/typography';
-import { colors, spacing } from '../../constants/spacing';
+import { colors } from '../../constants/colors';
+import { spacing } from '../../constants/spacing';
 import { VitalStatusBadge } from '../ui/VitalStatusBadge';
 import type { VitalStatus } from '../../utils/vitalStatus';
 

@@ -1,7 +1,7 @@
 // PulseSense — Emergency Action Screen
 // Shows severity banner, trigger details, action steps, quick actions
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,8 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { fonts } from '../../constants/typography';
-import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { colors } from '../../constants/colors';
+import { spacing, borderRadius } from '../../constants/spacing';
 import { SeverityBanner } from '../../components/ui/SeverityBanner';
 import { ActionStep } from '../../components/ui/ActionStep';
 import { Button } from '../../components/ui/Button';
@@ -29,7 +30,7 @@ export function EmergencyActionScreen({ route, navigation }: any) {
   const lastResults = useAlertStore((s) => s.lastEmergencyResult);
   const profile = useProfileStore((s) => s.profile);
   const contacts = useProfileStore((s) => s.contacts);
-  const settings = useSettingsStore();
+  const emergencyNumber = useSettingsStore((s) => s.emergencyNumber);
   const [address, setAddress] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
 
@@ -38,11 +39,7 @@ export function EmergencyActionScreen({ route, navigation }: any) {
   const isEmergency = primaryResult?.severity === 'EMERGENCY_NOW';
   const primaryContact = contacts.find((c) => c.is_primary) || contacts[0];
 
-  useEffect(() => {
-    getLocation();
-  }, []);
-
-  const getLocation = async () => {
+  const getLocation = useCallback(async () => {
     setLocating(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -68,10 +65,14 @@ export function EmergencyActionScreen({ route, navigation }: any) {
       setAddress('Unable to determine location');
     }
     setLocating(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    getLocation();
+  }, [getLocation]);
 
   const handleEmergencyCall = () => {
-    const number = settings.emergencyNumber || '112';
+    const number = emergencyNumber || '112';
     Linking.openURL(`tel:${number}`);
   };
 

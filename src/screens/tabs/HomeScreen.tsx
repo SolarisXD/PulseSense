@@ -1,7 +1,7 @@
 // PulseSense — Home Screen
 // Gradient atmosphere, staggered motion entrance, proper icons, refined hierarchy
 
-import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,10 +13,10 @@ import {
   Image,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withDelay, Easing } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { colors } from '../../constants/colors';
+import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 import { useProfileStore } from '../../store/profileStore';
 import { useAlertStore } from '../../store/alertStore';
@@ -29,32 +29,17 @@ import {
   getGlucoseStatus, getTempStatus, getPainStatus,
   type VitalStatus,
 } from '../../utils/vitalStatus';
+import { AnimatedSection } from '../../components/ui/AnimatedSection';
 import { EmergencyButton } from '../../components/emergency/EmergencyButton';
 import { VitalCard } from '../../components/vitals/VitalCard';
 import { AlertRow } from '../../components/ui/AlertRow';
+import type { SeverityLevel } from '../../constants/rules';
 import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { useHealthInsights } from '../../hooks/useHealthInsights';
+import { InsightCard } from '../../components/health/InsightCard';
 
 const { width } = Dimensions.get('window');
-
-// Animated section component for staggered entrance
-function AnimatedSection({ children, index = 0, style }: { children: React.ReactNode; index?: number; style?: any }) {
-  const opacity = useSharedValue(0);
-  const translateY = useSharedValue(24);
-
-  useEffect(() => {
-    const delay = 300 + index * 120;
-    opacity.value = withDelay(delay, withTiming(1, { duration: 500, easing: Easing.out(Easing.ease) }));
-    translateY.value = withDelay(delay, withSpring(0, { damping: 18, stiffness: 140 }));
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  return <Animated.View style={[animatedStyle, style]}>{children}</Animated.View>;
-}
 
 export function HomeScreen({ navigation }: any) {
   const profile = useProfileStore((s) => s.profile);
@@ -63,6 +48,7 @@ export function HomeScreen({ navigation }: any) {
   const [latestVitals, setLatestVitals] = useState<Record<string, any>>({});
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { insights, loading: insightsLoading } = useHealthInsights();
 
   const loadVitals = useCallback(async () => {
     setLoading(true);
@@ -117,142 +103,48 @@ export function HomeScreen({ navigation }: any) {
     (a) => a.severity_level === 'EMERGENCY_NOW' || a.severity_level === 'URGENT_SAME_DAY'
   );
 
-  // Vitals icon map
-  const vitalIconMap: Record<string, keyof typeof Ionicons.glyphMap> = {
-    bp: 'heart-half',
-    pulse: 'pulse',
-    spo2: 'analytics-outline',
-    glucose: 'water-outline',
-    temperature: 'thermometer-outline',
-    weight: 'scale-outline',
-    pain: 'bandage-outline',
-  };
+  const vitalCardConfigs: Array<{
+    dataKey: string;
+    cardKey: string;
+    name: string;
+    getValue: (data: any) => string;
+    getStatus: (data: any) => VitalStatus;
+    iconName: keyof typeof Ionicons.glyphMap;
+    getUnit?: (data: any) => string | undefined;
+    staticUnit?: string;
+  }> = [
+    { dataKey: 'bp', cardKey: 'bp', name: 'BP', iconName: 'heart-half', getValue: (d) => `${d.bp_sys ?? '--'}/${d.bp_dia ?? '--'}`, getStatus: (d) => getBpStatus(d.bp_sys, d.bp_dia) },
+    { dataKey: 'pulse', cardKey: 'pulse', name: 'Pulse', staticUnit: 'bpm', iconName: 'pulse', getValue: (d) => String(d.pulse), getStatus: (d) => getPulseStatus(d.pulse) },
+    { dataKey: 'spo2', cardKey: 'spo2', name: 'SpO2', staticUnit: '%', iconName: 'analytics-outline', getValue: (d) => String(d.spo2), getStatus: (d) => getSpo2Status(d.spo2) },
+    { dataKey: 'glucose', cardKey: 'glucose', name: 'Glucose', iconName: 'water-outline', getValue: (d) => String(d.glucose_value), getStatus: (d) => getGlucoseStatus(d.glucose_value, d.glucose_context), getUnit: (d) => d.glucose_unit || 'mg/dL' },
+    { dataKey: 'temperature', cardKey: 'temp', name: 'Temp', staticUnit: '°C', iconName: 'thermometer-outline', getValue: (d) => String(d.temp_value), getStatus: (d) => getTempStatus(d.temp_value) },
+    { dataKey: 'weight', cardKey: 'weight', name: 'Weight', staticUnit: 'kg', iconName: 'scale-outline', getValue: (d) => String(d.weight_value), getStatus: () => 'normal' as VitalStatus },
+    { dataKey: 'pain', cardKey: 'pain', name: 'Pain', iconName: 'bandage-outline', getValue: (d) => `${d.pain_level}/10`, getStatus: (d) => getPainStatus(d.pain_level) },
+  ];
 
   const vitalCards: Array<{ key: string; component: React.ReactNode }> = [];
 
-  if (latestVitals.bp) {
+  vitalCardConfigs.forEach((config) => {
+    const data = latestVitals[config.dataKey];
+    if (!data) return;
+    const unit = config.getUnit ? config.getUnit(data) : config.staticUnit;
     vitalCards.push({
-      key: 'bp',
+      key: config.cardKey,
       component: (
         <VitalCard
-          key="bp"
-          name="BP"
-          value={`${latestVitals.bp.bp_sys ?? '--'}/${latestVitals.bp.bp_dia ?? '--'}`}
-          status={getBpStatus(latestVitals.bp.bp_sys, latestVitals.bp.bp_dia)}
-          timeAgo={getTimeAgo(latestVitals.bp.logged_at_iso)}
-          iconName={vitalIconMap.bp}
+          key={config.cardKey}
+          name={config.name}
+          value={config.getValue(data)}
+          unit={unit}
+          status={config.getStatus(data)}
+          timeAgo={getTimeAgo(data.logged_at_iso)}
+          iconName={config.iconName}
           onPress={() => navigation.navigate('HistoryTab')}
-          index={0}
+          index={vitalCards.length}
         />
       ),
     });
-  }
-  if (latestVitals.pulse) {
-    vitalCards.push({
-      key: 'pulse',
-      component: (
-        <VitalCard
-          key="pulse"
-          name="Pulse"
-          value={String(latestVitals.pulse.pulse)}
-          unit="bpm"
-          status={getPulseStatus(latestVitals.pulse.pulse)}
-          timeAgo={getTimeAgo(latestVitals.pulse.logged_at_iso)}
-          iconName={vitalIconMap.pulse}
-          onPress={() => navigation.navigate('HistoryTab')}
-          index={1}
-        />
-      ),
-    });
-  }
-  if (latestVitals.spo2) {
-    vitalCards.push({
-      key: 'spo2',
-      component: (
-        <VitalCard
-          key="spo2"
-          name="SpO2"
-          value={String(latestVitals.spo2.spo2)}
-          unit="%"
-          status={getSpo2Status(latestVitals.spo2.spo2)}
-          timeAgo={getTimeAgo(latestVitals.spo2.logged_at_iso)}
-          iconName={vitalIconMap.spo2}
-          onPress={() => navigation.navigate('HistoryTab')}
-          index={2}
-        />
-      ),
-    });
-  }
-  if (latestVitals.glucose) {
-    vitalCards.push({
-      key: 'glucose',
-      component: (
-        <VitalCard
-          key="glucose"
-          name="Glucose"
-          value={String(latestVitals.glucose.glucose_value)}
-          status={getGlucoseStatus(latestVitals.glucose.glucose_value, latestVitals.glucose.glucose_context)}
-          timeAgo={getTimeAgo(latestVitals.glucose.logged_at_iso)}
-          iconName={vitalIconMap.glucose}
-          onPress={() => navigation.navigate('HistoryTab')}
-          index={3}
-        />
-      ),
-    });
-  }
-  if (latestVitals.temperature) {
-    vitalCards.push({
-      key: 'temp',
-      component: (
-        <VitalCard
-          key="temp"
-          name="Temp"
-          value={String(latestVitals.temperature.temp_value)}
-          unit="°C"
-          status={getTempStatus(latestVitals.temperature.temp_value)}
-          timeAgo={getTimeAgo(latestVitals.temperature.logged_at_iso)}
-          iconName={vitalIconMap.temperature}
-          onPress={() => navigation.navigate('HistoryTab')}
-          index={4}
-        />
-      ),
-    });
-  }
-  if (latestVitals.weight) {
-    vitalCards.push({
-      key: 'weight',
-      component: (
-        <VitalCard
-          key="weight"
-          name="Weight"
-          value={String(latestVitals.weight.weight_value)}
-          unit="kg"
-          status="normal"
-          timeAgo={getTimeAgo(latestVitals.weight.logged_at_iso)}
-          iconName={vitalIconMap.weight}
-          onPress={() => navigation.navigate('HistoryTab')}
-          index={5}
-        />
-      ),
-    });
-  }
-  if (latestVitals.pain) {
-    vitalCards.push({
-      key: 'pain',
-      component: (
-        <VitalCard
-          key="pain"
-          name="Pain"
-          value={`${latestVitals.pain.pain_level}/10`}
-          status={getPainStatus(latestVitals.pain.pain_level)}
-          timeAgo={getTimeAgo(latestVitals.pain.logged_at_iso)}
-          iconName={vitalIconMap.pain}
-          onPress={() => navigation.navigate('HistoryTab')}
-          index={6}
-        />
-      ),
-    });
-  }
+  });
 
   // ---------- Skeleton Loading State ----------
   if (loading) {
@@ -350,7 +242,7 @@ export function HomeScreen({ navigation }: any) {
                 key={alert.id}
                 title={alert.title}
                 message={alert.message}
-                severity={alert.severity_level as any}
+                severity={alert.severity_level as SeverityLevel}
                 timestamp={alert.created_at}
                 onPress={() => navigation.navigate('AlertsTab')}
               />
@@ -358,8 +250,28 @@ export function HomeScreen({ navigation }: any) {
           </AnimatedSection>
         )}
 
-        {/* Latest Vitals */}
+        {/* Health Insights */}
         <AnimatedSection index={3}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="bulb" size={16} color={colors.primaryLight} />
+            <Text style={styles.sectionTitle}>Health Insights</Text>
+          </View>
+          {insightsLoading ? (
+            <Skeleton.Box width="100%" height={80} borderRadius={10} style={{ marginBottom: 12 }} />
+          ) : insights.length > 0 ? (
+            insights.slice(0, 3).map((insight, i) => (
+              <InsightCard key={insight.id} insight={insight} index={i} />
+            ))
+          ) : (
+            <View style={styles.emptyInsights}>
+              <Ionicons name="bulb-outline" size={24} color={colors.textDisabled} />
+              <Text style={styles.emptyInsightsText}>No insights yet — keep logging your vitals!</Text>
+            </View>
+          )}
+        </AnimatedSection>
+
+        {/* Latest Vitals */}
+        <AnimatedSection index={4}>
           <View style={styles.sectionHeader}>
             <Ionicons name="pulse" size={16} color={colors.primary} />
             <Text style={styles.sectionTitle}>Latest Vitals</Text>
@@ -381,7 +293,7 @@ export function HomeScreen({ navigation }: any) {
         </AnimatedSection>
 
         {/* Quick Log Button */}
-        <AnimatedSection index={4}>
+        <AnimatedSection index={5}>
           <Button
             title="+ Log a Vital"
             onPress={() => navigation.navigate('VitalsTab')}
@@ -531,6 +443,19 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontFamily: fonts.body,
     fontWeight: '500',
+  },
+  emptyInsights: {
+    paddingVertical: spacing.space5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.space2,
+    marginBottom: spacing.space3,
+  },
+  emptyInsightsText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontFamily: fonts.body,
+    textAlign: 'center',
   },
   emptyHint: {
     fontSize: 11,

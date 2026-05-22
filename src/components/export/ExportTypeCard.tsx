@@ -5,7 +5,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts } from '../../constants/typography';
-import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { colors } from '../../constants/colors';
+import { spacing, borderRadius } from '../../constants/spacing';
 
 interface ExportTypeCardProps {
   title: string;

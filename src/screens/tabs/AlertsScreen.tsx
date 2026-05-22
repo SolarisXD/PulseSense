@@ -7,24 +7,20 @@ import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, Easing } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing } from '../../constants/spacing';
+import { colors } from '../../constants/colors';
+import { spacing } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 import { AlertRow } from '../../components/ui/AlertRow';
 import { getDB } from '../../hooks/useDB';
 import { getAllAlerts, resolveAlert } from '../../db/queries/emergency';
 import { loadStores } from '../../hooks/useDB';
 import type { AlertRow as AlertRowType } from '../../db/queries/emergency';
+import type { SeverityLevel } from '../../constants/rules';
 
 export function AlertsScreen() {
   const [alerts, setAlerts] = useState<AlertRowType[]>([]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadAlerts();
-    }, [])
-  );
-
-  const loadAlerts = async () => {
+  const loadAlerts = useCallback(async () => {
     try {
       const db = await getDB();
       const allAlerts = await getAllAlerts(db);
@@ -32,7 +28,13 @@ export function AlertsScreen() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadAlerts();
+    }, [loadAlerts])
+  );
 
   const handleResolve = async (id: number) => {
     try {
@@ -54,7 +56,7 @@ export function AlertsScreen() {
           <AlertRow
             title={item.title}
             message={item.message}
-            severity={item.severity_level as any}
+            severity={item.severity_level as SeverityLevel}
             timestamp={item.created_at}
             isResolved={item.is_resolved === 1}
             onPress={item.is_resolved ? undefined : () => handleResolve(item.id)}

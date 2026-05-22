@@ -14,12 +14,13 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { colors } from '../../constants/colors';
+import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 import { Button } from '../../components/ui/Button';
 import { evaluateSymptoms } from '../../engine/ruleEngine';
 import { getDB } from '../../hooks/useDB';
-import { insertSymptomEvent, insertRuleTriggers, insertAlert } from '../../db/queries/emergency';
+import { insertSymptomEvent, insertRuleTriggers, insertAlert, getActiveAlerts } from '../../db/queries/emergency';
 import { useAlertStore } from '../../store/alertStore';
 import type { SymptomInput, RuleResult } from '../../constants/rules';
 import { nowIso } from '../../utils/dateUtils';
@@ -163,6 +164,8 @@ export function EmergencyCheckScreen({ navigation }: any) {
           symptom_event_id: eventId,
           vital_log_id: null,
         });
+        const activeAlerts = await getActiveAlerts(db);
+        useAlertStore.getState().setActiveAlerts(activeAlerts);
       }
 
       useAlertStore.getState().setLastEmergencyResult(results);

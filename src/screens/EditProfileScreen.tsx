@@ -1,10 +1,11 @@
 // PulseSense — Edit Profile Screen
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { fonts } from '../constants/typography';
-import { colors, spacing, borderRadius } from '../constants/spacing';
+import { colors } from '../constants/colors';
+import { spacing, borderRadius } from '../constants/spacing';
 import { Button } from '../components/ui/Button';
 import { useProfileStore } from '../store/profileStore';
 import { useDateInput } from '../hooks/useDateInput';
@@ -18,7 +19,10 @@ export function EditProfileScreen({ navigation }: any) {
   const profile = useProfileStore((s) => s.profile);
   const [name, setName] = useState(profile?.full_name || '');
   const dobInput = useDateInput();
-  React.useEffect(() => { if (profile?.dob) dobInput.setValue(profile.dob); }, []);
+
+  useEffect(() => {
+    if (profile?.dob) dobInput.setValue(profile.dob);
+  }, [profile?.dob]);
   const [sex, setSex] = useState(profile?.sex || '');
   const [showSexPicker, setShowSexPicker] = useState(false);
   const [bloodGroup, setBloodGroup] = useState(profile?.blood_group || '');

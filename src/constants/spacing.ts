@@ -1,9 +1,6 @@
 // PulseSense — Spacing System (4pt grid)
 // Based on UI Design Guide v1.0
 
-// Re-export colors so all existing imports from spacing.ts still work
-export { colors } from './colors';
-
 export const spacing = {
   space1: 4,
   space2: 8,

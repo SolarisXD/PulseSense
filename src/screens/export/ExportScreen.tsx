@@ -1,5 +1,5 @@
 // PulseSense — Export Screen
-// Choose export type, configure options, generate & share PDF
+// Choose export type, configure options, generate & share PDF or CSV
 
 import React, { useState } from 'react';
 import {
@@ -12,12 +12,16 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { fonts } from '../../constants/typography';
-import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { colors } from '../../constants/colors';
+import { spacing, borderRadius } from '../../constants/spacing';
+import { VITAL_CONFIG } from '../../utils/vitalFormatters';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/ui/Button';
 import { ExportTypeCard } from '../../components/export/ExportTypeCard';
-import { generateExport, sharePdf } from '../../export/exportService';
+import { generateExport, generateCsv, sharePdf, shareCsv } from '../../export/exportService';
 import type { ExportType } from '../../export/exportService';
+
+type ExportFormat = 'pdf' | 'csv';
 
 const EXPORT_TYPES: { type: ExportType; iconName: keyof typeof Ionicons.glyphMap; title: string; desc: string }[] = [
   { type: 'medical_id', iconName: 'card-outline', title: 'Medical ID', desc: 'Name, DOB, blood group, conditions, allergies, emergency contacts — one page' },
@@ -27,61 +31,53 @@ const EXPORT_TYPES: { type: ExportType; iconName: keyof typeof Ionicons.glyphMap
   { type: 'full_report', iconName: 'document-text-outline', title: 'Full Report', desc: 'All of the above combined' },
 ];
 
-const VITAL_TYPES = [
-  { key: 'bp', label: 'Blood Pressure' },
-  { key: 'pulse', label: 'Pulse' },
-  { key: 'spo2', label: 'SpO2' },
-  { key: 'glucose', label: 'Glucose' },
-  { key: 'temperature', label: 'Temperature' },
-  { key: 'weight', label: 'Weight' },
-  { key: 'pain', label: 'Pain' },
-];
+const VITAL_TYPES = VITAL_CONFIG.map((v) => ({ key: v.key, label: v.label }));
 
 export function ExportScreen({ route }: any) {
   const initialType = route?.params?.preSelectedType || null;
   const [selectedType, setSelectedType] = useState<ExportType | null>(initialType);
 
-  // Map HistoryScreen vital keys ('temp', 'glucose') → ExportScreen keys ('temperature', 'glucose')
-  const vitalKeyMap: Record<string, string> = {
-    bp: 'bp', pulse: 'pulse', spo2: 'spo2',
-    glucose: 'glucose', temp: 'temperature', weight: 'weight', pain: 'pain',
-  };
-  const preFilterVital = route?.params?.preFilterVital
-    ? vitalKeyMap[route.params.preFilterVital]
-    : null;
+  const preFilterVital = route?.params?.preFilterVital || null;
 
+  const defaultVitals = VITAL_CONFIG.map((v) => v.key);
   const [selectedVitals, setSelectedVitals] = useState<string[]>(
-    preFilterVital ? [preFilterVital] : ['bp', 'pulse', 'spo2', 'glucose', 'temperature', 'weight', 'pain']
+    preFilterVital ? [preFilterVital] : defaultVitals
   );
   const [generating, setGenerating] = useState(false);
-  const [pdfUri, setPdfUri] = useState<string | null>(null);
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('pdf');
+  const [resultUri, setResultUri] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     if (!selectedType) return;
     setGenerating(true);
-    setPdfUri(null);
+    setResultUri(null);
 
     try {
-      const uri = await generateExport({
+      const opts = {
         type: selectedType,
         vitalTypes: selectedType === 'vitals_report' ? selectedVitals : undefined,
-      });
-      setPdfUri(uri);
+      };
+      const uri = exportFormat === 'csv' ? await generateCsv(opts) : await generateExport(opts);
+      setResultUri(uri);
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Failed to generate PDF. Please try again.');
+      Alert.alert('Error', `Failed to generate ${exportFormat.toUpperCase()}. Please try again.`);
     }
 
     setGenerating(false);
   };
 
   const handleShare = async () => {
-    if (!pdfUri) return;
+    if (!resultUri) return;
     try {
-      await sharePdf(pdfUri);
+      if (exportFormat === 'csv') {
+        await shareCsv(resultUri);
+      } else {
+        await sharePdf(resultUri);
+      }
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Failed to share PDF.');
+      Alert.alert('Error', `Failed to share ${exportFormat.toUpperCase()}.`);
     }
   };
 
@@ -91,10 +87,12 @@ export function ExportScreen({ route }: any) {
     );
   };
 
+  const formatLabel = exportFormat === 'pdf' ? 'PDF' : 'CSV';
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.heading}>Export Report</Text>
-      <Text style={styles.subtext}>Choose what to include in your PDF export</Text>
+      <Text style={styles.subtext}>Choose what to include in your export</Text>
 
       {/* Export Type Selection */}
       <Text style={styles.sectionLabel}>Step 1: Choose Export Type</Text>
@@ -129,9 +127,38 @@ export function ExportScreen({ route }: any) {
         </View>
       )}
 
+      {/* Format Toggle */}
+      {selectedType && (
+        <View style={styles.formatSelector}>
+          <Text style={styles.sectionLabel}>Step {selectedType === 'vitals_report' ? '3' : '2'}: Choose Format</Text>
+          <View style={styles.formatRow}>
+            <TouchableOpacity
+              style={[styles.formatChip, exportFormat === 'pdf' && styles.formatChipSelected]}
+              onPress={() => setExportFormat('pdf')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="document-text" size={16} color={exportFormat === 'pdf' ? '#FFFFFF' : colors.textSecondary} />
+              <Text style={[styles.formatChipText, exportFormat === 'pdf' && styles.formatChipTextSelected]}>
+                PDF
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.formatChip, exportFormat === 'csv' && styles.formatChipSelected]}
+              onPress={() => setExportFormat('csv')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="grid-outline" size={16} color={exportFormat === 'csv' ? '#FFFFFF' : colors.textSecondary} />
+              <Text style={[styles.formatChipText, exportFormat === 'csv' && styles.formatChipTextSelected]}>
+                CSV
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       {/* Generate */}
       <Button
-        title={generating ? 'Generating PDF...' : 'Generate PDF'}
+        title={generating ? `Generating ${formatLabel}...` : `Generate ${formatLabel}`}
         onPress={handleGenerate}
         disabled={!selectedType || generating}
         loading={generating}
@@ -139,12 +166,12 @@ export function ExportScreen({ route }: any) {
       />
 
       {/* Share after generation */}
-      {pdfUri && !generating && (
+      {resultUri && !generating && (
         <View style={styles.successCard}>
           <Ionicons name="checkmark-circle" size={36} color={colors.success} style={{ marginBottom: spacing.space3 }} />
-          <Text style={styles.successText}>PDF generated successfully!</Text>
+          <Text style={styles.successText}>{formatLabel} generated successfully!</Text>
           <Button
-            title="Share PDF"
+            title={`Share ${formatLabel}`}
             onPress={handleShare}
             variant="primary"
           />
@@ -218,15 +245,43 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
+  formatSelector: {
+    marginTop: spacing.space2,
+  },
+  formatRow: {
+    flexDirection: 'row',
+    gap: spacing.space3,
+  },
+  formatChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.space2 + 2,
+    paddingHorizontal: spacing.space5,
+    borderRadius: borderRadius.full,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    gap: spacing.space2,
+  },
+  formatChipSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+  formatChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    fontFamily: fonts.body,
+  },
+  formatChipTextSelected: {
+    color: '#FFFFFF',
+  },
   successCard: {
     backgroundColor: colors.successSurface,
     borderRadius: borderRadius.md,
     padding: spacing.space6,
     alignItems: 'center',
     marginTop: spacing.space5,
-  },
-  successIcon: {
-    marginBottom: spacing.space3,
   },
   successText: {
     fontSize: 15,

@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { fonts } from '../constants/typography';
-import { colors, spacing, borderRadius } from '../constants/spacing';
+import { colors } from '../constants/colors';
+import { spacing, borderRadius } from '../constants/spacing';
 import { Button } from '../components/ui/Button';
 import { getDB, loadStores } from '../hooks/useDB';
 import { insertContact } from '../db/queries/contacts';

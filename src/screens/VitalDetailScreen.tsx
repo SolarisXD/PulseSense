@@ -12,7 +12,8 @@ import {
 import { LineChart } from 'react-native-gifted-charts';
 import { useFocusEffect } from '@react-navigation/native';
 import { fonts } from '../constants/typography';
-import { colors, spacing, borderRadius } from '../constants/spacing';
+import { colors } from '../constants/colors';
+import { spacing, borderRadius } from '../constants/spacing';
 import { getDB } from '../hooks/useDB';
 import { getVitalLogsByDateRange } from '../db/queries/vitals';
 import type { VitalLogRow } from '../db/queries/vitals';
@@ -171,7 +172,7 @@ export function VitalDetailScreen({ route, navigation }: any) {
     if (log.temp_value != null) {
       items.push({
         label: 'Temperature',
-        value: `${log.temp_value}°${log.temp_unit}`,
+        value: `${log.temp_value}°${log.temp_unit || 'C'}`,
         status: getTempStatus(log.temp_value),
         chartData: extractTrend(allLogs, (l) => l.temp_value),
         chartColor: colors.urgent,
@@ -180,7 +181,7 @@ export function VitalDetailScreen({ route, navigation }: any) {
     if (log.weight_value != null) {
       items.push({
         label: 'Weight',
-        value: `${log.weight_value} ${log.weight_unit}`,
+        value: `${log.weight_value} ${log.weight_unit || 'kg'}`,
         status: 'normal' as VitalStatus,
         chartData: extractTrend(allLogs, (l) => l.weight_value),
         chartColor: colors.primary,

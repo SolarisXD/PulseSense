@@ -2,13 +2,13 @@
 // Shows profile info, contacts, conditions, allergies, medications
 // Updated with fonts and icons
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Linking, Platform, Image } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withDelay, Easing } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { colors } from '../../constants/colors';
+import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 import { useProfileStore } from '../../store/profileStore';
 import { useAgeCalculator } from '../../hooks/useAgeCalculator';
@@ -17,30 +17,13 @@ import { archiveCondition } from '../../db/queries/conditions';
 import { deleteAllergy } from '../../db/queries/allergies';
 import { deleteContact } from '../../db/queries/contacts';
 import { deleteMedication } from '../../db/queries/medications';
+import { AnimatedSection } from '../../components/ui/AnimatedSection';
 import { ConditionCard } from '../../components/conditions/ConditionCard';
 import { DosageDisplay } from '../../components/medications/DosageDisplay';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 
-// Animated section component
-function AnimatedSection({ children, index = 0 }: { children: React.ReactNode; index?: number }) {
-  const opacity = useSharedValue(0);
-  const translateY = useSharedValue(20);
-
-  useEffect(() => {
-    const delay = 200 + index * 100;
-    opacity.value = withDelay(delay, withTiming(1, { duration: 450, easing: Easing.out(Easing.ease) }));
-    translateY.value = withDelay(delay, withSpring(0, { damping: 16, stiffness: 150 }));
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  return <Animated.View style={animatedStyle}>{children}</Animated.View>;
-}
 
 export function ProfileScreen({ navigation }: any) {
   const profile = useProfileStore((s) => s.profile);

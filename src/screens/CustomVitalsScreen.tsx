@@ -4,7 +4,8 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { fonts } from '../constants/typography';
-import { colors, spacing, borderRadius } from '../constants/spacing';
+import { colors } from '../constants/colors';
+import { spacing, borderRadius } from '../constants/spacing';
 import { Button } from '../components/ui/Button';
 import { getDB } from '../hooks/useDB';
 import { getCustomVitalDefinitions, insertCustomVitalDefinition, toggleCustomVitalActive, deleteCustomVitalDefinition } from '../db/queries/customVitals';
@@ -26,6 +27,12 @@ export function CustomVitalsScreen() {
     const all = await getCustomVitalDefinitions(db);
     setDefs(all);
   };
+
+  const handleToggle = useCallback(async (id: number) => {
+    const db = await getDB();
+    await toggleCustomVitalActive(db, id);
+    await loadDefs();
+  }, []);
 
   const handleAdd = async () => {
     if (!name.trim() || !unit.trim()) { Alert.alert('Required', 'Name and unit are required.'); return; }
@@ -75,11 +82,7 @@ export function CustomVitalsScreen() {
             </Text>
             {item.notes && <Text style={styles.cardNotes}>{item.notes}</Text>}
             <View style={styles.cardActions}>
-              <TouchableOpacity onPress={async () => {
-                const db = await getDB();
-                await toggleCustomVitalActive(db, item.id);
-                await loadDefs();
-              }}>
+              <TouchableOpacity onPress={() => handleToggle(item.id)}>
                 <Text style={styles.actionText}>{item.is_active ? 'Deactivate' : 'Activate'}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => handleDelete(item.id)}>

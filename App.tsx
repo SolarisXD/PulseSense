@@ -10,9 +10,12 @@ import { Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold
 import { RobotoMono_400Regular, RobotoMono_500Medium } from '@expo-google-fonts/roboto-mono';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { initializeNotificationHandler } from './src/services/notificationService';
 
 // Prevent native splash from auto-hiding
 SplashScreenExpo.preventAutoHideAsync();
+
+initializeNotificationHandler();
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({

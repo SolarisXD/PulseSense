@@ -4,7 +4,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { colors } from '../../constants/colors';
+import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 
 interface ConditionCardProps {
@@ -49,13 +50,13 @@ export function ConditionCard({
         )}
       </View>
       <View style={styles.metaRow}>
-        {type && <Text style={styles.meta}>{type}</Text>}
-        {diagnosedDate && (
-          <>
-            <Text style={styles.metaSep}> · </Text>
-            <Text style={styles.meta}>Since {diagnosedDate}</Text>
-          </>
+        {type && diagnosedDate && (
+          <Text style={styles.meta}>{type} · </Text>
         )}
+        {type && !diagnosedDate && (
+          <Text style={styles.meta}>{type}</Text>
+        )}
+        {diagnosedDate && <Text style={styles.meta}>Since {diagnosedDate}</Text>}
       </View>
       {severity && (
         <View style={[styles.severityBadge, { backgroundColor: accentColor + '20' }]}>

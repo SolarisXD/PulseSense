@@ -12,6 +12,7 @@ import { getAllSettings } from '../db/queries/settings';
 import { getActiveAlerts } from '../db/queries/emergency';
 import { useProfileStore } from '../store/profileStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useThemeStore } from '../store/themeStore';
 import { useAlertStore } from '../store/alertStore';
 
 let dbInstance: SQLite.SQLiteDatabase | null = null;
@@ -49,6 +50,7 @@ export async function loadStores(db: SQLite.SQLiteDatabase): Promise<void> {
     settingsRecord[s.key] = s.value;
   }
   useSettingsStore.getState().hydrate(settingsRecord);
+  useThemeStore.getState().hydrate(settingsRecord.dark_mode || 'false');
   useAlertStore.getState().setActiveAlerts(alerts);
 }
 

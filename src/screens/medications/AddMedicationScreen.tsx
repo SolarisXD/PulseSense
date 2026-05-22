@@ -3,11 +3,14 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { fonts } from '../../constants/typography';
-import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { colors } from '../../constants/colors';
+import { spacing, borderRadius } from '../../constants/spacing';
 import { Button } from '../../components/ui/Button';
 import { DosageDisplay } from '../../components/medications/DosageDisplay';
 import { getDB, loadStores } from '../../hooks/useDB';
 import { insertMedication } from '../../db/queries/medications';
+import { useSettingsStore } from '../../store/settingsStore';
+import { scheduleMedicationReminder } from '../../services/notificationService';
 
 const TIMING_OPTIONS = ['before_meal', 'after_meal', 'with_meal', 'morning', 'evening', 'bedtime', 'custom'];
 
@@ -31,6 +34,10 @@ export function AddMedicationScreen({ navigation }: any) {
     { name: '', strength: '', morning: 0, afternoon: 0, night: 0, timing: '', timingCustom: '', duration: '', notes: '' },
   ]);
   const [saving, setSaving] = useState(false);
+  const remindersEnabled = useSettingsStore((s) => s.medicationReminders);
+  const reminderMorningTime = useSettingsStore((s) => s.reminderMorningTime);
+  const reminderAfternoonTime = useSettingsStore((s) => s.reminderAfternoonTime);
+  const reminderNightTime = useSettingsStore((s) => s.reminderNightTime);
 
   const updateMedicine = (idx: number, field: keyof MedicineRow, value: any) => {
     const updated = [...medicines];
@@ -82,6 +89,30 @@ export function AddMedicationScreen({ navigation }: any) {
         }))
       );
       await loadStores(db);
+
+      // Schedule medication reminders if enabled
+      if (remindersEnabled) {
+        try {
+          for (let i = 0; i < validItems.length; i++) {
+            const item = validItems[i];
+            const reminderId = `${item.name}-${i}-${Date.now()}`;
+            await scheduleMedicationReminder(
+              reminderId,
+              item.name,
+              item.morning,
+              item.afternoon,
+              item.night,
+              item.timing || null,
+              reminderMorningTime,
+              reminderAfternoonTime,
+              reminderNightTime,
+            );
+          }
+        } catch (notifErr) {
+          console.warn('Failed to schedule reminders:', notifErr);
+        }
+      }
+
       navigation.goBack();
     } catch (err) {
       console.error(err);

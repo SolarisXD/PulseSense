@@ -3,9 +3,9 @@
 // Usage: <Skeleton.Box width={200} height={20} /> or <Skeleton.Circle size={48} /> or <Skeleton.Text lines={3} />
 
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle, DimensionValue } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing, withDelay } from 'react-native-reanimated';
-import { colors } from '../../constants/spacing';
+import { colors } from '../../constants/colors';
 
 // ---------- Core Skeleton Box ----------
 
@@ -38,7 +38,7 @@ function SkeletonBox({ width = '100%', height = 16, borderRadius = 4, style }: S
     <Animated.View
       style={[
         {
-          width: width as any,
+          width: width as DimensionValue,
           height,
           borderRadius,
           backgroundColor: colors.surfaceAlt,

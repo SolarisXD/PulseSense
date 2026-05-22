@@ -2,7 +2,11 @@
 // DD/MM/YYYY format for display, ISO for storage/sorting
 
 export function calculateAge(dob: string): string {
-  const [day, month, year] = dob.split('/').map(Number);
+  if (!dob) return '';
+  const parts = dob.split('/');
+  if (parts.length !== 3) return '';
+  const [day, month, year] = parts.map(Number);
+  if (isNaN(day) || isNaN(month) || isNaN(year)) return '';
   const birthDate = new Date(year, month - 1, day);
   const today = new Date();
 

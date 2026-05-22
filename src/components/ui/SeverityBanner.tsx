@@ -23,7 +23,7 @@ const severityConfig: Record<SeverityLevel, { bg: string; icon: keyof typeof Ion
 };
 
 export function SeverityBanner({ severity, title, subtitle }: SeverityBannerProps) {
-  const config = severityConfig[severity];
+  const config = severityConfig[severity] || severityConfig.LOG_ONLY;
 
   return (
     <View style={[styles.banner, { backgroundColor: config.bg }]}>

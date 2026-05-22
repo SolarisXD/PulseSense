@@ -3,7 +3,9 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { fonts } from '../../constants/typography';
-import { colors, spacing, borderRadius } from '../../constants/spacing';
+import { colors } from '../../constants/colors';
+import { spacing, borderRadius } from '../../constants/spacing';
+import { chipStyles } from '../../constants/chipStyles';
 import { Button } from '../../components/ui/Button';
 import { useDateInput } from '../../hooks/useDateInput';
 import { getDB, loadStores } from '../../hooks/useDB';
@@ -52,8 +54,8 @@ export function AddConditionScreen({ navigation }: any) {
       <Text style={styles.label}>TYPE</Text>
       <View style={styles.optionsRow}>
         {CONDITION_TYPES.map((t) => (
-          <TouchableOpacity key={t} style={[styles.chip, type === t && styles.chipSelected]} onPress={() => setType(t)}>
-            <Text style={[styles.chipText, type === t && styles.chipTextSelected]}>{t}</Text>
+          <TouchableOpacity key={t} style={[chipStyles.chip, type === t && chipStyles.chipSelected]} onPress={() => setType(t)}>
+            <Text style={[chipStyles.chipText, type === t && chipStyles.chipTextSelected]}>{t}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -64,8 +66,8 @@ export function AddConditionScreen({ navigation }: any) {
       <Text style={styles.label}>SEVERITY</Text>
       <View style={styles.optionsRow}>
         {SEVERITY_OPTIONS.map((s) => (
-          <TouchableOpacity key={s} style={[styles.chip, severity === s && styles.chipSelected]} onPress={() => setSeverity(s)}>
-            <Text style={[styles.chipText, severity === s && styles.chipTextSelected]}>{s}</Text>
+          <TouchableOpacity key={s} style={[chipStyles.chip, severity === s && chipStyles.chipSelected]} onPress={() => setSeverity(s)}>
+            <Text style={[chipStyles.chipText, severity === s && chipStyles.chipTextSelected]}>{s}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -85,8 +87,4 @@ const styles = StyleSheet.create({
   input: { height: 48, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 15, color: colors.textPrimary, fontFamily: fonts.body, backgroundColor: colors.surface, marginBottom: spacing.space2 },
   multiline: { height: 80, paddingTop: spacing.space3, textAlignVertical: 'top' },
   optionsRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: spacing.space2 },
-  chip: { paddingVertical: spacing.space2, paddingHorizontal: spacing.space4, borderRadius: borderRadius.full, borderWidth: 1.5, borderColor: colors.border, marginRight: spacing.space2, marginBottom: spacing.space2 },
-  chipSelected: { borderColor: colors.primary, backgroundColor: colors.primarySurface },
-  chipText: { fontSize: 12, color: colors.textPrimary, fontFamily: fonts.body },
-  chipTextSelected: { color: colors.primary, fontWeight: '600' },
 });

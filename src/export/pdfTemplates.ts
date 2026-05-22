@@ -3,12 +3,21 @@
 
 import { calculateAge, formatTodayDisplay } from '../utils/dateUtils';
 import { formatDosage } from '../utils/dosageFormatter';
+import { formatVitalHtmlCell, VITAL_HEADERS } from '../utils/vitalFormatters';
 
 const BASE_STYLES = `
   body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #1C2B3A; margin: 20px; }
-  .header { background: #1A5F7A; color: white; padding: 14px 18px; border-radius: 4px; margin-bottom: 16px; }
-  .header h1 { margin: 0; font-size: 18px; }
-  .header p { margin: 3px 0; font-size: 10px; opacity: 0.85; }
+  .report-header { background: #1A5F7A; color: white; border-radius: 4px; margin-bottom: 16px; }
+  .report-header table { width: 100%; border-collapse: collapse; margin: 0; }
+  .report-header td { padding: 0; border: none; font-size: 10px; opacity: 0.85; color: white; }
+  .report-header .title-cell { padding: 14px 18px 4px; }
+  .report-header .title-cell h1 { margin: 0; font-size: 18px; opacity: 1; }
+  .report-header .info-cell { padding: 2px 18px; }
+  .report-header .info-cell table { margin: 0; }
+  .report-header .info-cell td { padding: 2px 12px 2px 0; border: none; font-size: 10px; opacity: 0.85; color: white; vertical-align: top; white-space: nowrap; }
+  .report-header .info-cell td.label { font-weight: 600; opacity: 0.6; padding-right: 4px; }
+  .report-header .generated-cell { padding: 4px 18px 14px; }
+  .report-header .generated-cell td { padding: 2px 0; border: none; font-size: 9px; opacity: 0.6; color: white; }
   .section-title { font-size: 12px; font-weight: bold; color: #1A5F7A; margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #1A5F7A; padding-bottom: 4px; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
   th { background: #EEF4F7; text-align: left; padding: 7px 9px; border: 1px solid #CBD5E0; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #1C2B3A; }
@@ -23,10 +32,21 @@ const BASE_STYLES = `
 
 function headerHtml(name: string, dob: string, bloodGroup: string | null, sex: string | null) {
   return `
-    <div class="header">
-      <h1>Medical Record — ${name}</h1>
-      <p>DOB: ${dob} | Age: ${calculateAge(dob)} | Blood Group: ${bloodGroup || 'Unknown'} | Sex: ${sex || 'Not specified'}</p>
-      <p>Report generated: ${formatTodayDisplay()}</p>
+    <div class="report-header">
+      <table>
+        <tr><td class="title-cell"><h1>Medical Record — ${name}</h1></td></tr>
+        <tr><td class="info-cell">
+          <table>
+            <tr>
+              <td class="label">DOB:</td><td>${dob}</td>
+              <td class="label">Age:</td><td>${calculateAge(dob)}</td>
+              <td class="label">Blood:</td><td>${bloodGroup || 'Unknown'}</td>
+              <td class="label">Sex:</td><td>${sex || 'Not specified'}</td>
+            </tr>
+          </table>
+        </td></tr>
+        <tr><td class="generated-cell"><table><tr><td>Report generated: ${formatTodayDisplay()}</td></tr></table></td></tr>
+      </table>
     </div>
   `;
 }
@@ -107,8 +127,8 @@ export function buildVitalsReportHtml(
     logged_at_display: string;
     bp_sys: number | null; bp_dia: number | null;
     pulse: number | null; spo2: number | null;
-    glucose_value: number | null; glucose_context: string | null;
-    temp_value: number | null; weight_value: number | null;
+    glucose_value: number | null; glucose_unit: string; glucose_context: string | null;
+    temp_value: number | null; temp_unit: string; weight_value: number | null; weight_unit: string;
     pain_level: number | null; pain_location: string | null;
     notes: string | null;
   }[],
@@ -116,21 +136,16 @@ export function buildVitalsReportHtml(
 ): string {
   const rowsHtml = vitals.map((v) => {
     const cells = selectedTypes.map((type) => {
-      switch (type) {
-        case 'bp': return v.bp_sys ? `${v.bp_sys}/${v.bp_dia}` : '-';
-        case 'pulse': return v.pulse != null ? `${v.pulse}` : '-';
-        case 'spo2': return v.spo2 != null ? `${v.spo2}%` : '-';
-        case 'glucose': return v.glucose_value != null ? `${v.glucose_value} ${v.glucose_context || ''}` : '-';
-        case 'temperature': return v.temp_value != null ? `${v.temp_value}°` : '-';
-        case 'weight': return v.weight_value != null ? `${v.weight_value}` : '-';
-        case 'pain': return v.pain_level != null ? `${v.pain_level}/10 ${v.pain_location || ''}` : '-';
-        default: return '-';
-      }
+      const normalizedType = type === 'temperature' ? 'temp' : type;
+      return formatVitalHtmlCell(normalizedType, v);
     });
     return `<tr><td>${v.logged_at_display}</td>${cells.map((c) => `<td>${c}</td>`).join('')}</tr>`;
   }).join('');
 
-  const headers = selectedTypes.map((t) => `<th>${t.charAt(0).toUpperCase() + t.slice(1)}</th>`).join('');
+  const headers = selectedTypes.map((t) => {
+    const normalizedType = t === 'temperature' ? 'temp' : t;
+    return `<th>${VITAL_HEADERS[normalizedType] || t}</th>`;
+  }).join('');
 
   return `
     ${headerHtml(profile.full_name, profile.dob, profile.blood_group, profile.sex)}
@@ -175,7 +190,6 @@ export function buildAlertsHtml(
     : '<tr><td colspan="4" style="text-align:center; color:#9CA3AF;">No emergency alerts recorded</td></tr>';
 
   return `
-    <div style="page-break-before: always;"></div>
     ${sectionTitle('Emergency Alerts History')}
     <table><thead><tr><th>Date/Time</th><th>Severity</th><th>Title</th><th>Details</th></tr></thead><tbody>${alertsHtml}</tbody></table>
     ${footerHtml()}
