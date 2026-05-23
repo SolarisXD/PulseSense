@@ -1,6 +1,3 @@
-// PulseSense — Export Screen
-// Choose export type, configure options, generate & share PDF or CSV
-
 import React, { useState } from 'react';
 import {
   View,
@@ -9,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { fonts } from '../../constants/typography';
 import { colors } from '../../constants/colors';
@@ -18,7 +14,13 @@ import { VITAL_CONFIG } from '../../utils/vitalFormatters';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/ui/Button';
 import { ExportTypeCard } from '../../components/export/ExportTypeCard';
-import { generateExport, generateCsv, sharePdf, shareCsv } from '../../export/exportService';
+import {
+  generateExport,
+  generateCsv,
+  sharePdf,
+  shareCsv,
+  previewPdf,
+} from '../../export/exportService';
 import type { ExportType } from '../../export/exportService';
 
 type ExportFormat = 'pdf' | 'csv';
@@ -47,6 +49,21 @@ export function ExportScreen({ route }: any) {
   const [exportFormat, setExportFormat] = useState<ExportFormat>('pdf');
   const [resultUri, setResultUri] = useState<string | null>(null);
 
+  const handlePreview = async () => {
+    if (!selectedType || exportFormat !== 'pdf') return;
+    setGenerating(true);
+    try {
+      const opts = {
+        type: selectedType,
+        vitalTypes: selectedType === 'vitals_report' ? selectedVitals : undefined,
+      };
+      await previewPdf(opts);
+    } catch (err) {
+      Alert.alert('Error', 'Failed to generate preview. Please try again.');
+    }
+    setGenerating(false);
+  };
+
   const handleGenerate = async () => {
     if (!selectedType) return;
     setGenerating(true);
@@ -60,7 +77,6 @@ export function ExportScreen({ route }: any) {
       const uri = exportFormat === 'csv' ? await generateCsv(opts) : await generateExport(opts);
       setResultUri(uri);
     } catch (err) {
-      console.error(err);
       Alert.alert('Error', `Failed to generate ${exportFormat.toUpperCase()}. Please try again.`);
     }
 
@@ -76,7 +92,6 @@ export function ExportScreen({ route }: any) {
         await sharePdf(resultUri);
       }
     } catch (err) {
-      console.error(err);
       Alert.alert('Error', `Failed to share ${exportFormat.toUpperCase()}.`);
     }
   };
@@ -94,7 +109,6 @@ export function ExportScreen({ route }: any) {
       <Text style={styles.heading}>Export Report</Text>
       <Text style={styles.subtext}>Choose what to include in your export</Text>
 
-      {/* Export Type Selection */}
       <Text style={styles.sectionLabel}>Step 1: Choose Export Type</Text>
       {EXPORT_TYPES.map((et) => (
         <ExportTypeCard
@@ -107,7 +121,6 @@ export function ExportScreen({ route }: any) {
         />
       ))}
 
-      {/* Vital Type Selection (for vitals_report) */}
       {selectedType === 'vitals_report' && (
         <View style={styles.vitalSelector}>
           <Text style={styles.sectionLabel}>Step 2: Select Vitals</Text>
@@ -127,7 +140,6 @@ export function ExportScreen({ route }: any) {
         </View>
       )}
 
-      {/* Format Toggle */}
       {selectedType && (
         <View style={styles.formatSelector}>
           <Text style={styles.sectionLabel}>Step {selectedType === 'vitals_report' ? '3' : '2'}: Choose Format</Text>
@@ -156,25 +168,45 @@ export function ExportScreen({ route }: any) {
         </View>
       )}
 
-      {/* Generate */}
+      {exportFormat === 'pdf' && (
+        <Button
+          title={generating ? 'Preparing Preview...' : 'Preview PDF'}
+          onPress={handlePreview}
+          disabled={!selectedType || generating}
+          loading={generating}
+          variant="outline"
+          style={{ marginTop: spacing.space4 }}
+        />
+      )}
+
       <Button
         title={generating ? `Generating ${formatLabel}...` : `Generate ${formatLabel}`}
         onPress={handleGenerate}
         disabled={!selectedType || generating}
         loading={generating}
-        style={{ marginTop: spacing.space4 }}
+        style={{ marginTop: spacing.space3 }}
       />
 
-      {/* Share after generation */}
       {resultUri && !generating && (
         <View style={styles.successCard}>
           <Ionicons name="checkmark-circle" size={36} color={colors.success} style={{ marginBottom: spacing.space3 }} />
           <Text style={styles.successText}>{formatLabel} generated successfully!</Text>
-          <Button
-            title={`Share ${formatLabel}`}
-            onPress={handleShare}
-            variant="primary"
-          />
+          <View style={styles.actionRow}>
+            <Button
+              title={`Share ${formatLabel}`}
+              onPress={handleShare}
+              variant="primary"
+              style={{ flex: 1 }}
+            />
+            {exportFormat === 'pdf' && (
+              <Button
+                title="Preview"
+                onPress={handlePreview}
+                variant="outline"
+                style={{ flex: 1, marginLeft: spacing.space3 }}
+              />
+            )}
+          </View>
         </View>
       )}
 
@@ -289,5 +321,9 @@ const styles = StyleSheet.create({
     color: '#065F46',
     fontFamily: fonts.body,
     marginBottom: spacing.space4,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    width: '100%',
   },
 });

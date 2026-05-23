@@ -6,7 +6,6 @@ import {
   Alert, TextInput, Modal, KeyboardAvoidingView, Platform, Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications';
 import { fonts } from '../constants/typography';
 import { colors } from '../constants/colors';
 import { spacing, borderRadius } from '../constants/spacing';
@@ -99,8 +98,8 @@ export function SettingsScreen({ navigation }: any) {
 
   useEffect(() => {
     (async () => {
-      const { status } = await Notifications.getPermissionsAsync();
-      setNotificationsEnabled(status === 'granted');
+      const enabled = await requestNotificationPermissions();
+      setNotificationsEnabled(enabled);
     })();
   }, []);
 

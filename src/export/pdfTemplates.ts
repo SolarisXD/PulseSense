@@ -1,52 +1,54 @@
-// PulseSense — PDF HTML Templates
-// Generates HTML+CSS strings for expo-print to render as PDF
-
-import { calculateAge, formatTodayDisplay } from '../utils/dateUtils';
+import { calculateAge, formatTodayDisplay, isoToDisplay } from '../utils/dateUtils';
 import { formatDosage } from '../utils/dosageFormatter';
 import { formatVitalHtmlCell, VITAL_HEADERS } from '../utils/vitalFormatters';
 
 const BASE_STYLES = `
   body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #1C2B3A; margin: 20px; }
-  .report-header { background: #1A5F7A; color: white; border-radius: 4px; margin-bottom: 16px; }
-  .report-header table { width: 100%; border-collapse: collapse; margin: 0; }
-  .report-header td { padding: 0; border: none; font-size: 10px; opacity: 0.85; color: white; }
-  .report-header .title-cell { padding: 14px 18px 4px; }
-  .report-header .title-cell h1 { margin: 0; font-size: 18px; opacity: 1; }
-  .report-header .info-cell { padding: 2px 18px; }
-  .report-header .info-cell table { margin: 0; }
-  .report-header .info-cell td { padding: 2px 12px 2px 0; border: none; font-size: 10px; opacity: 0.85; color: white; vertical-align: top; white-space: nowrap; }
-  .report-header .info-cell td.label { font-weight: 600; opacity: 0.6; padding-right: 4px; }
-  .report-header .generated-cell { padding: 4px 18px 14px; }
-  .report-header .generated-cell td { padding: 2px 0; border: none; font-size: 9px; opacity: 0.6; color: white; }
+  .report-header { background: #1A5F7A; color: white; border-radius: 4px; margin-bottom: 16px; padding: 14px 18px; width: 100%; }
+  .report-header h1 { margin: 0 0 8px; font-size: 18px; color: white; }
+  .header-info { font-size: 10px; color: rgba(255,255,255,0.85); }
+  .header-info td { padding: 2px 16px 2px 0; vertical-align: top; }
+  .header-info .label { font-weight: 600; opacity: 0.6; padding-right: 4px; }
+  .header-generated { font-size: 9px; color: rgba(255,255,255,0.6); margin-top: 6px; }
+  .header-photo-cell { width: 70px; text-align: right; vertical-align: top; }
+  .header-photo { width: 56px; height: 56px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.6); object-fit: cover; }
+  .header-photo-placeholder { width: 56px; height: 56px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); text-align: center; line-height: 56px; font-size: 22px; color: rgba(255,255,255,0.4); }
   .section-title { font-size: 12px; font-weight: bold; color: #1A5F7A; margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #1A5F7A; padding-bottom: 4px; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  table.content-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
   th { background: #EEF4F7; text-align: left; padding: 7px 9px; border: 1px solid #CBD5E0; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #1C2B3A; }
   td { padding: 7px 9px; border: 1px solid #CBD5E0; font-size: 10px; }
   tr:nth-child(even) { background: #F8FAFB; }
   .badge-danger { background: #FEE2E2; color: #991B1B; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 600; }
   .badge-warning { background: #FEF3C7; color: #D97706; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 600; }
   .badge-normal { background: #D1FAE5; color: #065F46; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 600; }
-  .footer { margin-top: 28px; font-size: 9px; color: #9CA3AF; text-align: center; border-top: 1px solid #E5E7EB; padding-top: 10px; }
+  .disclaimer { margin-top: 28px; font-size: 9px; color: #9CA3AF; text-align: center; border-top: 1px solid #E5E7EB; padding-top: 10px; font-weight: bold; }
   .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.04; font-size: 60px; color: #1A5F7A; font-weight: bold; pointer-events: none; }
+  .notes-cell { font-style: italic; color: #4B5563; max-width: 180px; word-wrap: break-word; }
 `;
 
-function headerHtml(name: string, dob: string, bloodGroup: string | null, sex: string | null) {
+function photoCellHtml(photoUri?: string | null): string {
+  if (photoUri) {
+    return `<td class="header-photo-cell" rowspan="2"><img src="${photoUri}" alt="Profile" class="header-photo" /></td>`;
+  }
+  return `<td class="header-photo-cell" rowspan="2"><div class="header-photo-placeholder">&#9787;</div></td>`;
+}
+
+function headerHtml(name: string, dob: string, bloodGroup: string | null, sex: string | null, photoUri?: string | null) {
   return `
     <div class="report-header">
-      <table>
-        <tr><td class="title-cell"><h1>Medical Record — ${name}</h1></td></tr>
-        <tr><td class="info-cell">
-          <table>
-            <tr>
-              <td class="label">DOB:</td><td>${dob}</td>
-              <td class="label">Age:</td><td>${calculateAge(dob)}</td>
-              <td class="label">Blood:</td><td>${bloodGroup || 'Unknown'}</td>
-              <td class="label">Sex:</td><td>${sex || 'Not specified'}</td>
-            </tr>
-          </table>
-        </td></tr>
-        <tr><td class="generated-cell"><table><tr><td>Report generated: ${formatTodayDisplay()}</td></tr></table></td></tr>
-      </table>
+      <table style="width:100%; border: none; margin: 0;"><tr>
+        <td style="padding:0; border:none; vertical-align:top;">
+          <h1>Medical Record — ${name}</h1>
+          <table class="header-info" style="border:none; margin:0;"><tr>
+            <td style="padding:2px 16px 2px 0; border:none;"><span class="label">DOB:</span> ${dob}</td>
+            <td style="padding:2px 16px 2px 0; border:none;"><span class="label">Age:</span> ${calculateAge(dob)}</td>
+            <td style="padding:2px 16px 2px 0; border:none;"><span class="label">Blood:</span> ${bloodGroup || 'Unknown'}</td>
+            <td style="padding:2px 16px 2px 0; border:none;"><span class="label">Sex:</span> ${sex || 'Not specified'}</td>
+          </tr></table>
+          <div class="header-generated">Report generated: ${formatTodayDisplay()}</div>
+        </td>
+        ${photoCellHtml(photoUri)}
+      </tr></table>
     </div>
   `;
 }
@@ -55,12 +57,12 @@ function sectionTitle(title: string) {
   return `<div class="section-title">${title}</div>`;
 }
 
-function footerHtml() {
-  return '<div class="footer">Generated by PulseSense — for informational use only. Not a clinical document.</div>';
+function disclaimerHtml() {
+  return '<div class="disclaimer">Generated by PulseSense — for informational use only. Not a clinical document.</div>';
 }
 
 export function buildFullReportHtml(
-  profile: { full_name: string; dob: string; blood_group: string | null; sex: string | null },
+  profile: PdfProfile,
   conditions: { name: string; type: string | null; severity: string | null; diagnosed_date: string | null; notes: string | null }[],
   allergies: { name: string; severity: string | null; reaction: string | null }[],
   contacts: { name: string; relationship: string | null; phone: string; contact_type?: string }[],
@@ -68,18 +70,22 @@ export function buildFullReportHtml(
   alerts: { title: string; message: string; severity_level: string; created_at: string }[]
 ): string {
   const parts = [
-    buildMedicalIdHtml(profile, conditions, allergies, contacts),
-    `<div style="page-break-before: always;"></div>`,
-    buildMedicationsHtml(profile, medications),
-    `<div style="page-break-before: always;"></div>`,
-    buildAlertsHtml(alerts),
+    headerHtml(profile.full_name, profile.dob, profile.blood_group, profile.sex, profile.photo_uri),
+    '<div style="page-break-inside: avoid;">',
+    buildMedicalIdSections(conditions, allergies, contacts),
+    '</div>',
+    medications.length > 0 ? '<div style="page-break-inside: avoid;">' : '',
+    medications.length > 0 ? buildMedicationsSections(medications) : '',
+    medications.length > 0 ? '</div>' : '',
+    alerts.length > 0 ? '<div style="page-break-inside: avoid;">' : '',
+    alerts.length > 0 ? buildAlertsSections(alerts) : '',
+    alerts.length > 0 ? '</div>' : '',
+    disclaimerHtml(),
   ];
-
   return wrapHtml(parts.join('\n'));
 }
 
-export function buildMedicalIdHtml(
-  profile: { full_name: string; dob: string; blood_group: string | null; sex: string | null },
+function buildMedicalIdSections(
   conditions: { name: string; type: string | null; severity: string | null; diagnosed_date: string | null; notes: string | null }[],
   allergies: { name: string; severity: string | null; reaction: string | null }[],
   contacts: { name: string; relationship: string | null; phone: string; contact_type?: string }[]
@@ -110,53 +116,16 @@ export function buildMedicalIdHtml(
     : '<tr><td colspan="4" style="text-align:center; color:#9CA3AF;">No emergency contacts</td></tr>';
 
   return `
-    ${headerHtml(profile.full_name, profile.dob, profile.blood_group, profile.sex)}
     ${sectionTitle('Medical Conditions')}
     <table><thead><tr><th>Condition</th><th>Type</th><th>Diagnosed</th><th>Severity</th><th>Notes</th></tr></thead><tbody>${conditionsHtml}</tbody></table>
     ${sectionTitle('Allergies')}
     <table><thead><tr><th>Allergen</th><th>Severity</th><th>Reaction</th></tr></thead><tbody>${allergiesHtml}</tbody></table>
     ${sectionTitle('Emergency Contacts')}
     <table><thead><tr><th>Name</th><th>Relationship</th><th>Type</th><th>Phone</th></tr></thead><tbody>${contactsHtml}</tbody></table>
-    ${footerHtml()}
   `;
 }
 
-export function buildVitalsReportHtml(
-  profile: { full_name: string; dob: string; blood_group: string | null; sex: string | null },
-  vitals: {
-    logged_at_display: string;
-    bp_sys: number | null; bp_dia: number | null;
-    pulse: number | null; spo2: number | null;
-    glucose_value: number | null; glucose_unit: string; glucose_context: string | null;
-    temp_value: number | null; temp_unit: string; weight_value: number | null; weight_unit: string;
-    pain_level: number | null; pain_location: string | null;
-    notes: string | null;
-  }[],
-  selectedTypes: string[]
-): string {
-  const rowsHtml = vitals.map((v) => {
-    const cells = selectedTypes.map((type) => {
-      const normalizedType = type === 'temperature' ? 'temp' : type;
-      return formatVitalHtmlCell(normalizedType, v);
-    });
-    return `<tr><td>${v.logged_at_display}</td>${cells.map((c) => `<td>${c}</td>`).join('')}</tr>`;
-  }).join('');
-
-  const headers = selectedTypes.map((t) => {
-    const normalizedType = t === 'temperature' ? 'temp' : t;
-    return `<th>${VITAL_HEADERS[normalizedType] || t}</th>`;
-  }).join('');
-
-  return `
-    ${headerHtml(profile.full_name, profile.dob, profile.blood_group, profile.sex)}
-    ${sectionTitle('Vitals History')}
-    <table><thead><tr><th>Date/Time</th>${headers}</tr></thead><tbody>${rowsHtml || '<tr><td colspan="9" style="text-align:center; color:#9CA3AF;">No vitals recorded in selected range</td></tr>'}</tbody></table>
-    ${footerHtml()}
-  `;
-}
-
-export function buildMedicationsHtml(
-  profile: { full_name: string; dob: string; blood_group: string | null; sex: string | null },
+function buildMedicationsSections(
   medications: { prescription_date: string; prescribing_doctor: string | null; diagnosis_notes: string | null; is_active: number; items: { medicine_name: string; strength: string | null; dose_morning: number; dose_afternoon: number; dose_night: number; timing: string | null; duration: string | null }[] }[]
 ): string {
   const medsHtml = medications.map((m) => {
@@ -172,28 +141,114 @@ export function buildMedicationsHtml(
   }).join('');
 
   return `
-    ${headerHtml(profile.full_name, profile.dob, profile.blood_group, profile.sex)}
     ${sectionTitle('Medications')}
     <table><thead><tr><th>Medicine</th><th>Strength</th><th>Dosage (M-A-N)</th><th>Timing</th><th>Duration</th></tr></thead><tbody>${medsHtml || '<tr><td colspan="5" style="text-align:center; color:#9CA3AF;">No medications recorded</td></tr>'}</tbody></table>
-    ${footerHtml()}
   `;
 }
 
-export function buildAlertsHtml(
+function buildAlertsSections(
   alerts: { title: string; message: string; severity_level: string; created_at: string }[]
 ): string {
   const alertsHtml = alerts.length > 0
     ? alerts.map((a) => {
         const badgeClass = a.severity_level === 'EMERGENCY_NOW' ? 'danger' : a.severity_level === 'URGENT_SAME_DAY' ? 'warning' : 'normal';
-        return `<tr><td>${a.created_at}</td><td><span class="badge-${badgeClass}">${a.severity_level}</span></td><td>${a.title}</td><td>${a.message}</td></tr>`;
+        return `<tr><td>${a.created_at ? isoToDisplay(a.created_at) : a.created_at}</td><td><span class="badge-${badgeClass}">${a.severity_level}</span></td><td>${a.title}</td><td>${a.message}</td></tr>`;
       }).join('')
     : '<tr><td colspan="4" style="text-align:center; color:#9CA3AF;">No emergency alerts recorded</td></tr>';
 
   return `
     ${sectionTitle('Emergency Alerts History')}
     <table><thead><tr><th>Date/Time</th><th>Severity</th><th>Title</th><th>Details</th></tr></thead><tbody>${alertsHtml}</tbody></table>
-    ${footerHtml()}
   `;
+}
+
+export function buildMedicalIdHtml(
+  profile: PdfProfile,
+  conditions: { name: string; type: string | null; severity: string | null; diagnosed_date: string | null; notes: string | null }[],
+  allergies: { name: string; severity: string | null; reaction: string | null }[],
+  contacts: { name: string; relationship: string | null; phone: string; contact_type?: string }[],
+  medications: { prescription_date: string; prescribing_doctor: string | null; diagnosis_notes: string | null; is_active: number; items: { medicine_name: string; strength: string | null; dose_morning: number; dose_afternoon: number; dose_night: number; timing: string | null; duration: string | null }[] }[] = []
+): string {
+  return `
+    ${headerHtml(profile.full_name, profile.dob, profile.blood_group, profile.sex, profile.photo_uri)}
+    ${buildMedicalIdSections(conditions, allergies, contacts)}
+    ${medications.length > 0 ? buildMedicationsSections(medications) : ''}
+    ${disclaimerHtml()}
+  `;
+}
+
+export function buildVitalsReportHtml(
+  profile: PdfProfile,
+  vitals: {
+    logged_at_display: string;
+    bp_sys: number | null; bp_dia: number | null;
+    pulse: number | null; spo2: number | null;
+    glucose_value: number | null; glucose_unit: string; glucose_context: string | null;
+    temp_value: number | null; temp_unit: string; weight_value: number | null; weight_unit: string;
+    pain_level: number | null; pain_location: string | null;
+    notes: string | null;
+  }[],
+  selectedTypes: string[]
+): string {
+  const showNotes = vitals.some((v) => v.notes != null && v.notes.length > 0);
+  const headerCells = selectedTypes.map((t) => {
+    const normalizedType = t === 'temperature' ? 'temp' : t;
+    return `<th>${VITAL_HEADERS[normalizedType] || t}</th>`;
+  }).join('');
+  const notesHeader = showNotes ? '<th>Notes</th>' : '';
+  const headers = headerCells + notesHeader;
+
+  const rowsHtml = vitals.map((v) => {
+    const cells = selectedTypes.map((type) => {
+      const normalizedType = type === 'temperature' ? 'temp' : type;
+      return formatVitalHtmlCell(normalizedType, v);
+    });
+    const notesCell = showNotes ? `<td class="notes-cell">${v.notes || ''}</td>` : '';
+    return `<tr><td>${v.logged_at_display}</td>${cells.map((c) => `<td>${c}</td>`).join('')}${notesCell}</tr>`;
+  }).join('');
+
+  return `
+    ${headerHtml(profile.full_name, profile.dob, profile.blood_group, profile.sex, profile.photo_uri)}
+    ${sectionTitle('Vitals History')}
+    <table><thead><tr><th>Date/Time</th>${headers}</tr></thead><tbody>${rowsHtml || '<tr><td colspan="9" style="text-align:center; color:#9CA3AF;">No vitals recorded in selected range</td></tr>'}</tbody></table>
+    ${disclaimerHtml()}
+  `;
+}
+
+export function buildMedicationsHtml(
+  profile: PdfProfile,
+  medications: { prescription_date: string; prescribing_doctor: string | null; diagnosis_notes: string | null; is_active: number; items: { medicine_name: string; strength: string | null; dose_morning: number; dose_afternoon: number; dose_night: number; timing: string | null; duration: string | null }[] }[]
+): string {
+  return `
+    ${headerHtml(profile.full_name, profile.dob, profile.blood_group, profile.sex, profile.photo_uri)}
+    ${buildMedicationsSections(medications)}
+    ${disclaimerHtml()}
+  `;
+}
+
+export function buildAlertsHtml(
+  alerts: { title: string; message: string; severity_level: string; created_at: string }[],
+  profile?: PdfProfile | null
+): string {
+  const header = profile ? headerHtml(profile.full_name, profile.dob, profile.blood_group, profile.sex, profile.photo_uri) : '';
+  return `
+    ${header}
+    ${sectionTitle('Emergency Alerts History')}
+    <table><thead><tr><th>Date/Time</th><th>Severity</th><th>Title</th><th>Details</th></tr></thead><tbody>${buildAlertsRows(alerts)}</tbody></table>
+    ${disclaimerHtml()}
+  `;
+}
+
+function buildAlertsRows(
+  alerts: { title: string; message: string; severity_level: string; created_at: string }[]
+): string {
+  if (alerts.length === 0) {
+    return '<tr><td colspan="4" style="text-align:center; color:#9CA3AF;">No emergency alerts recorded</td></tr>';
+  }
+  return alerts.map((a) => {
+    const badgeClass = a.severity_level === 'EMERGENCY_NOW' ? 'danger' : a.severity_level === 'URGENT_SAME_DAY' ? 'warning' : 'normal';
+    return `<tr><td>${a.created_at ? isoToDisplay(a.created_at) : a.created_at}</td><td><span class="badge-${badgeClass}">${a.severity_level}</span></td><td>${a.title}</td><td>${a.message}</td></tr>`;
+  }).join('');
 }
 
 export function wrapHtml(content: string): string {

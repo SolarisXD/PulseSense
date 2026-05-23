@@ -1,7 +1,3 @@
-// PulseSense — History Screen
-// Filterable tabular view of vitals with color-coded status
-// Updated with motion and refined typography
-
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -14,18 +10,19 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, Easing } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 import { TableHeader } from '../../components/vitals/TableHeader';
 import { TableRow } from '../../components/vitals/TableRow';
-import { Input } from '../../components/ui/Input';
 import { getDB, loadStores } from '../../hooks/useDB';
 import { getVitalLogsByDateRange } from '../../db/queries/vitals';
+import { getCustomVitalLogsByDateRange } from '../../db/queries/customVitals';
 import { getLast30DaysRange, formatDisplayDate, formatDisplayTime } from '../../utils/dateUtils';
 import { formatVitalCell, VITAL_LABELS, VITAL_TYPE_KEYS, VITAL_CONFIG } from '../../utils/vitalFormatters';
+import { getCustomVitalStatus } from '../../utils/vitalStatus';
+import type { VitalStatus } from '../../utils/vitalStatus';
 import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 
@@ -64,6 +61,13 @@ function getDateRange(key: DateRangeKey): { start: string; end: string } {
   };
 }
 
+interface CustomVitalLookup {
+  value: number;
+  unit: string;
+  normal_min: number | null;
+  normal_max: number | null;
+}
+
 export function HistoryScreen({ navigation }: any) {
   const [selectedFilter, setSelectedFilter] = useState(ALL_VITALS);
   const [vitalLogs, setVitalLogs] = useState<any[]>([]);
@@ -71,14 +75,33 @@ export function HistoryScreen({ navigation }: any) {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [dateRangeKey, setDateRangeKey] = useState<DateRangeKey>('30d');
+  const [customVitalsLookup, setCustomVitalsLookup] = useState<Record<number, Record<string, CustomVitalLookup>>>({});
+  const [customVitalKeys, setCustomVitalKeys] = useState<string[]>([]);
 
-  const loadVitals = useCallback(async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const db = await getDB();
       const range = getDateRange(dateRangeKey);
       const logs = await getVitalLogsByDateRange(db, range.start, range.end);
       setVitalLogs(logs);
+
+      const customLogs = await getCustomVitalLogsByDateRange(db, range.start, range.end);
+      const lookup: Record<number, Record<string, CustomVitalLookup>> = {};
+      const keys = new Set<string>();
+      for (const cl of customLogs) {
+        if (!cl.vital_log_id) continue;
+        if (!lookup[cl.vital_log_id]) lookup[cl.vital_log_id] = {};
+        lookup[cl.vital_log_id][cl.definition_name] = {
+          value: cl.value,
+          unit: cl.unit,
+          normal_min: null,
+          normal_max: null,
+        };
+        keys.add(cl.definition_name);
+      }
+      setCustomVitalsLookup(lookup);
+      setCustomVitalKeys(Array.from(keys).sort());
     } catch (err) {
       console.error(err);
     } finally {
@@ -88,8 +111,8 @@ export function HistoryScreen({ navigation }: any) {
 
   useFocusEffect(
     useCallback(() => {
-      loadVitals();
-    }, [loadVitals])
+      loadData();
+    }, [loadData])
   );
 
   const onRefresh = useCallback(async () => {
@@ -100,22 +123,62 @@ export function HistoryScreen({ navigation }: any) {
       const range = getDateRange(dateRangeKey);
       const logs = await getVitalLogsByDateRange(db, range.start, range.end);
       setVitalLogs(logs);
+
+      const customLogs = await getCustomVitalLogsByDateRange(db, range.start, range.end);
+      const lookup: Record<number, Record<string, CustomVitalLookup>> = {};
+      const keys = new Set<string>();
+      for (const cl of customLogs) {
+        if (!cl.vital_log_id) continue;
+        if (!lookup[cl.vital_log_id]) lookup[cl.vital_log_id] = {};
+        lookup[cl.vital_log_id][cl.definition_name] = {
+          value: cl.value,
+          unit: cl.unit,
+          normal_min: null,
+          normal_max: null,
+        };
+        keys.add(cl.definition_name);
+      }
+      setCustomVitalsLookup(lookup);
+      setCustomVitalKeys(Array.from(keys).sort());
     } catch (err) {
       console.error(err);
     }
     setRefreshing(false);
   }, [dateRangeKey]);
 
-  const getColumns = () => {
+  const allColumns = useMemo(() => {
     if (selectedFilter === ALL_VITALS) {
-      return VITAL_TYPE_KEYS;
+      return [...VITAL_TYPE_KEYS, ...customVitalKeys];
+    }
+    if (customVitalKeys.includes(selectedFilter)) {
+      return [selectedFilter];
     }
     return [selectedFilter];
-  };
+  }, [selectedFilter, customVitalKeys]);
+
+  const allHeaders = useMemo(() => {
+    const headers: Record<string, string> = { ...VITAL_LABELS };
+    for (const key of customVitalKeys) {
+      headers[key] = key;
+    }
+    return headers;
+  }, [customVitalKeys]);
 
   const getCellData = (log: any) => {
-    const cols = getColumns();
-    return cols.map((col) => formatVitalCell(col, log));
+    const lookup = customVitalsLookup[log.id] || {};
+    return allColumns.map((col) => {
+      if (VITAL_TYPE_KEYS.includes(col as any)) {
+        return formatVitalCell(col, log);
+      }
+      const cv = lookup[col];
+      if (cv) {
+        return {
+          value: `${cv.value} ${cv.unit}`,
+          status: getCustomVitalStatus(cv.value, cv.normal_min, cv.normal_max),
+        };
+      }
+      return { value: '-', status: 'unknown' as VitalStatus };
+    });
   };
 
   const searchedLogs = useMemo(() => {
@@ -136,6 +199,10 @@ export function HistoryScreen({ navigation }: any) {
 
   const filteredLogs = searchedLogs.filter((log) => {
     if (selectedFilter === ALL_VITALS) return true;
+    if (customVitalKeys.includes(selectedFilter)) {
+      const lookup = customVitalsLookup[log.id] || {};
+      return !!lookup[selectedFilter];
+    }
     const hasData: Record<string, boolean> = {
       bp: log.bp_sys !== null,
       pulse: log.pulse !== null,
@@ -148,11 +215,21 @@ export function HistoryScreen({ navigation }: any) {
     return hasData[selectedFilter] || false;
   });
 
-  // ---------- Skeleton Loading State ----------
+  const customFilterOptions = useMemo(() => {
+    return customVitalKeys.map((key) => ({
+      key,
+      label: key,
+      icon: 'flask-outline' as keyof typeof Ionicons.glyphMap,
+    }));
+  }, [customVitalKeys]);
+
+  const allOptions = useMemo(() => {
+    return [...VITAL_OPTIONS, ...customFilterOptions];
+  }, [customFilterOptions]);
+
   if (loading) {
     return (
       <View style={styles.container}>
-        {/* Filter bar skeleton */}
         <View style={styles.filterBar}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {Array.from({ length: 6 }).map((_, i) => (
@@ -160,9 +237,7 @@ export function HistoryScreen({ navigation }: any) {
             ))}
           </ScrollView>
         </View>
-        {/* Table rows skeleton */}
         <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
-          {/* Table header skeleton */}
           <Skeleton.Box width="100%" height={32} borderRadius={6} style={{ marginBottom: 8 }} />
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton.Box key={i} width="100%" height={44} borderRadius={6} style={{ marginBottom: 4 }} />
@@ -214,7 +289,7 @@ export function HistoryScreen({ navigation }: any) {
       {/* Vital Filter Bar */}
       <View style={styles.filterBar}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {VITAL_OPTIONS.map((opt) => (
+          {allOptions.map((opt) => (
             <TouchableOpacity
               key={opt.key}
               style={[styles.filterChip, selectedFilter === opt.key && styles.filterChipSelected]}
@@ -240,7 +315,7 @@ export function HistoryScreen({ navigation }: any) {
         data={filteredLogs}
         keyExtractor={(item) => String(item.id)}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        ListHeaderComponent={<TableHeader columns={getColumns().map((k) => VITAL_LABELS[k] || k)} />}
+        ListHeaderComponent={<TableHeader columns={allColumns.map((k) => allHeaders[k] || k)} />}
         renderItem={({ item, index }) => (
           <TableRow
             date={formatDisplayDate(item.logged_at_display)}

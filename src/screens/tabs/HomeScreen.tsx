@@ -24,6 +24,8 @@ import { useAlertStore } from '../../store/alertStore';
 import { useAgeCalculator } from '../../hooks/useAgeCalculator';
 import { getDB, loadStores } from '../../hooks/useDB';
 import { getLatestPerVital } from '../../db/queries/vitals';
+import { getLatestCustomVitalLogs } from '../../db/queries/customVitals';
+import { getCustomVitalStatus } from '../../utils/vitalStatus';
 import { formatTodayDisplay } from '../../utils/dateUtils';
 import {
   getBpStatus, getPulseStatus, getSpo2Status,
@@ -49,6 +51,7 @@ export function HomeScreen({ navigation }: any) {
   const age = useAgeCalculator();
   const activeAlerts = useAlertStore((s) => s.activeAlerts);
   const [latestVitals, setLatestVitals] = useState<Record<string, any>>({});
+  const [latestCustomVitals, setLatestCustomVitals] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const { insights, loading: insightsLoading } = useHealthInsights();
@@ -64,6 +67,8 @@ export function HomeScreen({ navigation }: any) {
       const db = await getDB();
       const vitals = await getLatestPerVital(db);
       setLatestVitals(vitals);
+      const custom = await getLatestCustomVitalLogs(db);
+      setLatestCustomVitals(custom);
     } catch (err) {
       console.error('Failed to load vitals:', err);
     } finally {
@@ -275,8 +280,23 @@ export function HomeScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.vitalsScroll}>
-            {vitalCards.length > 0 ? (
-              vitalCards.map((vc) => vc.component)
+            {vitalCards.length > 0 || latestCustomVitals.length > 0 ? (
+              <>
+                {vitalCards.map((vc) => vc.component)}
+                {latestCustomVitals.map((cv, idx) => (
+                  <VitalCard
+                    key={`cv-${cv.id}`}
+                    name={cv.definition_name}
+                    value={String(cv.value)}
+                    unit={cv.unit}
+                    status={getCustomVitalStatus(cv.value, null, null)}
+                    timeAgo={getTimeAgo(cv.logged_at_iso || cv.created_at)}
+                    iconName="flask-outline"
+                    onPress={() => navigation.navigate('HistoryTab')}
+                    index={idx + vitalCards.length}
+                  />
+                ))}
+              </>
             ) : (
               <View style={[styles.emptyVitals, { backgroundColor: c.surface, borderColor: c.borderLight }]}>
                 <Ionicons name="heart-outline" size={28} color={c.textDisabled} />

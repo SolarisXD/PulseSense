@@ -1,6 +1,4 @@
-// PulseSense — Add/Edit Condition Screen
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { fonts } from '../../constants/typography';
 import { colors } from '../../constants/colors';
@@ -9,18 +7,43 @@ import { chipStyles } from '../../constants/chipStyles';
 import { Button } from '../../components/ui/Button';
 import { useDateInput } from '../../hooks/useDateInput';
 import { getDB, loadStores } from '../../hooks/useDB';
-import { insertCondition } from '../../db/queries/conditions';
+import { insertCondition, updateCondition, getConditionById } from '../../db/queries/conditions';
 
 const CONDITION_TYPES = ['chronic', 'acute', 'genetic', 'autoimmune', 'other'];
 const SEVERITY_OPTIONS = ['mild', 'moderate', 'severe'];
 
-export function AddConditionScreen({ navigation }: any) {
+export function AddConditionScreen({ navigation, route }: any) {
+  const conditionId = route?.params?.conditionId ?? null;
+  const isEditing = !!conditionId;
+
   const [name, setName] = useState('');
   const [type, setType] = useState('');
   const dobInput = useDateInput();
   const [severity, setSeverity] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (conditionId) {
+      loadCondition(conditionId);
+    }
+  }, [conditionId]);
+
+  const loadCondition = async (id: number) => {
+    try {
+      const db = await getDB();
+      const cond = await getConditionById(db, id);
+      if (cond) {
+        setName(cond.name);
+        setType(cond.type || '');
+        if (cond.diagnosed_date) dobInput.setValue(cond.diagnosed_date);
+        setSeverity(cond.severity || '');
+        setNotes(cond.notes || '');
+      }
+    } catch (err) {
+      console.error('Failed to load condition:', err);
+    }
+  };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -30,13 +53,18 @@ export function AddConditionScreen({ navigation }: any) {
     setSaving(true);
     try {
       const db = await getDB();
-      await insertCondition(db, {
+      const data = {
         name: name.trim(),
         type: type || null,
         diagnosed_date: dobInput.value || null,
         severity: severity || null,
         notes: notes || null,
-      });
+      };
+      if (isEditing) {
+        await updateCondition(db, conditionId, data);
+      } else {
+        await insertCondition(db, data);
+      }
       await loadStores(db);
       navigation.goBack();
     } catch (err) {
@@ -75,7 +103,7 @@ export function AddConditionScreen({ navigation }: any) {
       <Text style={styles.label}>NOTES</Text>
       <TextInput style={[styles.input, styles.multiline]} value={notes} onChangeText={setNotes} placeholder="Additional notes" placeholderTextColor={colors.textDisabled} multiline numberOfLines={3} />
 
-      <Button title={saving ? 'Saving...' : 'Save Condition'} onPress={handleSave} loading={saving} disabled={!name.trim()} />
+      <Button title={saving ? 'Saving...' : (isEditing ? 'Update Condition' : 'Save Condition')} onPress={handleSave} loading={saving} disabled={!name.trim()} />
     </ScrollView>
   );
 }

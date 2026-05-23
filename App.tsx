@@ -1,6 +1,3 @@
-// PulseSense — Main Entry Point
-// Loads fonts, initializes database, and renders the app navigator
-
 import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -13,12 +10,13 @@ import { AppNavigator } from './src/navigation/AppNavigator';
 import { initializeNotificationHandler } from './src/services/notificationService';
 import { useThemeStore } from './src/store/themeStore';
 
-// Prevent native splash from auto-hiding
 SplashScreenExpo.preventAutoHideAsync();
 
-initializeNotificationHandler();
-
 export default function App() {
+  useEffect(() => {
+    initializeNotificationHandler();
+  }, []);
+
   const [fontsLoaded, fontError] = useFonts({
     Syne: Syne_400Regular,
     Syne_400: Syne_400Regular,

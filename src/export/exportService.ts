@@ -3,7 +3,7 @@
 
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { File, Paths } from 'expo-file-system';
+import { File, Paths, readAsStringAsync, EncodingType } from 'expo-file-system';
 import { getDB } from '../hooks/useDB';
 import { getProfile } from '../db/queries/profile';
 import { getConditions } from '../db/queries/conditions';
@@ -38,81 +38,103 @@ export interface ExportOptions {
   dateRange?: { start: string; end: string }; // for vitals_report
 }
 
+async function photoToDataUri(uri: string | null | undefined): Promise<string | null> {
+  if (!uri) return null;
+  try {
+    const base64 = await readAsStringAsync(uri, { encoding: EncodingType.Base64 });
+    const ext = uri.split('.').pop()?.toLowerCase() || 'jpg';
+    const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+    return `data:${mime};base64,${base64}`;
+  } catch {
+    return null;
+  }
+}
+
 async function getExportData(type: ExportType) {
   const db = await getDB();
-  const profilePromise = type !== 'alerts' ? getProfile(db) : Promise.resolve(null);
+  const profilePromise = getProfile(db);
   const conditionsPromise = type === 'medical_id' || type === 'full_report' ? getConditions(db) : Promise.resolve([]);
   const allergiesPromise = type === 'medical_id' || type === 'full_report' ? getAllergies(db) : Promise.resolve([]);
   const contactsPromise = type === 'medical_id' || type === 'full_report' ? getContacts(db) : Promise.resolve([]);
   const allMedsPromise = type === 'full_report' ? getMedications(db) : Promise.resolve([]);
-  const activeMedsPromise = type === 'medications' || type === 'full_report' ? getActiveMedications(db) : Promise.resolve([]);
+  const activeMedsPromise = type === 'medications' || type === 'medical_id' || type === 'full_report' ? getActiveMedications(db) : Promise.resolve([]);
   const alertsPromise = type === 'alerts' || type === 'full_report' ? getAllAlerts(db) : Promise.resolve([]);
 
-  const [profile, conditions, allergies, contacts, allMedications, activeMedications, alerts] = await Promise.all([
+  let [profile, conditions, allergies, contacts, allMedications, activeMedications, alerts] = await Promise.all([
     profilePromise, conditionsPromise, allergiesPromise, contactsPromise,
     allMedsPromise, activeMedsPromise, alertsPromise,
   ]);
 
   const medications = type === 'full_report' ? allMedications : activeMedications;
 
+  if (profile?.photo_uri) {
+    profile = { ...profile, photo_uri: await photoToDataUri(profile.photo_uri) };
+  }
+
   return { profile, conditions, allergies, contacts, medications, alerts };
 }
 
-export async function generateExport(options: ExportOptions): Promise<string> {
+export async function generateExportHtml(options: ExportOptions): Promise<string> {
   const data = await getExportData(options.type);
-  const { profile } = data;
-  if (!profile) throw new Error('Profile not found');
-
-  let html: string;
 
   switch (options.type) {
-    case 'medical_id':
-      html = wrapHtml(buildMedicalIdHtml(
-        profile,
+    case 'medical_id': {
+      if (!data.profile) throw new Error('Profile not found');
+      return wrapHtml(buildMedicalIdHtml(
+        data.profile,
         data.conditions,
         data.allergies,
-        data.contacts
+        data.contacts,
+        data.medications
       ));
-      break;
+    }
 
     case 'vitals_report': {
+      if (!data.profile) throw new Error('Profile not found');
       const range = options.dateRange || getLast30DaysRange();
       const db = await getDB();
       const vitals = await getVitalLogsByDateRange(db, range.start, range.end);
-      html = wrapHtml(buildVitalsReportHtml(
-        profile,
+      return wrapHtml(buildVitalsReportHtml(
+        data.profile,
         vitals,
         options.vitalTypes || ['bp', 'pulse', 'spo2', 'glucose', 'temperature', 'weight', 'pain']
       ));
-      break;
     }
 
-    case 'medications':
-      html = wrapHtml(buildMedicationsHtml(profile, data.medications));
-      break;
+    case 'medications': {
+      if (!data.profile) throw new Error('Profile not found');
+      return wrapHtml(buildMedicationsHtml(data.profile, data.medications));
+    }
 
     case 'alerts':
-      html = wrapHtml(buildAlertsHtml(data.alerts));
-      break;
+      return wrapHtml(buildAlertsHtml(data.alerts, data.profile));
 
-    case 'full_report':
-      html = buildFullReportHtml(
-        profile,
+    case 'full_report': {
+      if (!data.profile) throw new Error('Profile not found');
+      return buildFullReportHtml(
+        data.profile,
         data.conditions,
         data.allergies,
         data.contacts,
         data.medications,
         data.alerts
       );
-      break;
+    }
 
     default:
       throw new Error(`Unknown export type: ${options.type}`);
   }
+}
 
-  // Generate PDF
-  const { uri } = await Print.printToFileAsync({ html, width: 595.28, height: 841.89 }); // A4
+export async function generateExport(options: ExportOptions): Promise<string> {
+  const html = await generateExportHtml(options);
+  const { uri } = await Print.printToFileAsync({ html, width: 595.28, height: 841.89 });
   return uri;
+}
+
+export async function previewPdf(options: ExportOptions): Promise<void> {
+  const html = await generateExportHtml(options);
+  await Print.printAsync({ html, width: 595.28, height: 841.89 });
 }
 
 export async function sharePdf(uri: string): Promise<void> {

@@ -70,6 +70,11 @@ export async function archiveCondition(db: SQLiteDatabase, id: number): Promise<
   );
 }
 
+export async function getConditionById(db: SQLiteDatabase, id: number): Promise<ConditionRow | null> {
+  const row = await db.getFirstAsync<ConditionRow>('SELECT * FROM conditions WHERE id = ?', [id]);
+  return row || null;
+}
+
 export async function deleteCondition(db: SQLiteDatabase, id: number): Promise<void> {
   await db.runAsync('DELETE FROM conditions WHERE id = ?', [id]);
 }

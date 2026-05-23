@@ -9,6 +9,7 @@ import { spacing, borderRadius } from '../constants/spacing';
 import { Button } from '../components/ui/Button';
 import { useProfileStore } from '../store/profileStore';
 import { useDateInput } from '../hooks/useDateInput';
+import { useSettingsStore } from '../store/settingsStore';
 import { getDB, loadStores } from '../hooks/useDB';
 import { updateProfile, updateProfilePhoto } from '../db/queries/profile';
 
@@ -27,8 +28,12 @@ export function EditProfileScreen({ navigation }: any) {
   const [showSexPicker, setShowSexPicker] = useState(false);
   const [bloodGroup, setBloodGroup] = useState(profile?.blood_group || '');
   const [showBloodPicker, setShowBloodPicker] = useState(false);
+  const [heightCm, setHeightCm] = useState(profile?.height_unit === 'cm' && profile?.height_value ? String(profile.height_value) : '');
+  const [heightFt, setHeightFt] = useState(profile?.height_unit === 'ft_in' && profile?.height_ft ? String(profile.height_ft) : '');
+  const [heightIn, setHeightIn] = useState(profile?.height_unit === 'ft_in' && profile?.height_in ? String(profile.height_in) : '');
   const [photo, setPhoto] = useState(profile?.photo_uri || '');
   const [saving, setSaving] = useState(false);
+  const heightUnit = useSettingsStore((s) => s.heightUnit);
 
   const handlePickPhoto = async () => {
     try {
@@ -56,6 +61,10 @@ export function EditProfileScreen({ navigation }: any) {
         dob: dobInput.value || profile?.dob || '',
         sex: sex || profile?.sex || '',
         blood_group: bloodGroup || profile?.blood_group || null,
+        height_value: heightUnit === 'cm' ? (heightCm ? parseFloat(heightCm) : null) : null,
+        height_unit: heightUnit,
+        height_ft: heightUnit === 'ft_in' ? (heightFt ? parseInt(heightFt, 10) : null) : null,
+        height_in: heightUnit === 'ft_in' ? (heightIn ? parseFloat(heightIn) : null) : null,
         photo_uri: photo || null,
       });
       await loadStores(db);
@@ -106,6 +115,41 @@ export function EditProfileScreen({ navigation }: any) {
           <Text style={[styles.pickerText, bloodGroup === bg && styles.pickerTextSelected]}>{bg}</Text>
         </TouchableOpacity>
       ))}
+
+      <Text style={styles.label}>HEIGHT ({heightUnit === 'cm' ? 'cm' : 'ft/in'})</Text>
+      {heightUnit === 'cm' ? (
+        <TextInput
+          style={styles.input}
+          value={heightCm}
+          onChangeText={setHeightCm}
+          placeholder="e.g. 175"
+          placeholderTextColor={colors.textDisabled}
+          keyboardType="decimal-pad"
+        />
+      ) : (
+        <View style={{ flexDirection: 'row', gap: spacing.space2 }}>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              style={styles.input}
+              value={heightFt}
+              onChangeText={setHeightFt}
+              placeholder="ft"
+              placeholderTextColor={colors.textDisabled}
+              keyboardType="number-pad"
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              style={styles.input}
+              value={heightIn}
+              onChangeText={setHeightIn}
+              placeholder="in"
+              placeholderTextColor={colors.textDisabled}
+              keyboardType="decimal-pad"
+            />
+          </View>
+        </View>
+      )}
 
       <Button title={saving ? 'Saving...' : 'Save Profile'} onPress={handleSave} loading={saving} />
     </ScrollView>

@@ -128,6 +128,24 @@ export async function getCustomVitalLogs(
   return rows;
 }
 
+export async function getCustomVitalLogsByDateRange(
+  db: SQLiteDatabase,
+  startIso: string,
+  endIso: string
+): Promise<(CustomVitalLogRow & { definition_name: string; unit: string })[]> {
+  const rows = await db.getAllAsync<
+    CustomVitalLogRow & { definition_name: string; unit: string }
+  >(
+    `SELECT cvl.*, cvd.name as definition_name, cvd.unit
+     FROM custom_vital_logs cvl
+     JOIN custom_vital_definitions cvd ON cvl.vital_definition_id = cvd.id
+     WHERE cvl.logged_at_iso >= ? AND cvl.logged_at_iso <= ?
+     ORDER BY cvl.logged_at_iso DESC`,
+    [startIso, endIso]
+  );
+  return rows;
+}
+
 export async function getLatestCustomVitalLogs(
   db: SQLiteDatabase
 ): Promise<(CustomVitalLogRow & { definition_name: string; unit: string })[]> {

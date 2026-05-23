@@ -1,7 +1,7 @@
 // PulseSense — Onboarding: Setup Profile Screen
 // Form for name, DOB, sex, blood group (minimal for onboarding)
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -45,9 +45,13 @@ export function SetupProfileScreen({ onComplete }: SetupProfileScreenProps) {
   const [sex, setSex] = useState('');
   const [bloodGroup, setBloodGroup] = useState('');
   const [showBloodPicker, setShowBloodPicker] = useState(false);
+  const [heightCm, setHeightCm] = useState('');
+  const [heightFt, setHeightFt] = useState('');
+  const [heightIn, setHeightIn] = useState('');
   const [photo, setPhoto] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const heightUnit = useSettingsStore((s) => s.heightUnit);
 
   const canSave = name.trim().length > 0 && dobInput.value.length === 10 && sex.length > 0 && photo.length > 0;
 
@@ -81,6 +85,10 @@ export function SetupProfileScreen({ onComplete }: SetupProfileScreenProps) {
         dob: dobInput.value,
         sex,
         blood_group: bloodGroup || null,
+        height_value: heightUnit === 'cm' ? (heightCm ? parseFloat(heightCm) : null) : null,
+        height_unit: heightUnit,
+        height_ft: heightUnit === 'ft_in' ? (heightFt ? parseInt(heightFt, 10) : null) : null,
+        height_in: heightUnit === 'ft_in' ? (heightIn ? parseFloat(heightIn) : null) : null,
         photo_uri: photo,
       });
       if (photo) {
@@ -198,6 +206,44 @@ export function SetupProfileScreen({ onComplete }: SetupProfileScreenProps) {
                   <Text style={[styles.pickerText, bloodGroup === bg && styles.pickerTextSelected]}>{bg}</Text>
                 </TouchableOpacity>
               ))}
+            </View>
+          )}
+        </View>
+
+        {/* Height */}
+        <View style={styles.field}>
+          <Text style={styles.label}>HEIGHT ({heightUnit === 'cm' ? 'cm' : 'ft/in'})</Text>
+          {heightUnit === 'cm' ? (
+            <TextInput
+              style={styles.input}
+              value={heightCm}
+              onChangeText={setHeightCm}
+              placeholder="e.g. 175"
+              placeholderTextColor={colors.textDisabled}
+              keyboardType="decimal-pad"
+            />
+          ) : (
+            <View style={{ flexDirection: 'row', gap: spacing.space2 }}>
+              <View style={{ flex: 1 }}>
+                <TextInput
+                  style={styles.input}
+                  value={heightFt}
+                  onChangeText={setHeightFt}
+                  placeholder="ft"
+                  placeholderTextColor={colors.textDisabled}
+                  keyboardType="number-pad"
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <TextInput
+                  style={styles.input}
+                  value={heightIn}
+                  onChangeText={setHeightIn}
+                  placeholder="in"
+                  placeholderTextColor={colors.textDisabled}
+                  keyboardType="decimal-pad"
+                />
+              </View>
             </View>
           )}
         </View>

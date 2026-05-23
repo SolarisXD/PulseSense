@@ -1,62 +1,94 @@
-// PulseSense — Notification Service
-// Local notification scheduling for medication reminders via expo-notifications
-
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { getDB } from '../hooks/useDB';
 import { getActiveMedications } from '../db/queries/medications';
 
-// ─── Notification Handler Setup ───────────────────────────────────────────
+const CHANNEL_ID = 'medication-reminders';
+
+const IS_NOTIFICATIONS_AVAILABLE: boolean = (() => {
+  try {
+    if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) {
+      return false;
+    }
+    return Platform.OS !== 'web';
+  } catch {
+    return false;
+  }
+})();
+
+type NotificationsModule = typeof import('expo-notifications');
+
+let _notificationsModule: NotificationsModule | null = null;
+
+async function getNotifications(): Promise<NotificationsModule | null> {
+  if (!IS_NOTIFICATIONS_AVAILABLE) return null;
+  if (_notificationsModule) return _notificationsModule;
+  try {
+    _notificationsModule = await import('expo-notifications');
+    return _notificationsModule;
+  } catch {
+    return null;
+  }
+}
+
 export function initializeNotificationHandler(): void {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-    }),
+  getNotifications().then((mod) => {
+    if (!mod) return;
+    try {
+      mod.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowBanner: true,
+          shouldShowList: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+        }),
+      });
+    } catch {}
   });
 }
 
-// ─── Android Channel Setup ────────────────────────────────────────────────
-const CHANNEL_ID = 'medication-reminders';
-
 async function ensureAndroidChannel(): Promise<void> {
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
+  if (Platform.OS !== 'android') return;
+  const mod = await getNotifications();
+  if (!mod) return;
+  try {
+    await mod.setNotificationChannelAsync(CHANNEL_ID, {
       name: 'Medication Reminders',
-      importance: Notifications.AndroidImportance.HIGH,
+      importance: mod.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
       sound: 'default',
     });
-  }
+  } catch {}
 }
 
-// ─── Permissions ──────────────────────────────────────────────────────────
 export async function requestNotificationPermissions(): Promise<boolean> {
+  const mod = await getNotifications();
+  if (!mod) return false;
+
   await ensureAndroidChannel();
 
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
+  try {
+    const { status: existingStatus } = await mod.getPermissionsAsync();
+    let finalStatus = existingStatus;
 
-  if (existingStatus !== 'granted') {
-    const { status } = await Notifications.requestPermissionsAsync({
-      ios: {
-        allowAlert: true,
-        allowBadge: true,
-        allowSound: true,
-      },
-    });
-    finalStatus = status;
+    if (existingStatus !== 'granted') {
+      const { status } = await mod.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+        },
+      });
+      finalStatus = status;
+    }
+
+    return finalStatus === 'granted';
+  } catch {
+    return false;
   }
-
-  return finalStatus === 'granted';
 }
 
-// ─── Identifier Helpers ───────────────────────────────────────────────────
-function reminderIdentifiers(
-  identifier: string,
-): { morning: string; afternoon: string; night: string } {
+function reminderIdentifiers(identifier: string): { morning: string; afternoon: string; night: string } {
   return {
     morning: `med-${identifier}-morning`,
     afternoon: `med-${identifier}-afternoon`,
@@ -64,7 +96,6 @@ function reminderIdentifiers(
   };
 }
 
-// ─── Time Helpers ─────────────────────────────────────────────────────────
 function parseTime(timeStr: string): { hour: number; minute: number } {
   const parts = timeStr.split(':');
   return {
@@ -75,24 +106,16 @@ function parseTime(timeStr: string): { hour: number; minute: number } {
 
 function timingLabel(timing: string | null): string {
   switch (timing) {
-    case 'before_meal':
-      return ' before meals';
-    case 'after_meal':
-      return ' after meals';
-    case 'with_meal':
-      return ' with meals';
-    case 'morning':
-      return ' in the morning';
-    case 'evening':
-      return ' in the evening';
-    case 'bedtime':
-      return ' at bedtime';
-    default:
-      return '';
+    case 'before_meal': return ' before meals';
+    case 'after_meal': return ' after meals';
+    case 'with_meal': return ' with meals';
+    case 'morning': return ' in the morning';
+    case 'evening': return ' in the evening';
+    case 'bedtime': return ' at bedtime';
+    default: return '';
   }
 }
 
-// ─── Schedule Single Slot ─────────────────────────────────────────────────
 async function scheduleSlot(
   identifier: string,
   slot: 'morning' | 'afternoon' | 'night',
@@ -101,34 +124,33 @@ async function scheduleSlot(
   minute: number,
   timing: string | null,
 ): Promise<void> {
+  const mod = await getNotifications();
+  if (!mod) return;
+
   await ensureAndroidChannel();
 
-  const label = slot.charAt(0).toUpperCase() + slot.slice(1);
-  const ids = reminderIdentifiers(identifier);
+  try {
+    const label = slot.charAt(0).toUpperCase() + slot.slice(1);
+    const ids = reminderIdentifiers(identifier);
 
-  await Notifications.scheduleNotificationAsync({
-    identifier: ids[slot],
-    content: {
-      title: 'Medication Reminder',
-      body: `Time to take ${medicineName}${timingLabel(timing)} — ${label} dose`,
-      data: {
-        type: 'medication-reminder',
-        identifier,
-        slot,
-        medicineName,
+    await mod.scheduleNotificationAsync({
+      identifier: ids[slot],
+      content: {
+        title: 'Medication Reminder',
+        body: `Time to take ${medicineName}${timingLabel(timing)} — ${label} dose`,
+        data: { type: 'medication-reminder', identifier, slot, medicineName },
+        sound: 'default',
       },
-      sound: 'default',
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour,
-      minute,
-      channelId: Platform.OS === 'android' ? CHANNEL_ID : undefined,
-    },
-  });
+      trigger: {
+        type: mod.SchedulableTriggerInputTypes.DAILY,
+        hour,
+        minute,
+        channelId: Platform.OS === 'android' ? CHANNEL_ID : undefined,
+      },
+    });
+  } catch {}
 }
 
-// ─── Schedule All Slots for One Medicine ──────────────────────────────────
 export async function scheduleMedicationReminder(
   identifier: string,
   medicineName: string,
@@ -152,45 +174,46 @@ export async function scheduleMedicationReminder(
   const tasks: Promise<void>[] = [];
 
   if (doseMorning > 0) {
-    tasks.push(
-      scheduleSlot(identifier, 'morning', medicineName, morning.hour, morning.minute, timing),
-    );
+    tasks.push(scheduleSlot(identifier, 'morning', medicineName, morning.hour, morning.minute, timing));
   }
   if (doseAfternoon > 0) {
-    tasks.push(
-      scheduleSlot(identifier, 'afternoon', medicineName, afternoon.hour, afternoon.minute, timing),
-    );
+    tasks.push(scheduleSlot(identifier, 'afternoon', medicineName, afternoon.hour, afternoon.minute, timing));
   }
   if (doseNight > 0) {
-    tasks.push(
-      scheduleSlot(identifier, 'night', medicineName, night.hour, night.minute, timing),
-    );
+    tasks.push(scheduleSlot(identifier, 'night', medicineName, night.hour, night.minute, timing));
   }
 
   await Promise.all(tasks);
 }
 
-// ─── Cancel All Reminders ─────────────────────────────────────────────────
 export async function cancelAllMedicationReminders(): Promise<void> {
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  const mod = await getNotifications();
+  if (!mod) return;
+  try {
+    await mod.cancelAllScheduledNotificationsAsync();
+  } catch {}
 }
 
-// ─── Cancel Reminders for a Specific Medication ───────────────────────────
 export async function cancelMedicationReminders(identifier: string): Promise<void> {
+  const mod = await getNotifications();
+  if (!mod) return;
+
   const ids = reminderIdentifiers(identifier);
   await Promise.all([
-    Notifications.cancelScheduledNotificationAsync(ids.morning).catch(() => {}),
-    Notifications.cancelScheduledNotificationAsync(ids.afternoon).catch(() => {}),
-    Notifications.cancelScheduledNotificationAsync(ids.night).catch(() => {}),
+    mod.cancelScheduledNotificationAsync(ids.morning).catch(() => {}),
+    mod.cancelScheduledNotificationAsync(ids.afternoon).catch(() => {}),
+    mod.cancelScheduledNotificationAsync(ids.night).catch(() => {}),
   ]);
 }
 
-// ─── Reschedule All Active Medications ─────────────────────────────────────
 export async function rescheduleAllMedicationReminders(
   morningTime: string,
   afternoonTime: string,
   nightTime: string,
 ): Promise<void> {
+  const mod = await getNotifications();
+  if (!mod) return;
+
   await cancelAllMedicationReminders();
 
   const db = await getDB();
