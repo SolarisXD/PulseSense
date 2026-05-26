@@ -7,6 +7,11 @@ import { getDB } from './useDB';
 import { getVitalLogsByDateRange, type VitalLogRow } from '../db/queries/vitals';
 import { generateInsights, type HealthInsight } from '../engine/healthInsights';
 
+const CACHE_TTL_MS = 30_000;
+
+let cachedInsights: HealthInsight[] = [];
+let cacheLoadedAt = 0;
+
 function get14DayRange(): { start: string; end: string } {
   const end = new Date();
   const start = new Date();
@@ -30,16 +35,25 @@ export function useHealthInsights(): {
   loading: boolean;
   refresh: () => void;
 } {
-  const [insights, setInsights] = useState<HealthInsight[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [insights, setInsights] = useState<HealthInsight[]>(cachedInsights);
+  const [loading, setLoading] = useState(cachedInsights.length === 0);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force?: boolean) => {
+    const now = Date.now();
+    if (!force && cachedInsights.length > 0 && (now - cacheLoadedAt) < CACHE_TTL_MS) {
+      setInsights(cachedInsights);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const db = await getDB();
       const { start, end } = get14DayRange();
       const vitals: VitalLogRow[] = await getVitalLogsByDateRange(db, start, end);
       const generated = generateInsights(vitals);
+      cachedInsights = generated;
+      cacheLoadedAt = Date.now();
       setInsights(generated);
     } catch (err) {
       console.error('[useHealthInsights] Failed to load insights:', err);
@@ -55,5 +69,5 @@ export function useHealthInsights(): {
     }, [load])
   );
 
-  return { insights, loading, refresh: load };
+  return { insights, loading, refresh: () => load(true) };
 }

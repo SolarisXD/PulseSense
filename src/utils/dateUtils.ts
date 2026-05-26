@@ -107,6 +107,20 @@ export function formatDisplayTime(display: string): string {
   return timePart || '';
 }
 
+export function formatDateInput(text: string): string {
+  const digits = text.replace(/\D/g, '');
+  if (digits.length === 0) return '';
+  let formatted = '';
+  if (digits.length <= 2) {
+    formatted = digits;
+  } else if (digits.length <= 4) {
+    formatted = digits.slice(0, 2) + '/' + digits.slice(2);
+  } else {
+    formatted = digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4, 8);
+  }
+  return formatted;
+}
+
 export function getLast30DaysRange(): { start: string; end: string } {
   const end = new Date();
   const start = new Date();

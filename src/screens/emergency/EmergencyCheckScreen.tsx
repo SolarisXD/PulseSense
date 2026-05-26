@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 import { Button } from '../../components/ui/Button';
@@ -25,85 +25,87 @@ import { useAlertStore } from '../../store/alertStore';
 import type { SymptomInput, RuleResult } from '../../constants/rules';
 import { nowIso } from '../../utils/dateUtils';
 
-const CATEGORIES = [
-  {
-    id: 'stroke',
-    label: 'Possible Stroke',
-    icon: 'fitness-outline' as const,
-    color: colors.danger,
-    symptoms: [
-      { key: 'balance_loss', label: 'Balance loss / dizziness' },
-      { key: 'vision_change', label: 'Vision change / blurring' },
-      { key: 'face_droop', label: 'Face drooping (one side)' },
-      { key: 'arm_weakness', label: 'Arm weakness (one side)' },
-      { key: 'speech_difficulty', label: 'Speech difficulty / slurred' },
-    ],
-  },
-  {
-    id: 'heart',
-    label: 'Chest Pain / Heart Attack',
-    icon: 'heart-half' as const,
-    color: colors.danger,
-    symptoms: [
-      { key: 'chest_discomfort', label: 'Chest discomfort / pressure' },
-      { key: 'upper_body_pain', label: 'Pain in arm, back, neck, jaw' },
-      { key: 'shortness_breath', label: 'Shortness of breath' },
-      { key: 'cold_sweat', label: 'Cold sweat' },
-      { key: 'nausea', label: 'Nausea / indigestion' },
-      { key: 'lightheadedness', label: 'Lightheadedness' },
-      { key: 'rapid_heartbeat', label: 'Rapid or irregular heartbeat' },
-    ],
-  },
-  {
-    id: 'breathing',
-    label: 'Trouble Breathing',
-    icon: 'analytics-outline' as const,
-    color: colors.urgent,
-    symptoms: [
-      { key: 'shortness_breath', label: 'Sudden severe breathlessness' },
-    ],
-  },
-  {
-    id: 'consciousness',
-    label: 'Unconscious / Not Breathing',
-    icon: 'medkit-outline' as const,
-    color: colors.danger,
-    symptoms: [
-      { key: 'unconscious', label: 'Unconscious / unresponsive' },
-      { key: 'not_breathing', label: 'Not breathing normally' },
-    ],
-  },
-  {
-    id: 'bleeding',
-    label: 'Severe Bleeding',
-    icon: 'water-outline' as const,
-    color: colors.danger,
-    symptoms: [
-      { key: 'severe_bleeding', label: 'Severe / uncontrolled bleeding' },
-    ],
-  },
-  {
-    id: 'allergy',
-    label: 'Severe Allergic Reaction',
-    icon: 'warning-outline' as const,
-    color: colors.urgent,
-    symptoms: [
-      { key: 'anaphylaxis', label: 'Signs of anaphylaxis (swelling, hives, wheezing)' },
-    ],
-  },
-  {
-    id: 'other',
-    label: 'Other / Not Sure',
-    icon: 'help-circle-outline' as const,
-    color: colors.textSecondary,
-    symptoms: [
-      { key: 'fainting', label: 'Fainting / collapsed' },
-      { key: 'seizure', label: 'Seizure / convulsions' },
-    ],
-  },
-];
-
 export function EmergencyCheckScreen({ navigation }: any) {
+  const c = useColors();
+
+  const CATEGORIES = [
+    {
+      id: 'stroke',
+      label: 'Possible Stroke',
+      icon: 'fitness-outline' as const,
+      color: c.danger,
+      symptoms: [
+        { key: 'balance_loss', label: 'Balance loss / dizziness' },
+        { key: 'vision_change', label: 'Vision change / blurring' },
+        { key: 'face_droop', label: 'Face drooping (one side)' },
+        { key: 'arm_weakness', label: 'Arm weakness (one side)' },
+        { key: 'speech_difficulty', label: 'Speech difficulty / slurred' },
+      ],
+    },
+    {
+      id: 'heart',
+      label: 'Chest Pain / Heart Attack',
+      icon: 'heart-half' as const,
+      color: c.danger,
+      symptoms: [
+        { key: 'chest_discomfort', label: 'Chest discomfort / pressure' },
+        { key: 'upper_body_pain', label: 'Pain in arm, back, neck, jaw' },
+        { key: 'shortness_breath', label: 'Shortness of breath' },
+        { key: 'cold_sweat', label: 'Cold sweat' },
+        { key: 'nausea', label: 'Nausea / indigestion' },
+        { key: 'lightheadedness', label: 'Lightheadedness' },
+        { key: 'rapid_heartbeat', label: 'Rapid or irregular heartbeat' },
+      ],
+    },
+    {
+      id: 'breathing',
+      label: 'Trouble Breathing',
+      icon: 'analytics-outline' as const,
+      color: c.urgent,
+      symptoms: [
+        { key: 'shortness_breath', label: 'Sudden severe breathlessness' },
+      ],
+    },
+    {
+      id: 'consciousness',
+      label: 'Unconscious / Not Breathing',
+      icon: 'medkit-outline' as const,
+      color: c.danger,
+      symptoms: [
+        { key: 'unconscious', label: 'Unconscious / unresponsive' },
+        { key: 'not_breathing', label: 'Not breathing normally' },
+      ],
+    },
+    {
+      id: 'bleeding',
+      label: 'Severe Bleeding',
+      icon: 'water-outline' as const,
+      color: c.danger,
+      symptoms: [
+        { key: 'severe_bleeding', label: 'Severe / uncontrolled bleeding' },
+      ],
+    },
+    {
+      id: 'allergy',
+      label: 'Severe Allergic Reaction',
+      icon: 'warning-outline' as const,
+      color: c.urgent,
+      symptoms: [
+        { key: 'anaphylaxis', label: 'Signs of anaphylaxis (swelling, hives, wheezing)' },
+      ],
+    },
+    {
+      id: 'other',
+      label: 'Other / Not Sure',
+      icon: 'help-circle-outline' as const,
+      color: c.textSecondary,
+      symptoms: [
+        { key: 'fainting', label: 'Fainting / collapsed' },
+        { key: 'seizure', label: 'Seizure / convulsions' },
+      ],
+    },
+  ];
+
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [symptoms, setSymptoms] = useState<SymptomInput>({});
   const [spo2, setSpo2] = useState('');
@@ -183,14 +185,14 @@ export function EmergencyCheckScreen({ navigation }: any) {
   const selectedCount = Object.values(symptoms).filter(Boolean).length;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <Text style={styles.heading}>What is happening?</Text>
-      <Text style={styles.subtext}>Select all symptoms that apply</Text>
+    <ScrollView style={[styles.container, { backgroundColor: c.background }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <Text style={[styles.heading, { color: c.textPrimary }]}>What is happening?</Text>
+      <Text style={[styles.subtext, { color: c.textSecondary }]}>Select all symptoms that apply</Text>
 
       {CATEGORIES.map((cat) => (
         <View key={cat.id} style={styles.categoryContainer}>
           <TouchableOpacity
-            style={[styles.categoryCard, expandedCategory === cat.id && { borderColor: cat.color }]}
+            style={[styles.categoryCard, { backgroundColor: c.surface, borderColor: c.borderLight }, expandedCategory === cat.id && { borderColor: cat.color }]}
             onPress={() => setExpandedCategory(expandedCategory === cat.id ? null : cat.id)}
             activeOpacity={0.7}
           >
@@ -198,9 +200,9 @@ export function EmergencyCheckScreen({ navigation }: any) {
               <Ionicons name={cat.icon} size={22} color={cat.color} />
             </View>
             <View style={styles.categoryInfo}>
-              <Text style={styles.categoryLabel}>{cat.label}</Text>
+              <Text style={[styles.categoryLabel, { color: c.textPrimary }]}>{cat.label}</Text>
               {expandedCategory === cat.id && (
-                <Text style={styles.selectedCount}>
+                <Text style={[styles.selectedCount, { color: c.primary }]}>
                   {cat.symptoms.filter((s) => symptoms[s.key as keyof SymptomInput]).length} selected
                 </Text>
               )}
@@ -208,25 +210,25 @@ export function EmergencyCheckScreen({ navigation }: any) {
             <Ionicons
               name={expandedCategory === cat.id ? 'chevron-up' : 'chevron-down'}
               size={18}
-              color={colors.textSecondary}
+              color={c.textSecondary}
             />
           </TouchableOpacity>
 
           {expandedCategory === cat.id && (
-            <View style={styles.symptomList}>
+            <View style={[styles.symptomList, { backgroundColor: c.surface, borderColor: c.borderLight }]}>
               {cat.symptoms.map((symp) => {
                 const isChecked = !!symptoms[symp.key as keyof SymptomInput];
                 return (
                   <TouchableOpacity
                     key={symp.key}
-                    style={[styles.symptomRow, isChecked && styles.symptomRowSelected]}
+                    style={[styles.symptomRow, isChecked && [styles.symptomRowSelected, { backgroundColor: c.primarySurface }]]}
                     onPress={() => toggleSymptom(symp.key as keyof SymptomInput)}
                     activeOpacity={0.7}
                   >
-                    <View style={[styles.checkbox, isChecked && styles.checkboxSelected]}>
+                    <View style={[styles.checkbox, { borderColor: c.border }, isChecked && [styles.checkboxSelected, { borderColor: c.primary, backgroundColor: c.primary }]]}>
                       {isChecked && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
                     </View>
-                    <Text style={[styles.symptomLabel, isChecked && styles.symptomLabelSelected]}>
+                    <Text style={[styles.symptomLabel, { color: c.textPrimary }, isChecked && [styles.symptomLabelSelected, { color: c.primary }]]}>
                       {symp.label}
                     </Text>
                   </TouchableOpacity>
@@ -238,56 +240,56 @@ export function EmergencyCheckScreen({ navigation }: any) {
       ))}
 
       {/* Quick Vitals */}
-      <View style={styles.quickVitals}>
-        <Text style={styles.quickVitalsTitle}>Optional: Quick Vitals</Text>
+      <View style={[styles.quickVitals, { backgroundColor: c.surface, borderColor: c.borderLight }]}>
+        <Text style={[styles.quickVitalsTitle, { color: c.textSecondary }]}>Optional: Quick Vitals</Text>
         <View style={styles.vitalsRow}>
           <View style={styles.vitalInput}>
-            <Text style={styles.vitalInputLabel}>SpO2 (%)</Text>
+            <Text style={[styles.vitalInputLabel, { color: c.textSecondary }]}>SpO2 (%)</Text>
             <TextInput
-              style={styles.vitalInputField}
+              style={[styles.vitalInputField, { borderColor: c.border, color: c.textPrimary }]}
               value={spo2}
               onChangeText={setSpo2}
               keyboardType="decimal-pad"
               placeholder="--"
-              placeholderTextColor={colors.textDisabled}
+              placeholderTextColor={c.textDisabled}
               maxLength={4}
             />
           </View>
           <View style={styles.vitalInput}>
-            <Text style={styles.vitalInputLabel}>Pulse (bpm)</Text>
+            <Text style={[styles.vitalInputLabel, { color: c.textSecondary }]}>Pulse (bpm)</Text>
             <TextInput
-              style={styles.vitalInputField}
+              style={[styles.vitalInputField, { borderColor: c.border, color: c.textPrimary }]}
               value={pulse}
               onChangeText={setPulse}
               keyboardType="number-pad"
               placeholder="--"
-              placeholderTextColor={colors.textDisabled}
+              placeholderTextColor={c.textDisabled}
               maxLength={3}
             />
           </View>
         </View>
         <View style={styles.vitalsRow}>
           <View style={styles.vitalInput}>
-            <Text style={styles.vitalInputLabel}>BP Systolic</Text>
+            <Text style={[styles.vitalInputLabel, { color: c.textSecondary }]}>BP Systolic</Text>
             <TextInput
-              style={styles.vitalInputField}
+              style={[styles.vitalInputField, { borderColor: c.border, color: c.textPrimary }]}
               value={bpSys}
               onChangeText={setBpSys}
               keyboardType="number-pad"
               placeholder="--"
-              placeholderTextColor={colors.textDisabled}
+              placeholderTextColor={c.textDisabled}
               maxLength={3}
             />
           </View>
           <View style={styles.vitalInput}>
-            <Text style={styles.vitalInputLabel}>BP Diastolic</Text>
+            <Text style={[styles.vitalInputLabel, { color: c.textSecondary }]}>BP Diastolic</Text>
             <TextInput
-              style={styles.vitalInputField}
+              style={[styles.vitalInputField, { borderColor: c.border, color: c.textPrimary }]}
               value={bpDia}
               onChangeText={setBpDia}
               keyboardType="number-pad"
               placeholder="--"
-              placeholderTextColor={colors.textDisabled}
+              placeholderTextColor={c.textDisabled}
               maxLength={3}
             />
           </View>
@@ -309,7 +311,6 @@ export function EmergencyCheckScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.space4,
@@ -318,14 +319,12 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.textPrimary,
     fontFamily: fonts.display,
     letterSpacing: -0.3,
     marginBottom: spacing.space2,
   },
   subtext: {
     fontSize: 13,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     marginBottom: spacing.space5,
   },
@@ -335,11 +334,9 @@ const styles = StyleSheet.create({
   categoryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.space4,
     borderWidth: 1.5,
-    borderColor: colors.borderLight,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -360,25 +357,21 @@ const styles = StyleSheet.create({
   categoryLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.textPrimary,
     fontFamily: fonts.body,
   },
   selectedCount: {
     fontSize: 11,
-    color: colors.primary,
     fontWeight: '500',
     fontFamily: fonts.body,
     marginTop: 2,
   },
   symptomList: {
-    backgroundColor: colors.surface,
     borderBottomLeftRadius: borderRadius.md,
     borderBottomRightRadius: borderRadius.md,
     padding: spacing.space3,
     borderLeftWidth: 1.5,
     borderRightWidth: 1.5,
     borderBottomWidth: 1.5,
-    borderColor: colors.borderLight,
   },
   symptomRow: {
     flexDirection: 'row',
@@ -386,7 +379,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.space2 + 2,
   },
   symptomRowSelected: {
-    backgroundColor: colors.primarySurface,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.space2,
   },
@@ -395,31 +387,24 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.space3,
   },
   checkboxSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
   },
   symptomLabel: {
     fontSize: 14,
-    color: colors.textPrimary,
     fontFamily: fonts.body,
   },
   symptomLabelSelected: {
     fontWeight: '600',
-    color: colors.primary,
   },
   quickVitals: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.space4,
     marginBottom: spacing.space5,
     borderWidth: 1,
-    borderColor: colors.borderLight,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -429,7 +414,6 @@ const styles = StyleSheet.create({
   quickVitalsTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     marginBottom: spacing.space3,
   },
@@ -444,18 +428,15 @@ const styles = StyleSheet.create({
   vitalInputLabel: {
     fontSize: 10,
     fontWeight: '500',
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     marginBottom: spacing.space1,
   },
   vitalInputField: {
     height: 40,
     borderWidth: 1.5,
-    borderColor: colors.border,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.space3,
     fontSize: 16,
-    color: colors.textPrimary,
     fontFamily: fonts.mono,
   },
 });

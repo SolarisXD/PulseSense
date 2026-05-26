@@ -8,6 +8,7 @@ import { colors } from '../../constants/colors';
 import { spacing } from '../../constants/spacing';
 import { VitalStatusBadge } from '../ui/VitalStatusBadge';
 import type { VitalStatus } from '../../utils/vitalStatus';
+import { useColors } from '../../hooks/useColors';
 
 interface CellData {
   value: string;
@@ -23,15 +24,17 @@ interface TableRowProps {
 }
 
 export function TableRow({ date, time, cells, isEven, onPress }: TableRowProps) {
+  const c = useColors();
+
   const content = (
-    <View style={[styles.row, isEven && styles.rowEven]}>
+    <View style={[styles.row, { borderBottomColor: c.borderLight }, isEven && { backgroundColor: c.surfaceAlt }]}>
       <View style={styles.dateTimeCol}>
-        <Text style={styles.date}>{date}</Text>
-        <Text style={styles.time}>{time}</Text>
+        <Text style={[styles.date, { color: c.textSecondary }]}>{date}</Text>
+        <Text style={[styles.time, { color: c.textSecondary }]}>{time}</Text>
       </View>
       {cells.map((cell, idx) => (
         <View key={idx} style={styles.cell}>
-          <Text style={[styles.cellValue, cell.status !== 'normal' && cell.status !== 'unknown' ? { color: cell.status === 'danger' ? colors.danger : colors.warning } : {}]}>
+          <Text style={[styles.cellValue, { color: c.textPrimary }, cell.status !== 'normal' && cell.status !== 'unknown' ? { color: cell.status === 'danger' ? c.danger : c.warning } : {}]}>
             {cell.value}
           </Text>
         </View>
@@ -57,10 +60,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.space3,
     paddingHorizontal: spacing.space3,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
-  },
-  rowEven: {
-    backgroundColor: colors.surfaceAlt,
   },
   dateTimeCol: {
     width: 70,
@@ -68,12 +67,10 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 11,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
   },
   time: {
     fontSize: 11,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
   },
   cell: {
@@ -84,7 +81,6 @@ const styles = StyleSheet.create({
   cellValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.textPrimary,
     fontFamily: fonts.mono,
   },
 });

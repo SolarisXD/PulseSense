@@ -1,6 +1,6 @@
 // PulseSense — Add Prescription Screen
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useColors } from '../../hooks/useColors';
 import { fonts } from '../../constants/typography';
@@ -8,9 +8,10 @@ import { spacing, borderRadius } from '../../constants/spacing';
 import { Button } from '../../components/ui/Button';
 import { DosageDisplay } from '../../components/medications/DosageDisplay';
 import { getDB, loadStores } from '../../hooks/useDB';
-import { insertMedication } from '../../db/queries/medications';
+import { insertMedication, updateMedication, updateMedicationItems } from '../../db/queries/medications';
 import { useSettingsStore } from '../../store/settingsStore';
 import { rescheduleAllMedicationReminders } from '../../services/notificationService';
+import { formatDateInput } from '../../utils/dateUtils';
 
 const TIMING_OPTIONS = ['before_meal', 'after_meal', 'with_meal', 'morning', 'evening', 'bedtime', 'custom'];
 
@@ -26,14 +27,41 @@ interface MedicineRow {
   notes: string;
 }
 
-export function AddMedicationScreen({ navigation }: any) {
+export function AddMedicationScreen({ navigation, route }: any) {
   const c = useColors();
+  const editing = route?.params?.medication ?? null;
+  const isEdit = !!editing;
+
   const [date, setDate] = useState('');
   const [doctor, setDoctor] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
   const [medicines, setMedicines] = useState<MedicineRow[]>([
     { name: '', strength: '', morning: 0, afternoon: 0, night: 0, timing: '', timingCustom: '', duration: '', notes: '' },
   ]);
+
+  useEffect(() => {
+    navigation.setOptions({ title: isEdit ? 'Edit Prescription' : 'Add Prescription' });
+    if (editing) {
+      setDate(editing.prescription_date || '');
+      setDoctor(editing.prescribing_doctor || '');
+      setDiagnosis(editing.diagnosis_notes || '');
+      if (editing.items?.length) {
+        setMedicines(
+          editing.items.map((item: any) => ({
+            name: item.medicine_name || '',
+            strength: item.strength || '',
+            morning: item.dose_morning ?? 0,
+            afternoon: item.dose_afternoon ?? 0,
+            night: item.dose_night ?? 0,
+            timing: item.timing || '',
+            timingCustom: item.timing_custom || '',
+            duration: item.duration || '',
+            notes: item.notes || '',
+          }))
+        );
+      }
+    }
+  }, [editing]);
   const [saving, setSaving] = useState(false);
   const remindersEnabled = useSettingsStore((s) => s.medicationReminders);
   const reminderMorningTime = useSettingsStore((s) => s.reminderMorningTime);
@@ -74,34 +102,56 @@ export function AddMedicationScreen({ navigation }: any) {
     setSaving(true);
     try {
       const db = await getDB();
-      await insertMedication(
-        db,
-        { prescription_date: date.trim(), prescribing_doctor: doctor || null, diagnosis_notes: diagnosis || null },
-        validItems.map((m) => ({
-          medicine_name: m.name.trim(),
-          strength: m.strength || null,
-          dose_morning: m.morning,
-          dose_afternoon: m.afternoon,
-          dose_night: m.night,
-          timing: m.timing || null,
-          timing_custom: m.timingCustom || null,
-          duration: m.duration || null,
-          notes: m.notes || null,
-        }))
-      );
-      await loadStores(db);
+      const itemsData = validItems.map((m) => ({
+        medicine_name: m.name.trim(),
+        strength: m.strength || null,
+        dose_morning: m.morning,
+        dose_afternoon: m.afternoon,
+        dose_night: m.night,
+        timing: m.timing || null,
+        timing_custom: m.timingCustom || null,
+        duration: m.duration || null,
+        notes: m.notes || null,
+      }));
 
-      // Use rescheduleAllMedicationReminders which reads directly from the DB
-      // using correct item.id identifiers, avoiding transient ID mismatch
-      if (remindersEnabled) {
-        try {
-          await rescheduleAllMedicationReminders(
-            reminderMorningTime,
-            reminderAfternoonTime,
-            reminderNightTime,
-          );
-        } catch (notifErr) {
-          console.warn('Failed to schedule reminders:', notifErr);
+      if (isEdit) {
+        await updateMedication(
+          db,
+          editing.id,
+          { prescription_date: date.trim(), prescribing_doctor: doctor || null, diagnosis_notes: diagnosis || null }
+        );
+        await updateMedicationItems(db, editing.id, itemsData);
+        await loadStores(db);
+
+        if (remindersEnabled) {
+          try {
+            await rescheduleAllMedicationReminders(
+              reminderMorningTime,
+              reminderAfternoonTime,
+              reminderNightTime,
+            );
+          } catch (notifErr) {
+            console.warn('Failed to schedule reminders:', notifErr);
+          }
+        }
+      } else {
+        await insertMedication(
+          db,
+          { prescription_date: date.trim(), prescribing_doctor: doctor || null, diagnosis_notes: diagnosis || null },
+          itemsData
+        );
+        await loadStores(db);
+
+        if (remindersEnabled) {
+          try {
+            await rescheduleAllMedicationReminders(
+              reminderMorningTime,
+              reminderAfternoonTime,
+              reminderNightTime,
+            );
+          } catch (notifErr) {
+            console.warn('Failed to schedule reminders:', notifErr);
+          }
         }
       }
 
@@ -116,7 +166,7 @@ export function AddMedicationScreen({ navigation }: any) {
   return (
     <ScrollView style={[styles.container, { backgroundColor: c.background }]} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={[styles.label, { color: c.textSecondary }]}>PRESCRIPTION DATE *</Text>
-      <TextInput style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} value={date} onChangeText={setDate} placeholder="DD/MM/YYYY" placeholderTextColor={c.textDisabled} keyboardType="number-pad" maxLength={10} />
+      <TextInput style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} value={date} onChangeText={(t) => setDate(formatDateInput(t))} placeholder="DD/MM/YYYY" placeholderTextColor={c.textDisabled} keyboardType="number-pad" maxLength={10} />
 
       <Text style={[styles.label, { color: c.textSecondary }]}>PRESCRIBING DOCTOR</Text>
       <TextInput style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} value={doctor} onChangeText={setDoctor} placeholder="Doctor's name" placeholderTextColor={c.textDisabled} />
@@ -173,7 +223,7 @@ export function AddMedicationScreen({ navigation }: any) {
       ))}
 
       <Button title="+ Add Another Medicine" onPress={addMedicine} variant="outline" style={{ marginBottom: spacing.space6 }} />
-      <Button title={saving ? 'Saving...' : 'Save Prescription'} onPress={handleSave} loading={saving} disabled={!date.trim()} />
+      <Button title={saving ? 'Saving...' : isEdit ? 'Update Prescription' : 'Save Prescription'} onPress={handleSave} loading={saving} disabled={!date.trim()} />
     </ScrollView>
   );
 }

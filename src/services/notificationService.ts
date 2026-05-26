@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import { getDB } from '../hooks/useDB';
+import { getDB } from '../db/database';
 import { getActiveMedications } from '../db/queries/medications';
 
 const CHANNEL_ID = 'medication-reminders';
@@ -43,7 +43,7 @@ export function initializeNotificationHandler(): void {
           shouldSetBadge: true,
         }),
       });
-    } catch {}
+    } catch (e) { console.warn('[notif] setNotificationHandler failed', e); }
   });
 }
 
@@ -58,7 +58,7 @@ async function ensureAndroidChannel(): Promise<void> {
       vibrationPattern: [0, 250, 250, 250],
       sound: 'default',
     });
-  } catch {}
+  } catch (e) { console.warn('[notif] ensureAndroidChannel failed', e); }
 }
 
 export async function requestNotificationPermissions(): Promise<boolean> {
@@ -83,7 +83,8 @@ export async function requestNotificationPermissions(): Promise<boolean> {
     }
 
     return finalStatus === 'granted';
-  } catch {
+  } catch (e) {
+    console.warn('[notif] requestPermissions failed', e);
     return false;
   }
 }
@@ -148,7 +149,7 @@ async function scheduleSlot(
         channelId: Platform.OS === 'android' ? CHANNEL_ID : undefined,
       },
     });
-  } catch {}
+  } catch (e) { console.warn('[notif] scheduleSlot failed', e); }
 }
 
 export async function scheduleMedicationReminder(
@@ -190,8 +191,14 @@ export async function cancelAllMedicationReminders(): Promise<void> {
   const mod = await getNotifications();
   if (!mod) return;
   try {
-    await mod.cancelAllScheduledNotificationsAsync();
-  } catch {}
+    const scheduled = await mod.getAllScheduledNotificationsAsync();
+    const medIds = scheduled
+      .filter((n) => n.identifier.startsWith('med-'))
+      .map((n) => n.identifier);
+    await Promise.allSettled(
+      medIds.map((id) => mod.cancelScheduledNotificationAsync(id))
+    );
+  } catch (e) { console.warn('[notif] cancelAll failed', e); }
 }
 
 export async function cancelMedicationReminders(identifier: string): Promise<void> {
@@ -240,6 +247,6 @@ export async function rescheduleAllMedicationReminders(
   }
 
   if (tasks.length > 0) {
-    await Promise.all(tasks);
+    await Promise.allSettled(tasks);
   }
 }

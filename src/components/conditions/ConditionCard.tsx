@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 
@@ -18,12 +18,6 @@ interface ConditionCardProps {
   onArchive?: () => void;
 }
 
-const severityColors: Record<string, string> = {
-  severe: colors.danger,
-  moderate: colors.warning,
-  mild: colors.success,
-};
-
 export function ConditionCard({
   name,
   type,
@@ -33,44 +27,49 @@ export function ConditionCard({
   onPress,
   onArchive,
 }: ConditionCardProps) {
-  const accentColor = severity ? severityColors[severity] || colors.primary : colors.primary;
+  const c = useColors();
+  const severityColors: Record<string, string> = {
+    severe: c.danger,
+    moderate: c.warning,
+    mild: c.success,
+  };
+  const accentColor = severity ? severityColors[severity] || c.primary : c.primary;
 
   return (
     <TouchableOpacity
-      style={[styles.card, { borderLeftColor: accentColor }]}
+      style={[styles.card, { backgroundColor: c.surface, borderLeftColor: accentColor }]}
       onPress={onPress}
       activeOpacity={0.7}
     >
       <View style={styles.header}>
-        <Text style={styles.name}>{name}</Text>
+        <Text style={[styles.name, { color: c.textPrimary }]}>{name}</Text>
         {onArchive && (
           <TouchableOpacity onPress={onArchive} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="archive-outline" size={18} color={colors.textDisabled} />
+            <Ionicons name="archive-outline" size={18} color={c.textDisabled} />
           </TouchableOpacity>
         )}
       </View>
       <View style={styles.metaRow}>
         {type && diagnosedDate && (
-          <Text style={styles.meta}>{type} · </Text>
+          <Text style={[styles.meta, { color: c.textSecondary }]}>{type} · </Text>
         )}
         {type && !diagnosedDate && (
-          <Text style={styles.meta}>{type}</Text>
+          <Text style={[styles.meta, { color: c.textSecondary }]}>{type}</Text>
         )}
-        {diagnosedDate && <Text style={styles.meta}>Since {diagnosedDate}</Text>}
+        {diagnosedDate && <Text style={[styles.meta, { color: c.textSecondary }]}>Since {diagnosedDate}</Text>}
       </View>
       {severity && (
         <View style={[styles.severityBadge, { backgroundColor: accentColor + '20' }]}>
           <Text style={[styles.severityText, { color: accentColor }]}>{severity}</Text>
         </View>
       )}
-      {notes && <Text style={styles.notes}>{notes}</Text>}
+      {notes && <Text style={[styles.notes, { color: c.textSecondary }]}>{notes}</Text>}
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
     borderLeftWidth: 4,
     borderRadius: borderRadius.md,
     padding: spacing.space4,
@@ -89,7 +88,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.textPrimary,
     fontFamily: fonts.body,
     flex: 1,
   },
@@ -101,12 +99,10 @@ const styles = StyleSheet.create({
   },
   meta: {
     fontSize: 12,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
   },
   metaSep: {
     fontSize: 12,
-    color: colors.textDisabled,
   },
   severityBadge: {
     alignSelf: 'flex-start',
@@ -123,7 +119,6 @@ const styles = StyleSheet.create({
   },
   notes: {
     fontSize: 12,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     marginTop: spacing.space1,
   },

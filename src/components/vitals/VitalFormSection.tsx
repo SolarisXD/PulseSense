@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 
@@ -12,11 +12,12 @@ interface VitalFormSectionProps {
 }
 
 export function VitalFormSection({ icon, title, children }: VitalFormSectionProps) {
+  const c = useColors();
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, { backgroundColor: c.surface }]}>
       <View style={styles.header}>
-        <Ionicons name={icon} size={18} color={colors.primary} />
-        <Text style={styles.title}>{title}</Text>
+        <Ionicons name={icon} size={18} color={c.primary} />
+        <Text style={[styles.title, { color: c.textPrimary }]}>{title}</Text>
       </View>
       {children}
     </View>
@@ -25,7 +26,6 @@ export function VitalFormSection({ icon, title, children }: VitalFormSectionProp
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.space4,
     marginBottom: spacing.space4,
@@ -44,7 +44,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.textPrimary,
     fontFamily: fonts.display,
   },
 });

@@ -36,6 +36,11 @@ jest.mock('../../db/queries/emergency', () => ({
   getAllAlerts: jest.fn().mockResolvedValue([]),
 }));
 
+jest.mock('expo-file-system/legacy', () => ({
+  readAsStringAsync: jest.fn().mockResolvedValue('mockBase64Data'),
+  EncodingType: { Base64: 'base64', UTF8: 'utf8' },
+}));
+
 jest.mock('expo-print', () => ({
   printToFileAsync: jest.fn().mockResolvedValue({ uri: 'file:///mock/test.pdf' }),
   printAsync: jest.fn().mockResolvedValue(undefined),

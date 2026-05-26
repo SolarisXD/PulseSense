@@ -116,6 +116,36 @@ export function HomeScreen({ navigation }: any) {
     (a) => a.severity_level === 'EMERGENCY_NOW' || a.severity_level === 'URGENT_SAME_DAY'
   );
 
+  const bannerStatus = useMemo(() => {
+    if (insights.length === 0) return null;
+    const hasWarning = insights.some((i) => i.type === 'warning');
+    const hasInfo = insights.some((i) => i.type === 'info');
+    const warningCount = insights.filter((i) => i.type === 'warning').length;
+    if (hasWarning) {
+      return { type: 'warning' as const, icon: 'alert-triangle' as const, color: c.danger, bg: c.dangerSurface, title: 'Needs Attention', message: `${warningCount} health item${warningCount > 1 ? 's' : ''} flagged for review` };
+    }
+    if (hasInfo) {
+      return { type: 'info' as const, icon: 'information-circle' as const, color: c.primary, bg: c.primarySurface, title: 'Health Updates', message: 'Review your insights for important health information' };
+    }
+    return { type: 'positive' as const, icon: 'checkmark-circle' as const, color: c.success, bg: c.successSurface, title: 'All Clear', message: 'All vitals in normal range — keep up the good habits!' };
+  }, [insights, c]);
+
+  const sortedInsights = useMemo(() => {
+    const severityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+    const typeOrder: Record<string, number> = { warning: 0, info: 1, positive: 2 };
+    return [...insights].sort((a, b) => {
+      const sev = (severityOrder[a.severity] ?? 2) - (severityOrder[b.severity] ?? 2);
+      if (sev !== 0) return sev;
+      return (typeOrder[a.type] ?? 2) - (typeOrder[b.type] ?? 2);
+    });
+  }, [insights]);
+
+  const quickActions = [
+    { icon: 'pulse-outline' as const, label: 'Log Vital', color: c.primary, nav: 'VitalsTab' },
+    { icon: 'medkit-outline' as const, label: 'Emergency', color: c.danger, nav: 'EmergencyCheck' },
+    { icon: 'bar-chart-outline' as const, label: 'History', color: c.primaryLight, nav: 'HistoryTab' },
+  ];
+
   const vitalCardConfigs: Array<{
     dataKey: string;
     cardKey: string;
@@ -226,12 +256,49 @@ export function HomeScreen({ navigation }: any) {
           </View>
         </AnimatedSection>
 
-        <AnimatedSection index={1}>
+        {bannerStatus && (
+          <AnimatedSection index={1}>
+            <TouchableOpacity
+              style={[styles.banner, { backgroundColor: bannerStatus.bg }]}
+              onPress={() => navigation.navigate(bannerStatus.type === 'warning' ? 'AlertsTab' : 'HistoryTab')}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.bannerIcon, { backgroundColor: bannerStatus.color + '25' }]}>
+                <Ionicons name={bannerStatus.icon} size={22} color={bannerStatus.color} />
+              </View>
+              <View style={styles.bannerContent}>
+                <Text style={[styles.bannerTitle, { color: bannerStatus.color }]}>{bannerStatus.title}</Text>
+                <Text style={[styles.bannerMessage, { color: c.textSecondary }]}>{bannerStatus.message}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={bannerStatus.color} />
+            </TouchableOpacity>
+          </AnimatedSection>
+        )}
+
+        <AnimatedSection index={2}>
+          <View style={styles.quickActionsRow}>
+            {quickActions.map((action) => (
+              <TouchableOpacity
+                key={action.label}
+                style={[styles.quickActionCard, { backgroundColor: c.surface }]}
+                onPress={() => navigation.navigate(action.nav)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.quickActionIcon, { backgroundColor: action.color + '18' }]}>
+                  <Ionicons name={action.icon} size={20} color={action.color} />
+                </View>
+                <Text style={[styles.quickActionLabel, { color: c.textSecondary }]}>{action.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </AnimatedSection>
+
+        <AnimatedSection index={3}>
           <EmergencyButton onPress={() => navigation.navigate('EmergencyCheck')} />
         </AnimatedSection>
 
         {unresolvedEmergencies.length > 0 && (
-          <AnimatedSection index={2}>
+        <AnimatedSection index={4}>
             <View style={styles.sectionHeader}>
               <Ionicons name="notifications" size={16} color={c.danger} />
               <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Active Alerts</Text>
@@ -252,15 +319,18 @@ export function HomeScreen({ navigation }: any) {
           </AnimatedSection>
         )}
 
-        <AnimatedSection index={3}>
+        <AnimatedSection index={5}>
           <View style={styles.sectionHeader}>
             <Ionicons name="bulb" size={16} color={c.primaryLight} />
             <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Health Insights</Text>
+            {sortedInsights.length > 0 && (
+              <Text style={[styles.insightCount, { color: c.textDisabled }]}>{sortedInsights.length} item{sortedInsights.length !== 1 ? 's' : ''}</Text>
+            )}
           </View>
           {insightsLoading ? (
             <Skeleton.Box width="100%" height={80} borderRadius={10} style={{ marginBottom: 12 }} />
-          ) : insights.length > 0 ? (
-            insights.slice(0, 3).map((insight, i) => (
+          ) : sortedInsights.length > 0 ? (
+            sortedInsights.map((insight, i) => (
               <InsightCard key={insight.id} insight={insight} index={i} />
             ))
           ) : (
@@ -271,7 +341,7 @@ export function HomeScreen({ navigation }: any) {
           )}
         </AnimatedSection>
 
-        <AnimatedSection index={4}>
+        <AnimatedSection index={6}>
           <View style={styles.sectionHeader}>
             <Ionicons name="pulse" size={16} color={c.primary} />
             <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Latest Vitals</Text>
@@ -307,7 +377,7 @@ export function HomeScreen({ navigation }: any) {
           </ScrollView>
         </AnimatedSection>
 
-        <AnimatedSection index={5}>
+        <AnimatedSection index={7}>
           <Button
             title="+ Log a Vital"
             onPress={() => navigation.navigate('VitalsTab')}
@@ -457,6 +527,67 @@ const styles = StyleSheet.create({
   },
   emptyHint: {
     fontSize: 11,
+    fontFamily: fonts.body,
+  },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: borderRadius.md,
+    padding: spacing.space4,
+    marginBottom: spacing.space3,
+  },
+  bannerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.space3,
+  },
+  bannerContent: {
+    flex: 1,
+  },
+  bannerTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    fontFamily: fonts.display,
+    marginBottom: 2,
+  },
+  bannerMessage: {
+    fontSize: 12,
+    fontFamily: fonts.body,
+    lineHeight: 16,
+  },
+  quickActionsRow: {
+    flexDirection: 'row',
+    gap: spacing.space2,
+    marginBottom: spacing.space4,
+  },
+  quickActionCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: spacing.space3,
+    borderRadius: borderRadius.md,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  quickActionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.space1 + 2,
+  },
+  quickActionLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    fontFamily: fonts.body,
+  },
+  insightCount: {
+    fontSize: 12,
     fontFamily: fonts.body,
   },
 });

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 
@@ -14,6 +14,7 @@ interface CycleDropdownProps {
 }
 
 export function CycleDropdown({ label, value, options, onChange, formatValue }: CycleDropdownProps) {
+  const c = useColors();
   const cycle = () => {
     const idx = options.indexOf(value);
     const next = options[(idx + 1) % options.length];
@@ -21,11 +22,11 @@ export function CycleDropdown({ label, value, options, onChange, formatValue }: 
   };
 
   return (
-    <TouchableOpacity style={styles.dropdown} onPress={cycle} activeOpacity={0.7}>
-      <Text style={styles.label}>{label}</Text>
+    <TouchableOpacity style={[styles.dropdown, { borderColor: c.border, backgroundColor: c.surface }]} onPress={cycle} activeOpacity={0.7}>
+      <Text style={[styles.label, { color: c.textSecondary }]}>{label}</Text>
       <View style={styles.valueRow}>
-        <Text style={styles.value}>{formatValue ? formatValue(value) : value}</Text>
-        <Ionicons name="chevron-down" size={14} color={colors.textSecondary} />
+        <Text style={[styles.value, { color: c.textPrimary }]}>{formatValue ? formatValue(value) : value}</Text>
+        <Ionicons name="chevron-down" size={14} color={c.textSecondary} />
       </View>
     </TouchableOpacity>
   );
@@ -38,15 +39,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 44,
     borderWidth: 1.5,
-    borderColor: colors.border,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.surface,
     paddingHorizontal: spacing.space3,
     marginTop: spacing.space2,
   },
   label: {
     fontSize: 12,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
   },
   valueRow: {
@@ -56,7 +54,6 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 14,
-    color: colors.textPrimary,
     fontFamily: fonts.body,
     textTransform: 'capitalize',
   },

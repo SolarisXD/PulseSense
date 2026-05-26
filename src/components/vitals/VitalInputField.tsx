@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { fonts } from '../../constants/typography';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { VitalStatusBadge } from '../ui/VitalStatusBadge';
 import type { VitalStatus } from '../../utils/vitalStatus';
@@ -29,23 +29,24 @@ export function VitalInputField({
   keyboardType = 'decimal-pad',
   status,
 }: VitalInputFieldProps) {
+  const c = useColors();
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
-        <Text style={styles.label}>{label}</Text>
+        <Text style={[styles.label, { color: c.textSecondary }]}>{label}</Text>
         {status && <VitalStatusBadge status={status} size="small" />}
       </View>
-      <View style={[styles.inputWrapper, status === 'danger' && styles.inputDanger, status === 'warning' && styles.inputWarning]}>
+      <View style={[styles.inputWrapper, { borderColor: status === 'danger' ? c.danger : status === 'warning' ? c.warning : c.border, backgroundColor: c.surface }]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: c.textPrimary }]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={colors.textDisabled}
+          placeholderTextColor={c.textDisabled}
           keyboardType={keyboardType}
           maxLength={6}
         />
-        {unit && <Text style={styles.unit}>{unit}</Text>}
+        {unit && <Text style={[styles.unit, { color: c.textSecondary }]}>{unit}</Text>}
       </View>
     </View>
   );
@@ -53,6 +54,7 @@ export function VitalInputField({
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     marginBottom: spacing.space3,
   },
   labelRow: {
@@ -64,7 +66,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '500',
-    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     fontFamily: fonts.body,
@@ -74,28 +75,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 44,
     borderWidth: 1.5,
-    borderColor: colors.border,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.surface,
     paddingHorizontal: spacing.space3,
   },
-  inputDanger: {
-    borderColor: colors.danger,
-  },
-  inputWarning: {
-    borderColor: colors.warning,
-  },
+
   input: {
     flex: 1,
     fontSize: 16,
-    color: colors.textPrimary,
     fontFamily: fonts.mono,
     paddingVertical: 0,
     height: '100%',
   },
   unit: {
     fontSize: 12,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     marginLeft: spacing.space2,
   },

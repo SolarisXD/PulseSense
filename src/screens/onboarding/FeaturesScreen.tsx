@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button';
 
 interface FeaturesScreenProps {
   onNext: () => void;
+  onBack?: () => void;
 }
 
 const features = [
@@ -19,7 +20,7 @@ const features = [
   { icon: 'document-text-outline' as const, title: 'PDF Export', desc: 'Generate lab-report-quality PDFs — Medical ID, vitals history, and more.', color: colors.primary },
 ];
 
-export function FeaturesScreen({ onNext }: FeaturesScreenProps) {
+export function FeaturesScreen({ onNext, onBack }: FeaturesScreenProps) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -40,6 +41,11 @@ export function FeaturesScreen({ onNext }: FeaturesScreenProps) {
         ))}
       </View>
       <View style={styles.footer}>
+        {onBack && (
+          <View style={styles.backWrapper}>
+            <Button title="Back" onPress={onBack} variant="ghost" size="small" />
+          </View>
+        )}
         <Button title="Next" onPress={onNext} variant="primary" />
       </View>
     </View>
@@ -61,7 +67,6 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '700',
     color: colors.textPrimary,
-    lineHeight: 32,
     fontFamily: fonts.display,
     letterSpacing: -0.3,
     marginBottom: spacing.space3,
@@ -109,5 +114,9 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingBottom: spacing.space12,
+  },
+  backWrapper: {
+    alignItems: 'flex-start',
+    marginBottom: spacing.space2,
   },
 });

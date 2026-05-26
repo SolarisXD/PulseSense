@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { fonts } from '../constants/typography';
-import { colors } from '../constants/colors';
+import { useColors } from '../hooks/useColors';
 import { spacing, borderRadius } from '../constants/spacing';
 import { Button } from '../components/ui/Button';
 import { useProfileStore } from '../store/profileStore';
@@ -17,6 +17,7 @@ const SEX_OPTIONS = ['Male', 'Female', 'Non-binary', 'Transgender Male', 'Transg
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
 
 export function EditProfileScreen({ navigation }: any) {
+  const c = useColors();
   const profile = useProfileStore((s) => s.profile);
   const [name, setName] = useState(profile?.full_name || '');
   const dobInput = useDateInput();
@@ -77,74 +78,74 @@ export function EditProfileScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={[styles.container, { backgroundColor: c.background }]} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       {/* Photo */}
       <TouchableOpacity style={styles.photoContainer} onPress={handlePickPhoto}>
-        <View style={styles.photoCircle}>
+        <View style={[styles.photoCircle, { backgroundColor: c.primarySurface }]}>
           {photo ? (
             <Image source={{ uri: photo }} style={styles.photoImage} />
           ) : (
-            <Text style={styles.photoInitial}>{name?.charAt(0)?.toUpperCase() || 'U'}</Text>
+            <Text style={[styles.photoInitial, { color: c.primary }]}>{name?.charAt(0)?.toUpperCase() || 'U'}</Text>
           )}
         </View>
-        <Text style={styles.photoLabel}>Change Photo</Text>
+        <Text style={[styles.photoLabel, { color: c.primary }]}>Change Photo</Text>
       </TouchableOpacity>
 
-      <Text style={styles.label}>FULL NAME *</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Full name" placeholderTextColor={colors.textDisabled} />
+      <Text style={[styles.label, { color: c.textSecondary }]}>FULL NAME *</Text>
+      <TextInput style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} value={name} onChangeText={setName} placeholder="Full name" placeholderTextColor={c.textDisabled} />
 
-      <Text style={styles.label}>DATE OF BIRTH</Text>
-      <TextInput style={styles.input} value={dobInput.value} onChangeText={dobInput.handleChange} placeholder="DD/MM/YYYY" placeholderTextColor={colors.textDisabled} keyboardType="number-pad" maxLength={10} />
+      <Text style={[styles.label, { color: c.textSecondary }]}>DATE OF BIRTH</Text>
+      <TextInput style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} value={dobInput.value} onChangeText={dobInput.handleChange} placeholder="DD/MM/YYYY" placeholderTextColor={c.textDisabled} keyboardType="number-pad" maxLength={10} />
 
-      <Text style={styles.label}>SEX</Text>
-      <TouchableOpacity style={styles.input} onPress={() => setShowSexPicker(!showSexPicker)}>
-        <Text style={[styles.inputText, !sex && { color: colors.textDisabled }]}>{sex || 'Select sex'}</Text>
+      <Text style={[styles.label, { color: c.textSecondary }]}>SEX</Text>
+      <TouchableOpacity style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} onPress={() => setShowSexPicker(!showSexPicker)}>
+        <Text style={[styles.inputText, { color: c.textPrimary }, !sex && { color: c.textDisabled }]}>{sex || 'Select sex'}</Text>
       </TouchableOpacity>
       {showSexPicker && SEX_OPTIONS.map((opt) => (
-        <TouchableOpacity key={opt} style={[styles.pickerOption, sex === opt && styles.pickerSelected]} onPress={() => { setSex(opt); setShowSexPicker(false); }}>
-          <Text style={[styles.pickerText, sex === opt && styles.pickerTextSelected]}>{opt}</Text>
+        <TouchableOpacity key={opt} style={[styles.pickerOption, { borderBottomColor: c.borderLight, backgroundColor: c.surface }, sex === opt && { backgroundColor: c.primarySurface }]} onPress={() => { setSex(opt); setShowSexPicker(false); }}>
+          <Text style={[styles.pickerText, { color: c.textPrimary }, sex === opt && { color: c.primary, fontWeight: '600' }]}>{opt}</Text>
         </TouchableOpacity>
       ))}
 
-      <Text style={styles.label}>BLOOD GROUP</Text>
-      <TouchableOpacity style={styles.input} onPress={() => setShowBloodPicker(!showBloodPicker)}>
-        <Text style={[styles.inputText, !bloodGroup && { color: colors.textDisabled }]}>{bloodGroup || 'Select blood group'}</Text>
+      <Text style={[styles.label, { color: c.textSecondary }]}>BLOOD GROUP</Text>
+      <TouchableOpacity style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} onPress={() => setShowBloodPicker(!showBloodPicker)}>
+        <Text style={[styles.inputText, { color: c.textPrimary }, !bloodGroup && { color: c.textDisabled }]}>{bloodGroup || 'Select blood group'}</Text>
       </TouchableOpacity>
       {showBloodPicker && BLOOD_GROUPS.map((bg) => (
-        <TouchableOpacity key={bg} style={[styles.pickerOption, bloodGroup === bg && styles.pickerSelected]} onPress={() => { setBloodGroup(bg); setShowBloodPicker(false); }}>
-          <Text style={[styles.pickerText, bloodGroup === bg && styles.pickerTextSelected]}>{bg}</Text>
+        <TouchableOpacity key={bg} style={[styles.pickerOption, { borderBottomColor: c.borderLight, backgroundColor: c.surface }, bloodGroup === bg && { backgroundColor: c.primarySurface }]} onPress={() => { setBloodGroup(bg); setShowBloodPicker(false); }}>
+          <Text style={[styles.pickerText, { color: c.textPrimary }, bloodGroup === bg && { color: c.primary, fontWeight: '600' }]}>{bg}</Text>
         </TouchableOpacity>
       ))}
 
-      <Text style={styles.label}>HEIGHT ({heightUnit === 'cm' ? 'cm' : 'ft/in'})</Text>
+      <Text style={[styles.label, { color: c.textSecondary }]}>HEIGHT ({heightUnit === 'cm' ? 'cm' : 'ft/in'})</Text>
       {heightUnit === 'cm' ? (
         <TextInput
-          style={styles.input}
+          style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]}
           value={heightCm}
           onChangeText={setHeightCm}
           placeholder="e.g. 175"
-          placeholderTextColor={colors.textDisabled}
+          placeholderTextColor={c.textDisabled}
           keyboardType="decimal-pad"
         />
       ) : (
         <View style={{ flexDirection: 'row', gap: spacing.space2 }}>
           <View style={{ flex: 1 }}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]}
               value={heightFt}
               onChangeText={setHeightFt}
               placeholder="ft"
-              placeholderTextColor={colors.textDisabled}
+              placeholderTextColor={c.textDisabled}
               keyboardType="number-pad"
             />
           </View>
           <View style={{ flex: 1 }}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]}
               value={heightIn}
               onChangeText={setHeightIn}
               placeholder="in"
-              placeholderTextColor={colors.textDisabled}
+              placeholderTextColor={c.textDisabled}
               keyboardType="decimal-pad"
             />
           </View>
@@ -157,19 +158,17 @@ export function EditProfileScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1 },
   content: { padding: spacing.space4 },
   photoContainer: { alignItems: 'center', marginBottom: spacing.space6 },
-  photoCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primarySurface, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.space2 },
-  photoInitial: { fontSize: 32, fontWeight: '700', color: colors.primary, fontFamily: fonts.body },
+  photoCircle: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.space2 },
+  photoInitial: { fontSize: 32, fontWeight: '700', fontFamily: fonts.body },
   photoImage: { width: 80, height: 80, borderRadius: 40 },
   photoEmoji: { fontSize: 32 },
-  photoLabel: { fontSize: 13, color: colors.primary, fontWeight: '500', fontFamily: fonts.body },
-  label: { fontSize: 12, fontWeight: '500', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: fonts.body, marginBottom: spacing.space2, marginTop: spacing.space4 },
-  input: { height: 48, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 15, color: colors.textPrimary, fontFamily: fonts.body, backgroundColor: colors.surface, justifyContent: 'center', marginBottom: spacing.space2 },
-  inputText: { fontSize: 15, color: colors.textPrimary, fontFamily: fonts.body },
-  pickerOption: { paddingVertical: spacing.space3, paddingHorizontal: spacing.space4, borderBottomWidth: 1, borderBottomColor: colors.borderLight, backgroundColor: colors.surface },
-  pickerSelected: { backgroundColor: colors.primarySurface },
-  pickerText: { fontSize: 14, color: colors.textPrimary, fontFamily: fonts.body },
-  pickerTextSelected: { color: colors.primary, fontWeight: '600' },
+  photoLabel: { fontSize: 13, fontWeight: '500', fontFamily: fonts.body },
+  label: { fontSize: 12, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: fonts.body, marginBottom: spacing.space2, marginTop: spacing.space4 },
+  input: { height: 48, borderWidth: 1.5, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 15, fontFamily: fonts.body, justifyContent: 'center', marginBottom: spacing.space2 },
+  inputText: { fontSize: 15, fontFamily: fonts.body },
+  pickerOption: { paddingVertical: spacing.space3, paddingHorizontal: spacing.space4, borderBottomWidth: 1 },
+  pickerText: { fontSize: 14, fontFamily: fonts.body },
 });

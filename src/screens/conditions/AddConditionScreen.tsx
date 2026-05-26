@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { useColors } from '../../hooks/useColors';
 import { fonts } from '../../constants/typography';
-import { colors } from '../../constants/colors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { chipStyles } from '../../constants/chipStyles';
 import { Button } from '../../components/ui/Button';
@@ -13,6 +13,7 @@ const CONDITION_TYPES = ['chronic', 'acute', 'genetic', 'autoimmune', 'other'];
 const SEVERITY_OPTIONS = ['mild', 'moderate', 'severe'];
 
 export function AddConditionScreen({ navigation, route }: any) {
+  const c = useColors();
   const conditionId = route?.params?.conditionId ?? null;
   const isEditing = !!conditionId;
 
@@ -75,11 +76,11 @@ export function AddConditionScreen({ navigation, route }: any) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>CONDITION NAME *</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="e.g. Type 2 Diabetes" placeholderTextColor={colors.textDisabled} />
+    <ScrollView style={[styles.container, { backgroundColor: c.background }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.label, { color: c.textSecondary }]}>CONDITION NAME *</Text>
+      <TextInput style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} value={name} onChangeText={setName} placeholder="e.g. Type 2 Diabetes" placeholderTextColor={c.textDisabled} />
 
-      <Text style={styles.label}>TYPE</Text>
+      <Text style={[styles.label, { color: c.textSecondary }]}>TYPE</Text>
       <View style={styles.optionsRow}>
         {CONDITION_TYPES.map((t) => (
           <TouchableOpacity key={t} style={[chipStyles.chip, type === t && chipStyles.chipSelected]} onPress={() => setType(t)}>
@@ -88,10 +89,10 @@ export function AddConditionScreen({ navigation, route }: any) {
         ))}
       </View>
 
-      <Text style={styles.label}>DIAGNOSED DATE</Text>
-      <TextInput style={styles.input} value={dobInput.value} onChangeText={dobInput.handleChange} placeholder="DD/MM/YYYY" placeholderTextColor={colors.textDisabled} keyboardType="number-pad" maxLength={10} />
+      <Text style={[styles.label, { color: c.textSecondary }]}>DIAGNOSED DATE</Text>
+      <TextInput style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} value={dobInput.value} onChangeText={dobInput.handleChange} placeholder="DD/MM/YYYY" placeholderTextColor={c.textDisabled} keyboardType="number-pad" maxLength={10} />
 
-      <Text style={styles.label}>SEVERITY</Text>
+      <Text style={[styles.label, { color: c.textSecondary }]}>SEVERITY</Text>
       <View style={styles.optionsRow}>
         {SEVERITY_OPTIONS.map((s) => (
           <TouchableOpacity key={s} style={[chipStyles.chip, severity === s && chipStyles.chipSelected]} onPress={() => setSeverity(s)}>
@@ -100,8 +101,8 @@ export function AddConditionScreen({ navigation, route }: any) {
         ))}
       </View>
 
-      <Text style={styles.label}>NOTES</Text>
-      <TextInput style={[styles.input, styles.multiline]} value={notes} onChangeText={setNotes} placeholder="Additional notes" placeholderTextColor={colors.textDisabled} multiline numberOfLines={3} />
+      <Text style={[styles.label, { color: c.textSecondary }]}>NOTES</Text>
+      <TextInput style={[styles.input, styles.multiline, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} value={notes} onChangeText={setNotes} placeholder="Additional notes" placeholderTextColor={c.textDisabled} multiline numberOfLines={3} />
 
       <Button title={saving ? 'Saving...' : (isEditing ? 'Update Condition' : 'Save Condition')} onPress={handleSave} loading={saving} disabled={!name.trim()} />
     </ScrollView>
@@ -109,10 +110,10 @@ export function AddConditionScreen({ navigation, route }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1 },
   content: { padding: spacing.space4 },
-  label: { fontSize: 12, fontWeight: '500', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: fonts.body, marginBottom: spacing.space2, marginTop: spacing.space4 },
-  input: { height: 48, borderWidth: 1.5, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 15, color: colors.textPrimary, fontFamily: fonts.body, backgroundColor: colors.surface, marginBottom: spacing.space2 },
+  label: { fontSize: 12, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: fonts.body, marginBottom: spacing.space2, marginTop: spacing.space4 },
+  input: { height: 48, borderWidth: 1.5, borderRadius: borderRadius.sm, paddingHorizontal: spacing.space3, fontSize: 15, fontFamily: fonts.body, marginBottom: spacing.space2 },
   multiline: { height: 80, paddingTop: spacing.space3, textAlignVertical: 'top' },
   optionsRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: spacing.space2 },
 });

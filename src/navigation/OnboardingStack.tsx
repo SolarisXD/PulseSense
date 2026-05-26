@@ -26,8 +26,8 @@ export function OnboardingStack() {
 
   const screens = [
     <WelcomeScreen key="welcome" onNext={() => goToScreen(1)} />,
-    <FeaturesScreen key="features" onNext={() => goToScreen(2)} />,
-    <SetupProfileScreen key="setup" onComplete={() => goToScreen(3)} />,
+    <FeaturesScreen key="features" onNext={() => goToScreen(2)} onBack={() => goToScreen(0)} />,
+    <SetupProfileScreen key="setup" onComplete={() => goToScreen(3)} onBack={() => goToScreen(1)} />,
     <ReadyScreen key="ready" onComplete={() => setOnboardingComplete(true)} />,
   ];
 

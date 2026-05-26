@@ -25,6 +25,7 @@ import { MedicationsListScreen } from '../screens/medications/MedicationsListScr
 import { AddMedicationScreen } from '../screens/medications/AddMedicationScreen';
 import { EditProfileScreen } from '../screens/EditProfileScreen';
 import { CustomVitalsScreen } from '../screens/CustomVitalsScreen';
+import { HealthConnectionScreen } from '../screens/settings/HealthConnectionScreen';
 import { VitalDetailScreen } from '../screens/VitalDetailScreen';
 
 const Stack = createStackNavigator();
@@ -95,6 +96,7 @@ export function AppNavigator() {
             <Stack.Screen name="EditProfile" component={EditProfileScreen} options={h('Edit Profile')} />
             <Stack.Screen name="CustomVitals" component={CustomVitalsScreen} options={h('Custom Vitals')} />
             <Stack.Screen name="VitalDetail" component={VitalDetailScreen} options={h('Vital Details')} />
+            <Stack.Screen name="HealthConnection" component={HealthConnectionScreen} options={h('Health Sync')} />
           </>
         )}
       </Stack.Navigator>

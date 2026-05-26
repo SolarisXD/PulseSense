@@ -65,8 +65,13 @@ export async function deleteContact(db: SQLiteDatabase, id: number): Promise<voi
 }
 
 export async function setPrimaryContact(db: SQLiteDatabase, id: number): Promise<void> {
-  // First clear all primary flags
-  await db.runAsync('UPDATE emergency_contacts SET is_primary = 0');
-  // Then set the selected one
-  await db.runAsync('UPDATE emergency_contacts SET is_primary = 1 WHERE id = ?', [id]);
+  await db.execAsync('BEGIN');
+  try {
+    await db.runAsync('UPDATE emergency_contacts SET is_primary = 0');
+    await db.runAsync('UPDATE emergency_contacts SET is_primary = 1 WHERE id = ?', [id]);
+    await db.execAsync('COMMIT');
+  } catch (e) {
+    await db.execAsync('ROLLBACK');
+    throw e;
+  }
 }

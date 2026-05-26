@@ -96,33 +96,25 @@ export async function getVitalLogsByDateRange(
 }
 
 export async function getLatestPerVital(db: SQLiteDatabase): Promise<Record<string, VitalLogRow | null>> {
-  // Get the latest log that has any vital data
-  const latest = await db.getAllAsync<VitalLogRow>(
-    `SELECT * FROM vital_logs WHERE is_deleted = 0
-     ORDER BY logged_at_iso DESC LIMIT 20`
-  );
+  const [bp, pulse, spo2, glucose, temperature, weight, pain] = await Promise.all([
+    db.getFirstAsync<VitalLogRow>('SELECT * FROM vital_logs WHERE is_deleted = 0 AND (bp_sys IS NOT NULL OR bp_dia IS NOT NULL) ORDER BY logged_at_iso DESC LIMIT 1'),
+    db.getFirstAsync<VitalLogRow>('SELECT * FROM vital_logs WHERE is_deleted = 0 AND pulse IS NOT NULL ORDER BY logged_at_iso DESC LIMIT 1'),
+    db.getFirstAsync<VitalLogRow>('SELECT * FROM vital_logs WHERE is_deleted = 0 AND spo2 IS NOT NULL ORDER BY logged_at_iso DESC LIMIT 1'),
+    db.getFirstAsync<VitalLogRow>('SELECT * FROM vital_logs WHERE is_deleted = 0 AND glucose_value IS NOT NULL ORDER BY logged_at_iso DESC LIMIT 1'),
+    db.getFirstAsync<VitalLogRow>('SELECT * FROM vital_logs WHERE is_deleted = 0 AND temp_value IS NOT NULL ORDER BY logged_at_iso DESC LIMIT 1'),
+    db.getFirstAsync<VitalLogRow>('SELECT * FROM vital_logs WHERE is_deleted = 0 AND weight_value IS NOT NULL ORDER BY logged_at_iso DESC LIMIT 1'),
+    db.getFirstAsync<VitalLogRow>('SELECT * FROM vital_logs WHERE is_deleted = 0 AND pain_level IS NOT NULL ORDER BY logged_at_iso DESC LIMIT 1'),
+  ]);
 
-  const result: Record<string, VitalLogRow | null> = {
-    bp: null,
-    pulse: null,
-    spo2: null,
-    glucose: null,
-    temperature: null,
-    weight: null,
-    pain: null,
+  return {
+    bp: bp ?? null,
+    pulse: pulse ?? null,
+    spo2: spo2 ?? null,
+    glucose: glucose ?? null,
+    temperature: temperature ?? null,
+    weight: weight ?? null,
+    pain: pain ?? null,
   };
-
-  for (const row of latest) {
-    if (!result.bp && (row.bp_sys !== null || row.bp_dia !== null)) result.bp = row;
-    if (!result.pulse && row.pulse !== null) result.pulse = row;
-    if (!result.spo2 && row.spo2 !== null) result.spo2 = row;
-    if (!result.glucose && row.glucose_value !== null) result.glucose = row;
-    if (!result.temperature && row.temp_value !== null) result.temperature = row;
-    if (!result.weight && row.weight_value !== null) result.weight = row;
-    if (!result.pain && row.pain_level !== null) result.pain = row;
-  }
-
-  return result;
 }
 
 export async function softDeleteVitalLog(db: SQLiteDatabase, id: number): Promise<void> {

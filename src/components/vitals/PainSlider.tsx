@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { fonts } from '../../constants/typography';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 
 interface PainSliderProps {
@@ -41,19 +41,20 @@ const painDescriptions = [
   'Unbearable',
 ];
 
-function getPainColor(level: number): string {
-  if (level <= 3) return colors.success;
-  if (level <= 6) return colors.warning;
-  return colors.danger;
+function getPainColor(level: number, c: ReturnType<typeof useColors>): string {
+  if (level <= 3) return c.success;
+  if (level <= 6) return c.warning;
+  return c.danger;
 }
 
 export function PainSlider({ value, onChange }: PainSliderProps) {
-  const color = getPainColor(value);
+  const c = useColors();
+  const color = getPainColor(value, c);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.label}>Pain Level</Text>
+        <Text style={[styles.label, { color: c.textSecondary }]}>Pain Level</Text>
         <Text style={[styles.level, { color }]}>{value}/10</Text>
       </View>
       <View style={styles.descriptorRow}>
@@ -67,14 +68,14 @@ export function PainSlider({ value, onChange }: PainSliderProps) {
         value={value}
         onValueChange={onChange}
         minimumTrackTintColor={color}
-        maximumTrackTintColor={colors.border}
+        maximumTrackTintColor={c.border}
         thumbTintColor={color}
       />
       <View style={styles.scaleRow}>
-        <Text style={styles.scaleText}>0</Text>
-        <Text style={styles.scaleText}>10</Text>
+        <Text style={[styles.scaleText, { color: c.textDisabled }]}>0</Text>
+        <Text style={[styles.scaleText, { color: c.textDisabled }]}>10</Text>
       </View>
-      <Text style={styles.description}>{painDescriptions[value]}</Text>
+      <Text style={[styles.description, { color: c.textSecondary }]}>{painDescriptions[value]}</Text>
     </View>
   );
 }
@@ -92,7 +93,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '500',
-    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     fontFamily: fonts.body,
@@ -121,12 +121,10 @@ const styles = StyleSheet.create({
   },
   scaleText: {
     fontSize: 11,
-    color: colors.textDisabled,
     fontFamily: fonts.body,
   },
   description: {
     fontSize: 11,
-    color: colors.textSecondary,
     fontStyle: 'italic',
     fontFamily: fonts.body,
   },

@@ -46,34 +46,42 @@ export interface MedicationItemInput {
   notes?: string | null;
 }
 
-export async function getMedications(db: SQLiteDatabase): Promise<(MedicationRow & { items: MedicationItemRow[] })[]> {
+async function getMedicationsWithItems(
+  db: SQLiteDatabase,
+  whereClause: string,
+  params: any[] = []
+): Promise<(MedicationRow & { items: MedicationItemRow[] })[]> {
   const meds = await db.getAllAsync<MedicationRow>(
-    'SELECT * FROM medications ORDER BY created_at DESC'
+    `SELECT * FROM medications ${whereClause} ORDER BY created_at DESC`,
+    params
   );
-  const result: (MedicationRow & { items: MedicationItemRow[] })[] = [];
-  for (const med of meds) {
-    const items = await db.getAllAsync<MedicationItemRow>(
-      'SELECT * FROM medication_items WHERE medication_id = ? ORDER BY sort_order ASC, id ASC',
-      [med.id]
-    );
-    result.push({ ...med, items });
+  if (meds.length === 0) return [];
+
+  const ids = meds.map((m) => m.id);
+  const placeholders = ids.map(() => '?').join(',');
+  const items = await db.getAllAsync<MedicationItemRow>(
+    `SELECT * FROM medication_items WHERE medication_id IN (${placeholders}) ORDER BY sort_order ASC, id ASC`,
+    ids
+  );
+
+  const itemsByMedId: Record<number, MedicationItemRow[]> = {};
+  for (const item of items) {
+    if (!itemsByMedId[item.medication_id]) itemsByMedId[item.medication_id] = [];
+    itemsByMedId[item.medication_id].push(item);
   }
-  return result;
+
+  return meds.map((med) => ({
+    ...med,
+    items: itemsByMedId[med.id] || [],
+  }));
+}
+
+export async function getMedications(db: SQLiteDatabase): Promise<(MedicationRow & { items: MedicationItemRow[] })[]> {
+  return getMedicationsWithItems(db, '');
 }
 
 export async function getActiveMedications(db: SQLiteDatabase): Promise<(MedicationRow & { items: MedicationItemRow[] })[]> {
-  const meds = await db.getAllAsync<MedicationRow>(
-    'SELECT * FROM medications WHERE is_active = 1 ORDER BY created_at DESC'
-  );
-  const result: (MedicationRow & { items: MedicationItemRow[] })[] = [];
-  for (const med of meds) {
-    const items = await db.getAllAsync<MedicationItemRow>(
-      'SELECT * FROM medication_items WHERE medication_id = ? ORDER BY sort_order ASC, id ASC',
-      [med.id]
-    );
-    result.push({ ...med, items });
-  }
-  return result;
+  return getMedicationsWithItems(db, 'WHERE is_active = 1');
 }
 
 export async function insertMedication(
@@ -130,6 +138,34 @@ export async function toggleMedicationActive(db: SQLiteDatabase, id: number): Pr
      updated_at = datetime('now') WHERE id = ?`,
     [id]
   );
+}
+
+export async function updateMedicationItems(
+  db: SQLiteDatabase,
+  medicationId: number,
+  items: MedicationItemInput[]
+): Promise<void> {
+  await db.runAsync('DELETE FROM medication_items WHERE medication_id = ?', [medicationId]);
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    await db.runAsync(
+      `INSERT INTO medication_items (medication_id, medicine_name, dose_morning, dose_afternoon, dose_night, timing, timing_custom, duration, strength, notes, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        medicationId,
+        item.medicine_name,
+        item.dose_morning ?? 0,
+        item.dose_afternoon ?? 0,
+        item.dose_night ?? 0,
+        item.timing ?? null,
+        item.timing_custom ?? null,
+        item.duration ?? null,
+        item.strength ?? null,
+        item.notes ?? null,
+        i,
+      ]
+    );
+  }
 }
 
 export async function deleteMedication(db: SQLiteDatabase, id: number): Promise<void> {

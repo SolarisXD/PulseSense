@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { fonts } from '../../constants/typography';
 import { colors } from '../../constants/colors';
 import { spacing, borderRadius } from '../../constants/spacing';
+import { useColors } from '../../hooks/useColors';
 
 interface ExportTypeCardProps {
   title: string;
@@ -18,24 +19,29 @@ interface ExportTypeCardProps {
 }
 
 export function ExportTypeCard({ title, description, iconName, iconColor, selected, onPress }: ExportTypeCardProps) {
+  const c = useColors();
   return (
     <TouchableOpacity
-      style={[styles.card, selected && styles.cardSelected]}
+      style={[
+        styles.card,
+        { backgroundColor: c.surface, borderColor: c.border },
+        selected && { borderColor: c.primary, backgroundColor: c.primarySurface },
+      ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={[styles.iconContainer, selected && styles.iconContainerSelected]}>
+      <View style={[styles.iconContainer, { backgroundColor: c.surfaceAlt }, selected && { backgroundColor: c.primary }]}>
         <Ionicons
           name={iconName}
           size={20}
-          color={selected ? '#FFFFFF' : iconColor || colors.primary}
+          color={selected ? '#FFFFFF' : iconColor || c.primary}
         />
       </View>
       <View style={styles.textContainer}>
-        <Text style={[styles.title, selected && styles.titleSelected]}>{title}</Text>
-        <Text style={styles.description}>{description}</Text>
+        <Text style={[styles.title, { color: c.textPrimary }, selected && { color: c.primary }]}>{title}</Text>
+        <Text style={[styles.description, { color: c.textSecondary }]}>{description}</Text>
       </View>
-      <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
+      <View style={[styles.checkbox, { borderColor: c.border }, selected && { borderColor: c.primary, backgroundColor: c.primary }]}>
         {selected && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
       </View>
     </TouchableOpacity>
@@ -46,33 +52,23 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.space4,
     marginBottom: spacing.space3,
     borderWidth: 1.5,
-    borderColor: colors.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 1,
   },
-  cardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySurface,
-  },
   iconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.space3,
-  },
-  iconContainerSelected: {
-    backgroundColor: colors.primary,
   },
   textContainer: {
     flex: 1,
@@ -80,15 +76,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.textPrimary,
     fontFamily: fonts.body,
-  },
-  titleSelected: {
-    color: colors.primary,
   },
   description: {
     fontSize: 11,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     marginTop: 2,
   },
@@ -97,12 +88,7 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  checkboxSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
   },
 });

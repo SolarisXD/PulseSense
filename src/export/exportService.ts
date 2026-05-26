@@ -3,7 +3,8 @@
 
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { File, Paths, readAsStringAsync, EncodingType } from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
+import { readAsStringAsync, EncodingType } from 'expo-file-system/legacy';
 import { getDB } from '../hooks/useDB';
 import { getProfile } from '../db/queries/profile';
 import { getConditions } from '../db/queries/conditions';

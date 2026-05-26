@@ -12,14 +12,18 @@ import { spacing, borderRadius } from '../constants/spacing';
 import { colorsDark } from '../constants/colorsDark';
 import { useSettingsStore } from '../store/settingsStore';
 import { useThemeStore } from '../store/themeStore';
+import { useProfileStore } from '../store/profileStore';
+import { useAlertStore } from '../store/alertStore';
 import { getDB } from '../hooks/useDB';
 import { setSetting } from '../db/queries/settings';
+import { deleteAllData } from '../db/queries/deleteProfile';
 import {
   cancelAllMedicationReminders,
   rescheduleAllMedicationReminders,
   requestNotificationPermissions,
 } from '../services/notificationService';
 import { performBackupAndShare, restoreDatabase } from '../services/backupService';
+import { Button } from '../components/ui/Button';
 
 const UNIT_OPTIONS: Record<string, { key: string; label: string; options: { value: string; label: string }[] }> = {
   tempUnit: {
@@ -95,6 +99,9 @@ export function SettingsScreen({ navigation }: any) {
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
   const [termsModalVisible, setTermsModalVisible] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -147,6 +154,53 @@ export function SettingsScreen({ navigation }: any) {
       console.error(err);
     }
   };
+
+  const handleDeleteProfile = () => {
+    Alert.alert(
+      'Delete Profile',
+      'This will permanently delete ALL your data including profile, vitals, medical history, medications, conditions, allergies, emergency contacts, and settings.\n\nThis action CANNOT be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          style: 'destructive',
+          onPress: () => {
+            setDeleteConfirmText('');
+            setDeleteModalVisible(true);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteConfirm = async () => {
+    const profileName = useProfileStore.getState().profile?.full_name || '';
+    const expected = `DELETE ${profileName}`;
+    if (deleteConfirmText.trim() !== expected) return;
+
+    setDeleting(true);
+    try {
+      const db = await getDB();
+      await deleteAllData(db);
+
+      useProfileStore.getState().clear();
+      useAlertStore.getState().clear();
+      useSettingsStore.getState().setOnboardingComplete(false);
+
+      await cancelAllMedicationReminders();
+
+      setDeleteModalVisible(false);
+      setDeleting(false);
+
+      Alert.alert('Profile Deleted', 'All data has been permanently removed.');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Failed to delete profile data.');
+      setDeleting(false);
+    }
+  };
+
+  const profileName = useProfileStore((s) => s.profile?.full_name || '');
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: activeColors.background }]} contentContainerStyle={styles.content}>
@@ -418,6 +472,16 @@ export function SettingsScreen({ navigation }: any) {
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        onPress={() => navigation.navigate('HealthConnection')}
+      >
+        <View style={styles.linkRowLeft}>
+          <Ionicons name="fitness-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
+          <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>Apple Health / Health Connect</Text>
+        </View>
+        <Text style={[styles.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={() => navigation.navigate('Export')}
       >
         <View style={styles.linkRowLeft}>
@@ -487,6 +551,18 @@ export function SettingsScreen({ navigation }: any) {
           </Text>
         </View>
         <Ionicons name="folder-open-outline" size={18} color={activeColors.textSecondary} />
+      </TouchableOpacity>
+
+      <Text style={[styles.sectionTitle, { marginTop: spacing.space6, color: activeColors.danger }]}>Danger Zone</Text>
+      <TouchableOpacity
+        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        onPress={handleDeleteProfile}
+      >
+        <View style={styles.linkRowLeft}>
+          <Ionicons name="trash-outline" size={20} color={activeColors.danger} style={{ marginRight: spacing.space3 }} />
+          <Text style={[styles.linkText, { color: activeColors.danger }]}>Delete Profile</Text>
+        </View>
+        <Text style={[styles.linkArrow, { color: activeColors.danger }]}>→</Text>
       </TouchableOpacity>
 
       <Text style={[styles.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>About</Text>
@@ -613,6 +689,100 @@ export function SettingsScreen({ navigation }: any) {
             <TouchableOpacity style={[styles.modalSaveBtn, { backgroundColor: activeColors.primary }]} onPress={() => setTermsModalVisible(false)}>
               <Text style={styles.modalSaveText}>Close</Text>
             </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Delete Profile Confirmation Modal */}
+      <Modal
+        visible={deleteModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={[styles.modalOverlay, { backgroundColor: activeColors.overlay }]}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={[styles.deleteModalCard, { backgroundColor: activeColors.surface }]}>
+            <View style={[styles.deleteIconCircle, { backgroundColor: activeColors.dangerSurface }]}>
+              <Ionicons name="trash" size={28} color={activeColors.danger} />
+            </View>
+
+            <Text style={[styles.deleteModalTitle, { color: activeColors.textPrimary }]}>
+              Delete Profile
+            </Text>
+            <Text style={[styles.deleteModalSubtitle, { color: activeColors.textSecondary }]}>
+              This will permanently remove all data for:
+            </Text>
+
+            <View style={[styles.deleteDataCard, { backgroundColor: activeColors.dangerSurface }]}>
+              {['Profile & Personal Info', 'Vitals History', 'Medications & Prescriptions',
+                'Medical Conditions', 'Allergies', 'Emergency Contacts', 'Settings & Preferences',
+              ].map((item) => (
+                <View key={item} style={styles.deleteDataRow}>
+                  <View style={[styles.deleteDataBullet, { backgroundColor: activeColors.danger }]} />
+                  <Text style={[styles.deleteDataText, { color: activeColors.textPrimary }]}>{item}</Text>
+                </View>
+              ))}
+            </View>
+
+            <Text style={[styles.deleteConfirmLabel, { color: activeColors.textSecondary }]}>
+              Type <Text style={{ fontWeight: '700', color: activeColors.danger }}>DELETE {profileName}</Text> to confirm
+            </Text>
+
+            <View style={styles.deleteInputRow}>
+              <TextInput
+                style={[
+                  styles.deleteInput,
+                  {
+                    borderColor: deleteConfirmText.trim() === `DELETE ${profileName}`
+                      ? activeColors.success
+                      : activeColors.border,
+                    color: activeColors.textPrimary,
+                    backgroundColor: activeColors.surfaceAlt,
+                  },
+                ]}
+                value={deleteConfirmText}
+                onChangeText={setDeleteConfirmText}
+                placeholder={`DELETE ${profileName}`}
+                placeholderTextColor={activeColors.textDisabled}
+                autoCapitalize="characters"
+                autoFocus
+                editable={!deleting}
+              />
+              {deleteConfirmText.trim() === `DELETE ${profileName}` && (
+                <Ionicons
+                  name="checkmark-circle"
+                  size={24}
+                  color={activeColors.success}
+                  style={styles.deleteMatchIcon}
+                />
+              )}
+            </View>
+
+            <View style={styles.deleteModalButtons}>
+              <TouchableOpacity
+                style={[styles.deleteCancelBtn, { borderColor: activeColors.border }]}
+                onPress={() => {
+                  setDeleteModalVisible(false);
+                  setDeleteConfirmText('');
+                }}
+                disabled={deleting}
+              >
+                <Text style={[styles.deleteCancelText, { color: activeColors.textSecondary }]}>Cancel</Text>
+              </TouchableOpacity>
+              <View style={styles.deleteConfirmBtnWrap}>
+                <Button
+                  title={deleting ? 'Deleting...' : 'Delete Everything'}
+                  onPress={handleDeleteConfirm}
+                  variant={deleteConfirmText.trim() === `DELETE ${profileName}` ? 'danger' : 'disabled'}
+                  size="medium"
+                  loading={deleting}
+                  disabled={deleteConfirmText.trim() !== `DELETE ${profileName}` || deleting}
+                />
+              </View>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -892,5 +1062,112 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     fontFamily: fonts.body,
+  },
+  deleteModalCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.space6,
+    width: '100%',
+    maxWidth: 340,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    alignItems: 'center',
+  },
+  deleteIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.space4,
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    fontFamily: fonts.display,
+    color: colors.textPrimary,
+    marginBottom: spacing.space1,
+    textAlign: 'center',
+  },
+  deleteModalSubtitle: {
+    fontSize: 13,
+    fontFamily: fonts.body,
+    color: colors.textSecondary,
+    marginBottom: spacing.space4,
+    textAlign: 'center',
+  },
+  deleteDataCard: {
+    width: '100%',
+    borderRadius: borderRadius.md,
+    padding: spacing.space4,
+    marginBottom: spacing.space5,
+  },
+  deleteDataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.space2,
+  },
+  deleteDataBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: spacing.space3,
+  },
+  deleteDataText: {
+    fontSize: 13,
+    fontFamily: fonts.body,
+    color: colors.textPrimary,
+  },
+  deleteConfirmLabel: {
+    fontSize: 13,
+    fontFamily: fonts.body,
+    color: colors.textSecondary,
+    marginBottom: spacing.space3,
+    textAlign: 'center',
+  },
+  deleteInputRow: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.space5,
+  },
+  deleteInput: {
+    flex: 1,
+    height: 48,
+    borderWidth: 1.5,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.space3,
+    fontSize: 16,
+    fontFamily: fonts.mono,
+    textAlign: 'center',
+    letterSpacing: 1,
+  },
+  deleteMatchIcon: {
+    marginLeft: spacing.space3,
+  },
+  deleteModalButtons: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.space3,
+  },
+  deleteCancelBtn: {
+    flex: 1,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: borderRadius.md,
+    borderWidth: 1.5,
+  },
+  deleteCancelText: {
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: fonts.body,
+  },
+  deleteConfirmBtnWrap: {
+    flex: 1,
   },
 });

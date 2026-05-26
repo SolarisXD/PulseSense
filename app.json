@@ -17,7 +17,9 @@
       "infoPlist": {
         "NSCameraUsageDescription": "PulseSense needs camera access to set your profile photo.",
         "NSPhotoLibraryUsageDescription": "PulseSense needs photo library access to set your profile photo.",
-        "NSLocationWhenInUseUsageDescription": "PulseSense uses your location to show your address on the emergency action screen."
+        "NSLocationWhenInUseUsageDescription": "PulseSense uses your location to show your address on the emergency action screen.",
+        "NSHealthShareUsageDescription": "PulseSense reads your health data to track vitals and provide health insights.",
+        "NSHealthUpdateUsageDescription": "PulseSense writes your vital recordings to Apple Health."
       }
     },
     "android": {
@@ -43,7 +45,20 @@
     "plugins": [
       "expo-sqlite",
       "expo-location",
-      "expo-font"
+      "expo-font",
+      "react-native-health",
+      "react-native-health-connect",
+      "expo-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ]
   }
 }

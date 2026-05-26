@@ -5,18 +5,13 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withDelay, Easing } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { typography } from '../../constants/typography';
 import type { HealthInsight } from '../../engine/healthInsights';
 
 // ── Color map per insight type ───────────────────────────────────────────────
-
-const typeColors: Record<HealthInsight['type'], { icon: string; bg: string; badge: string }> = {
-  warning: { icon: colors.warning, bg: colors.warningSurface, badge: colors.warning },
-  info: { icon: colors.primary, bg: colors.primarySurface, badge: colors.primary },
-  positive: { icon: colors.success, bg: colors.successSurface, badge: colors.success },
-};
+// 
 
 // ── Severity label map ───────────────────────────────────────────────────────
 
@@ -32,6 +27,12 @@ interface InsightCardProps {
 }
 
 export function InsightCard({ insight, index = 0 }: InsightCardProps) {
+  const c = useColors();
+  const typeColors: Record<HealthInsight['type'], { icon: string; bg: string; badge: string }> = {
+    warning: { icon: c.warning, bg: c.warningSurface, badge: c.warning },
+    info: { icon: c.primary, bg: c.primarySurface, badge: c.primary },
+    positive: { icon: c.success, bg: c.successSurface, badge: c.success },
+  };
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(20);
 
@@ -49,7 +50,7 @@ export function InsightCard({ insight, index = 0 }: InsightCardProps) {
   const colors_ = typeColors[insight.type];
 
   return (
-    <Animated.View style={[styles.card, animatedStyle]}>
+    <Animated.View style={[styles.card, animatedStyle, { backgroundColor: c.surface }]}>
       <View style={styles.row}>
         {/* Icon */}
         <View style={[styles.iconWrap, { backgroundColor: colors_.bg }]}>
@@ -59,14 +60,14 @@ export function InsightCard({ insight, index = 0 }: InsightCardProps) {
         {/* Content */}
         <View style={styles.content}>
           <View style={styles.titleRow}>
-            <Text style={styles.title} numberOfLines={1}>
+            <Text style={[styles.title, { color: c.textPrimary }]} numberOfLines={1}>
               {insight.title}
             </Text>
             <View style={[styles.badge, { backgroundColor: colors_.badge }]}>
               <Text style={styles.badgeText}>{severityLabel[insight.severity]}</Text>
             </View>
           </View>
-          <Text style={styles.message}>{insight.message}</Text>
+          <Text style={[styles.message, { color: c.textSecondary }]}>{insight.message}</Text>
         </View>
       </View>
     </Animated.View>
@@ -77,7 +78,6 @@ export function InsightCard({ insight, index = 0 }: InsightCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.space4,
     marginBottom: spacing.space3,
@@ -112,7 +112,6 @@ const styles = StyleSheet.create({
   title: {
     ...typography.bodyMedium,
     fontWeight: '600',
-    color: colors.textPrimary,
     flex: 1,
     marginRight: spacing.space2,
   },
@@ -128,7 +127,6 @@ const styles = StyleSheet.create({
   },
   message: {
     ...typography.body,
-    color: colors.textSecondary,
     lineHeight: 19,
   },
 });

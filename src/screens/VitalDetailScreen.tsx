@@ -12,7 +12,7 @@ import {
 import { LineChart } from 'react-native-gifted-charts';
 import { useFocusEffect } from '@react-navigation/native';
 import { fonts } from '../constants/typography';
-import { colors } from '../constants/colors';
+import { useColors } from '../hooks/useColors';
 import { spacing, borderRadius } from '../constants/spacing';
 import { getDB } from '../hooks/useDB';
 import { getVitalLogsByDateRange } from '../db/queries/vitals';
@@ -39,25 +39,26 @@ function VitalTag({
   chartData?: { value: number }[];
   chartColor?: string;
 }) {
+  const c = useColors();
   // Uses VitalStatus union from utils/vitalStatus: 'normal' | 'warning' | 'danger' | 'unknown'
   const statusColors: Record<string, string> = {
-    normal: colors.success,
-    warning: colors.warning,
-    danger: colors.danger,
-    unknown: colors.textDisabled,
+    normal: c.success,
+    warning: c.warning,
+    danger: c.danger,
+    unknown: c.textDisabled,
   };
 
-  const lineColor = chartColor || statusColors[status] || colors.primary;
+  const lineColor = chartColor || statusColors[status] || c.primary;
 
   return (
-    <View style={[styles.vitalCard, { borderLeftColor: statusColors[status] || colors.textDisabled }]}>
+    <View style={[styles.vitalCard, { backgroundColor: c.surface, borderLeftColor: statusColors[status] || c.textDisabled }]}>
       <View style={styles.vitalCardHeader}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.vitalLabel}>{label}</Text>
-          <Text style={[styles.vitalValue, { color: statusColors[status] || colors.textPrimary }]}>
+          <Text style={[styles.vitalLabel, { color: c.textSecondary }]}>{label}</Text>
+          <Text style={[styles.vitalValue, { color: statusColors[status] || c.textPrimary }]}>
             {value}
           </Text>
-          <Text style={styles.vitalStatus}>{status.charAt(0).toUpperCase() + status.slice(1)}</Text>
+          <Text style={[styles.vitalStatus, { color: c.textDisabled }]}>{status.charAt(0).toUpperCase() + status.slice(1)}</Text>
         </View>
         {chartData && chartData.length > 1 && (
           <View style={styles.sparklineContainer}>
@@ -101,6 +102,7 @@ function extractTrend(
 }
 
 export function VitalDetailScreen({ route, navigation }: any) {
+  const c = useColors();
   const { logId } = route.params;
   const [log, setLog] = useState<VitalLogRow | null>(null);
   const [allLogs, setAllLogs] = useState<VitalLogRow[]>([]);
@@ -139,7 +141,7 @@ export function VitalDetailScreen({ route, navigation }: any) {
         value: `${log.bp_sys ?? '--'}/${log.bp_dia ?? '--'} ${log.bp_position ? `(${log.bp_position})` : ''}`,
         status: log.bp_sys ? getBpStatus(log.bp_sys, log.bp_dia ?? 0) : 'unknown',
         chartData: extractTrend(allLogs, (l) => l.bp_sys),
-        chartColor: colors.primary,
+        chartColor: c.primary,
       });
     }
     if (log.pulse != null) {
@@ -148,7 +150,7 @@ export function VitalDetailScreen({ route, navigation }: any) {
         value: `${log.pulse} bpm`,
         status: getPulseStatus(log.pulse),
         chartData: extractTrend(allLogs, (l) => l.pulse),
-        chartColor: colors.primaryLight,
+        chartColor: c.primaryLight,
       });
     }
     if (log.spo2 != null) {
@@ -157,7 +159,7 @@ export function VitalDetailScreen({ route, navigation }: any) {
         value: `${log.spo2}%`,
         status: getSpo2Status(log.spo2),
         chartData: extractTrend(allLogs, (l) => l.spo2),
-        chartColor: colors.success,
+        chartColor: c.success,
       });
     }
     if (log.glucose_value != null) {
@@ -166,7 +168,7 @@ export function VitalDetailScreen({ route, navigation }: any) {
         value: `${log.glucose_value} ${log.glucose_unit}${log.glucose_context ? ` (${log.glucose_context})` : ''}`,
         status: getGlucoseStatus(log.glucose_value, log.glucose_context),
         chartData: extractTrend(allLogs, (l) => l.glucose_value),
-        chartColor: colors.warning,
+        chartColor: c.warning,
       });
     }
     if (log.temp_value != null) {
@@ -175,7 +177,7 @@ export function VitalDetailScreen({ route, navigation }: any) {
         value: `${log.temp_value}°${log.temp_unit || 'C'}`,
         status: getTempStatus(log.temp_value),
         chartData: extractTrend(allLogs, (l) => l.temp_value),
-        chartColor: colors.urgent,
+        chartColor: c.urgent,
       });
     }
     if (log.weight_value != null) {
@@ -184,7 +186,7 @@ export function VitalDetailScreen({ route, navigation }: any) {
         value: `${log.weight_value} ${log.weight_unit || 'kg'}`,
         status: 'normal' as VitalStatus,
         chartData: extractTrend(allLogs, (l) => l.weight_value),
-        chartColor: colors.primary,
+        chartColor: c.primary,
       });
     }
     if (log.pain_level != null) {
@@ -193,32 +195,32 @@ export function VitalDetailScreen({ route, navigation }: any) {
         value: `${log.pain_level}/10${log.pain_location ? ` - ${log.pain_location}` : ''}`,
         status: getPainStatus(log.pain_level),
         chartData: extractTrend(allLogs, (l) => l.pain_level),
-        chartColor: log.pain_level >= 7 ? colors.danger : log.pain_level >= 4 ? colors.warning : colors.success,
+        chartColor: log.pain_level >= 7 ? c.danger : log.pain_level >= 4 ? c.warning : c.success,
       });
     }
 
     return items;
-  }, [log, allLogs]);
+  }, [log, allLogs, c]);
 
   if (!log) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.notFound}>Vital log not found</Text>
+      <View style={[styles.center, { backgroundColor: c.background }]}>
+        <Text style={[styles.notFound, { color: c.textSecondary }]}>Vital log not found</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: c.background }]} contentContainerStyle={styles.content}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.date}>{formatDisplayDate(log.logged_at_display)}</Text>
-        <Text style={styles.time}>{formatDisplayTime(log.logged_at_display)}</Text>
+      <View style={[styles.header, { backgroundColor: c.surface }]}>
+        <Text style={[styles.date, { color: c.textPrimary }]}>{formatDisplayDate(log.logged_at_display)}</Text>
+        <Text style={[styles.time, { color: c.textSecondary }]}>{formatDisplayTime(log.logged_at_display)}</Text>
       </View>
 
       {/* Vital Cards with Sparkline Trends */}
       {vitals.length > 0 && (
-        <Text style={styles.trendsLabel}>Latest Reading & 14-Day Trend</Text>
+        <Text style={[styles.trendsLabel, { color: c.textSecondary }]}>Latest Reading & 14-Day Trend</Text>
       )}
       <View style={styles.vitalsGrid}>
         {vitals.map((v, i) => (
@@ -234,40 +236,40 @@ export function VitalDetailScreen({ route, navigation }: any) {
       </View>
 
       {vitals.length === 0 && (
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyText}>No vital readings in this log entry</Text>
+        <View style={[styles.emptyCard, { backgroundColor: c.surface }]}>
+          <Text style={[styles.emptyText, { color: c.textSecondary }]}>No vital readings in this log entry</Text>
         </View>
       )}
 
       {/* Notes */}
       {log.notes ? (
-        <View style={styles.notesSection}>
-          <Text style={styles.notesLabel}>Notes</Text>
-          <Text style={styles.notesText}>{log.notes}</Text>
+        <View style={[styles.notesSection, { backgroundColor: c.surfaceAlt }]}>
+          <Text style={[styles.notesLabel, { color: c.textSecondary }]}>Notes</Text>
+          <Text style={[styles.notesText, { color: c.textPrimary }]}>{log.notes}</Text>
         </View>
       ) : null}
 
       {log.pain_notes ? (
-        <View style={styles.notesSection}>
-          <Text style={styles.notesLabel}>Pain Notes</Text>
-          <Text style={styles.notesText}>{log.pain_notes}</Text>
+        <View style={[styles.notesSection, { backgroundColor: c.surfaceAlt }]}>
+          <Text style={[styles.notesLabel, { color: c.textSecondary }]}>Pain Notes</Text>
+          <Text style={[styles.notesText, { color: c.textPrimary }]}>{log.pain_notes}</Text>
         </View>
       ) : null}
 
       {/* Nearby Logs */}
       {nearbyLogs.length > 0 && (
         <View style={styles.nearbySection}>
-          <Text style={styles.nearbyTitle}>Recent Readings</Text>
+          <Text style={[styles.nearbyTitle, { color: c.textPrimary }]}>Recent Readings</Text>
           {nearbyLogs.map((nearby) => (
             <TouchableOpacity
               key={nearby.id}
-              style={styles.nearbyRow}
+              style={[styles.nearbyRow, { backgroundColor: c.surface }]}
               onPress={() => navigation.replace('VitalDetail', { logId: nearby.id })}
             >
-              <Text style={styles.nearbyDate}>
+              <Text style={[styles.nearbyDate, { color: c.textPrimary }]}>
                 {formatDisplayDate(nearby.logged_at_display)} {formatDisplayTime(nearby.logged_at_display)}
               </Text>
-              <Text style={styles.nearbySummary}>
+              <Text style={[styles.nearbySummary, { color: c.textSecondary }]}>
                 {[
                   nearby.bp_sys ? `BP ${nearby.bp_sys}/${nearby.bp_dia}` : null,
                   nearby.pulse != null ? `Pulse ${nearby.pulse}` : null,
@@ -287,7 +289,6 @@ export function VitalDetailScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.space4,
@@ -297,15 +298,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
   },
   notFound: {
     fontSize: 16,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
   },
   header: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.space4,
     marginBottom: spacing.space4,
@@ -314,12 +312,10 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.textPrimary,
     fontFamily: fonts.body,
   },
   time: {
     fontSize: 14,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     marginTop: spacing.space1,
   },
@@ -337,15 +333,12 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
   },
   vitalCard: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.space4,
     borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
   },
   vitalLabel: {
     fontSize: 12,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -359,21 +352,18 @@ const styles = StyleSheet.create({
   },
   vitalStatus: {
     fontSize: 12,
-    color: colors.textDisabled,
     fontFamily: fonts.body,
     marginTop: 2,
   },
   trendsLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     fontFamily: fonts.body,
     marginBottom: spacing.space3,
   },
   emptyCard: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.space8,
     alignItems: 'center',
@@ -381,11 +371,9 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
   },
   notesSection: {
-    backgroundColor: colors.surfaceAlt,
     borderRadius: borderRadius.md,
     padding: spacing.space4,
     marginBottom: spacing.space4,
@@ -393,7 +381,6 @@ const styles = StyleSheet.create({
   notesLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -401,7 +388,6 @@ const styles = StyleSheet.create({
   },
   notesText: {
     fontSize: 14,
-    color: colors.textPrimary,
     fontFamily: fonts.body,
     lineHeight: 20,
   },
@@ -411,12 +397,10 @@ const styles = StyleSheet.create({
   nearbyTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
     fontFamily: fonts.body,
     marginBottom: spacing.space3,
   },
   nearbyRow: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.space3,
     marginBottom: spacing.space2,
@@ -424,12 +408,10 @@ const styles = StyleSheet.create({
   nearbyDate: {
     fontSize: 13,
     fontWeight: '500',
-    color: colors.textPrimary,
     fontFamily: fonts.body,
   },
   nearbySummary: {
     fontSize: 12,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     marginTop: 2,
   },

@@ -29,6 +29,7 @@ import { useSettingsStore } from '../../store/settingsStore';
 
 interface SetupProfileScreenProps {
   onComplete: () => void;
+  onBack?: () => void;
 }
 
 const SEX_OPTIONS = [
@@ -38,7 +39,7 @@ const SEX_OPTIONS = [
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
 
-export function SetupProfileScreen({ onComplete }: SetupProfileScreenProps) {
+export function SetupProfileScreen({ onComplete, onBack }: SetupProfileScreenProps) {
   const [name, setName] = useState('');
   const dobInput = useDateInput();
   const [showSexPicker, setShowSexPicker] = useState(false);
@@ -252,6 +253,11 @@ export function SetupProfileScreen({ onComplete }: SetupProfileScreenProps) {
       </ScrollView>
 
       <View style={styles.footer}>
+        {onBack && (
+          <View style={styles.backWrapper}>
+            <Button title="Back" onPress={onBack} variant="ghost" size="small" />
+          </View>
+        )}
         <Button title={saving ? 'Saving...' : 'Continue'} onPress={handleSave} loading={saving} disabled={!canSave} />
       </View>
     </KeyboardAvoidingView>
@@ -397,5 +403,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.space6,
     paddingBottom: spacing.space8,
     paddingTop: spacing.space3,
+  },
+  backWrapper: {
+    alignItems: 'flex-start',
+    marginBottom: spacing.space2,
   },
 });
