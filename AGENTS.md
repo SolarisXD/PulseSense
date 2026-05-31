@@ -32,8 +32,18 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v54.0.0/ before 
 - Custom vital charts in History tab
 - Touch interaction on chart data points (tap/hold to see exact value/date)
 
-## Follow-ups
-- (none)
+## Play Store v1 Prep (completed by assistant)
+- Updated `app.json`: added `description`, fixed package name to `com.pulsesense.app`, removed stray `android.description`
+- Created `eas.json` with production build profile (app-bundle)
+- Fixed `@types/jest` version mismatch (v30→v29.5)
+- Added `*.aab` / `*.apk` to `.gitignore`
+
+## Play Store v1 — Still needed by developer
+1. Create Google Play Developer account ($25)
+2. Generate app icon (512×512), feature graphic (1024×500), 6 screenshots (see `Docs/play_store_assets_guide.md`)
+3. Host privacy policy (privacypolicies.com or GitHub Pages)
+4. `eas login` → `eas build --platform android --profile production`
+5. Upload `.aab` to Play Console → fill listing → rollout
 
 ## Relevant Files
 - `src/screens/tabs/HistoryScreen.tsx`: Table/Charts toggle, chart data extraction for 7 standard + custom vitals

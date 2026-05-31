@@ -1,7 +1,7 @@
 // PulseSense — Onboarding: Ready Screen
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { spacing } from '../../constants/spacing';
@@ -13,6 +13,8 @@ interface ReadyScreenProps {
 }
 
 export function ReadyScreen({ onComplete }: ReadyScreenProps) {
+  const [disclaimerAccepted, setDisclaimerAccepted] = React.useState(false);
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -29,9 +31,26 @@ export function ReadyScreen({ onComplete }: ReadyScreenProps) {
             All health data is stored locally. No cloud, no accounts, no tracking.
           </Text>
         </View>
+        <TouchableOpacity
+          style={styles.disclaimerRow}
+          onPress={() => setDisclaimerAccepted(!disclaimerAccepted)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.checkbox, disclaimerAccepted && styles.checkboxChecked]}>
+            {disclaimerAccepted && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+          </View>
+          <Text style={styles.disclaimerText}>
+            I understand PulseSense is <Text style={{ fontWeight: '700' }}>not a medical device</Text> and does not provide diagnosis or treatment. In an emergency, I will call emergency services.
+          </Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.footer}>
-        <Button title="Go to Home →" onPress={onComplete} variant="primary" />
+        <Button
+          title="Go to Home →"
+          onPress={onComplete}
+          variant={disclaimerAccepted ? 'primary' : 'disabled'}
+          disabled={!disclaimerAccepted}
+        />
       </View>
     </View>
   );
@@ -96,6 +115,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.primary,
     lineHeight: 16,
+    fontFamily: fonts.body,
+  },
+  disclaimerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.warningSurface,
+    padding: spacing.space4,
+    borderRadius: 10,
+    maxWidth: 320,
+    marginTop: spacing.space5,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.space3,
+    marginTop: 1,
+    backgroundColor: colors.surface,
+  },
+  checkboxChecked: {
+    borderColor: colors.danger,
+    backgroundColor: colors.danger,
+  },
+  disclaimerText: {
+    flex: 1,
+    fontSize: 12,
+    color: colors.danger,
+    lineHeight: 17,
     fontFamily: fonts.body,
   },
   footer: {

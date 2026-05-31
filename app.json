@@ -3,6 +3,7 @@
     "name": "PulseSense",
     "slug": "pulsesense",
     "version": "1.0.0",
+    "description": "Offline health companion for vitals, medications, and emergency triage. 100% private, no account required.",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -34,7 +35,7 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
       ],
-      "package": "com.anonymous.pulsesense"
+      "package": "com.pulsesense.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"

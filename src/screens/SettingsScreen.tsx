@@ -96,7 +96,7 @@ export function SettingsScreen({ navigation }: any) {
   const [restoring, setRestoring] = useState(false);
   const [emergencyModalVisible, setEmergencyModalVisible] = useState(false);
   const [emergencyEditValue, setEmergencyEditValue] = useState('');
-  const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
+  const [disclaimerModalVisible, setDisclaimerModalVisible] = useState(false);
   const [termsModalVisible, setTermsModalVisible] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -428,13 +428,13 @@ export function SettingsScreen({ navigation }: any) {
       <Text style={[styles.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Privacy & Legal</Text>
       <TouchableOpacity
         style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
-        onPress={() => setPrivacyModalVisible(true)}
+        onPress={() => Linking.openURL('https://solarisxd.github.io/PulseSense/').catch(() => {})}
       >
         <View style={styles.linkRowLeft}>
           <Ionicons name="shield-checkmark-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
           <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>Privacy Policy</Text>
         </View>
-        <Text style={[styles.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
+        <Ionicons name="open-outline" size={18} color={activeColors.textSecondary} />
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
@@ -443,6 +443,16 @@ export function SettingsScreen({ navigation }: any) {
         <View style={styles.linkRowLeft}>
           <Ionicons name="document-text-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
           <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>Terms of Service</Text>
+        </View>
+        <Text style={[styles.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        onPress={() => setDisclaimerModalVisible(true)}
+      >
+        <View style={styles.linkRowLeft}>
+          <Ionicons name="warning-outline" size={20} color={activeColors.danger} style={{ marginRight: spacing.space3 }} />
+          <Text style={[styles.linkText, { color: activeColors.danger, fontWeight: '600' }]}>Medico-Legal Disclaimer</Text>
         </View>
         <Text style={[styles.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
       </TouchableOpacity>
@@ -629,33 +639,35 @@ export function SettingsScreen({ navigation }: any) {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Privacy Policy Modal */}
+      {/* Medico-Legal Disclaimer Modal */}
       <Modal
-        visible={privacyModalVisible}
+        visible={disclaimerModalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setPrivacyModalVisible(false)}
+        onRequestClose={() => setDisclaimerModalVisible(false)}
       >
         <KeyboardAvoidingView style={[styles.modalOverlay, { backgroundColor: activeColors.overlay }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={[styles.modalCard, { backgroundColor: activeColors.surface }]}>
-            <Text style={[styles.modalTitle, { color: activeColors.textPrimary }]}>Privacy Policy</Text>
-            <ScrollView style={{ maxHeight: 300 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.space4 }}>
+              <Ionicons name="warning" size={22} color={activeColors.danger} style={{ marginRight: spacing.space2 }} />
+              <Text style={[styles.modalTitle, { color: activeColors.danger, marginBottom: 0 }]}>Medico-Legal Disclaimer</Text>
+            </View>
+            <ScrollView style={{ maxHeight: 350 }}>
               <Text style={[styles.modalBody, { color: activeColors.textSecondary }]}>
-                PulseSense respects your privacy. All health data entered into this application
-                is stored exclusively on your device using local SQLite storage.{'\n\n'}
-                No personal information, health records, or usage data is transmitted to any
-                external server, cloud service, or third party.{'\n\n'}
-                PulseSense does not collect analytics, track your activity, or share data
-                with advertisers.{'\n\n'}
-                In the event of an emergency, data shown on screen may be read by emergency
-                responders at your discretion. You are in full control of what information
-                is displayed and shared.{'\n\n'}
-                By using PulseSense, you acknowledge that the app is for informational and
-                organizational purposes only and does not replace professional medical advice.
+                <Text style={{ fontWeight: '700', color: activeColors.danger }}>PulseSense is not a medical device.</Text>{'\n\n'}
+                It has not been cleared or approved by the FDA, MHRA, or any other regulatory body. It does not provide a medical diagnosis, treatment recommendation, or clinical decision support.{'\n\n'}
+                The emergency triage engine uses a static, rule-based checklist for informational guidance only. It may produce false positives, false negatives, or be inappropriate for your specific condition.{'\n\n'}
+                <Text style={{ fontWeight: '700', color: activeColors.danger }}>If you believe you are experiencing a medical emergency, call your local emergency services immediately (e.g., 911, 112, 999). Do not delay seeking professional medical attention based on information provided by this app.</Text>{'\n\n'}
+                All health data entered into and exported from PulseSense is for personal reference and informational use only. You should always consult a qualified healthcare professional before making any medical decisions, changing a treatment plan, or interpreting your vital signs.{'\n\n'}
+                By using PulseSense, you acknowledge that:{'\n'}
+                • The app is a voluntary self-tracking and informational tool.{'\n'}
+                • No healthcare provider–patient relationship is established.{'\n'}
+                • The developer(s) assume no liability for any actions taken or not taken based on the app's output.{'\n'}
+                • Any PDF exports generated by the app are informational summaries, not clinical documents, and may not be suitable for medical records.
               </Text>
             </ScrollView>
-            <TouchableOpacity style={[styles.modalSaveBtn, { backgroundColor: activeColors.primary }]} onPress={() => setPrivacyModalVisible(false)}>
-              <Text style={styles.modalSaveText}>Close</Text>
+            <TouchableOpacity style={[styles.modalSaveBtn, { backgroundColor: activeColors.danger }]} onPress={() => setDisclaimerModalVisible(false)}>
+              <Text style={styles.modalSaveText}>I Understand</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>

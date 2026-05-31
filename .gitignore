@@ -32,6 +32,11 @@ yarn-error.*
 
 # local env files
 .env.*
+
+# Build artifacts
+*.aab
+*.apk
+
 .opencode/
 
 
