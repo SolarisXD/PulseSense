@@ -1,16 +1,16 @@
 // PulseSense — Settings Screen
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet,
   Alert, TextInput, Modal, KeyboardAvoidingView, Platform, Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { fonts } from '../constants/typography';
+import { fonts, scaleSize } from '../constants/typography';
 import { colors } from '../constants/colors';
 import { spacing, borderRadius } from '../constants/spacing';
 import { colorsDark } from '../constants/colorsDark';
-import { useSettingsStore } from '../store/settingsStore';
+import { useSettingsStore, type FontScale, FONT_SCALE_MULTIPLIERS } from '../store/settingsStore';
 import { useThemeStore } from '../store/themeStore';
 import { useProfileStore } from '../store/profileStore';
 import { useAlertStore } from '../store/alertStore';
@@ -85,6 +85,8 @@ export function SettingsScreen({ navigation }: any) {
   const setGlucoseUnit = useSettingsStore((s) => s.setGlucoseUnit);
   const setHeightUnit = useSettingsStore((s) => s.setHeightUnit);
   const setBpDefaultPosition = useSettingsStore((s) => s.setBpDefaultPosition);
+  const fontScale = useSettingsStore((s) => s.fontScale);
+  const setFontScale = useSettingsStore((s) => s.setFontScale);
   const setEmergencyNumber = useSettingsStore((s) => s.setEmergencyNumber);
   const setMedicationReminders = useSettingsStore((s) => s.setMedicationReminders);
   const setReminderMorningTime = useSettingsStore((s) => s.setReminderMorningTime);
@@ -111,6 +113,8 @@ export function SettingsScreen({ navigation }: any) {
   }, []);
 
   const activeColors = isDark ? { ...colors, ...colorsDark } : colors;
+  const fs = FONT_SCALE_MULTIPLIERS[fontScale];
+  const sc = useMemo(() => createStyles(fs), [fs]);
 
   const handleChange = async (storeKey: string, dbKey: string, value: string) => {
     try {
@@ -175,8 +179,8 @@ export function SettingsScreen({ navigation }: any) {
 
   const handleDeleteConfirm = async () => {
     const profileName = useProfileStore.getState().profile?.full_name || '';
-    const expected = `DELETE ${profileName}`;
-    if (deleteConfirmText.trim() !== expected) return;
+    const expected = `DELETE ${profileName}`.toLowerCase();
+    if (deleteConfirmText.trim().toLowerCase() !== expected) return;
 
     setDeleting(true);
     try {
@@ -203,17 +207,17 @@ export function SettingsScreen({ navigation }: any) {
   const profileName = useProfileStore((s) => s.profile?.full_name || '');
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: activeColors.background }]} contentContainerStyle={styles.content}>
-      <Text style={[styles.sectionTitle, { color: activeColors.textSecondary }]}>Units</Text>
+    <ScrollView style={[sc.container, { backgroundColor: activeColors.background }]} contentContainerStyle={sc.content}>
+      <Text style={[sc.sectionTitle, { color: activeColors.textSecondary }]}>Units</Text>
       {Object.entries(UNIT_OPTIONS).map(([storeKey, config]) => (
-        <View key={storeKey} style={styles.settingGroup}>
-          <Text style={[styles.settingLabel, { color: activeColors.textPrimary }]}>{config.label}</Text>
-          <View style={styles.optionsRow}>
+        <View key={storeKey} style={sc.settingGroup}>
+          <Text style={[sc.settingLabel, { color: activeColors.textPrimary }]}>{config.label}</Text>
+          <View style={sc.optionsRow}>
             {config.options.map((opt) => (
               <TouchableOpacity
                 key={opt.value}
                   style={[
-                    styles.optionChip,
+                    sc.optionChip,
                     { borderColor: activeColors.border, backgroundColor: activeColors.surface },
                     currentValue(storeKey) === opt.value && { borderColor: activeColors.primary, backgroundColor: activeColors.primarySurface },
                   ]}
@@ -221,7 +225,7 @@ export function SettingsScreen({ navigation }: any) {
                 >
                   <Text
                     style={[
-                      styles.optionText,
+                      sc.optionText,
                       { color: activeColors.textPrimary },
                       currentValue(storeKey) === opt.value && { color: activeColors.primary, fontWeight: '600' as const },
                     ]}
@@ -234,19 +238,19 @@ export function SettingsScreen({ navigation }: any) {
         </View>
       ))}
 
-      <Text style={[styles.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Appearance</Text>
+      <Text style={[sc.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Appearance</Text>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={() => setDark(!isDark)}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons
             name={isDark ? 'moon' : 'sunny-outline'}
             size={20}
             color={activeColors.textSecondary}
             style={{ marginRight: spacing.space3 }}
           />
-          <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>Dark Mode</Text>
+          <Text style={[sc.linkText, { color: activeColors.textPrimary }]}>Dark Mode</Text>
         </View>
         <Switch
           value={isDark}
@@ -256,24 +260,59 @@ export function SettingsScreen({ navigation }: any) {
         />
       </TouchableOpacity>
 
-      <Text style={[styles.sectionTitle, { marginTop: spacing.space6 }]}>Emergency</Text>
-      <View style={styles.settingGroup}>
-        <Text style={[styles.settingLabel, { color: activeColors.textPrimary }]}>Emergency Number</Text>
+      <Text style={[sc.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Font Size</Text>
+      <View style={sc.settingGroup}>
+        <View style={sc.optionsRow}>
+          {(['extra-small', 'small', 'normal', 'large', 'extra-large'] as FontScale[]).map((size) => (
+            <TouchableOpacity
+              key={size}
+              style={[
+                sc.optionChip,
+                { borderColor: activeColors.border, backgroundColor: activeColors.surface },
+                fontScale === size && { borderColor: activeColors.primary, backgroundColor: activeColors.primarySurface },
+              ]}
+              onPress={async () => {
+                setFontScale(size);
+                try {
+                  const db = await getDB();
+                  await setSetting(db, 'font_scale', size);
+                } catch (err) {
+                  console.error(err);
+                }
+              }}
+            >
+              <Text
+                style={[
+                  sc.optionText,
+                  { color: activeColors.textPrimary, fontSize: 11 + (FONT_SCALE_MULTIPLIERS[size] * 2) },
+                  fontScale === size && { color: activeColors.primary, fontWeight: '600' as const },
+                ]}
+              >
+                {size === 'extra-large' ? 'XL' : size.charAt(0).toUpperCase() + size.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <Text style={[sc.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Emergency</Text>
+      <View style={sc.settingGroup}>
+        <Text style={[sc.settingLabel, { color: activeColors.textPrimary }]}>Emergency Number</Text>
         <TouchableOpacity
-          style={[styles.editRow, { backgroundColor: activeColors.surface }]}
+          style={[sc.editRow, { backgroundColor: activeColors.surface }]}
           onPress={() => {
             setEmergencyEditValue(emergencyNumber);
             setEmergencyModalVisible(true);
           }}
         >
-          <Text style={[styles.editRowValue, { color: activeColors.textPrimary }]}>{emergencyNumber}</Text>
-          <Text style={[styles.editRowAction, { color: activeColors.primary }]}>Change</Text>
+          <Text style={[sc.editRowValue, { color: activeColors.textPrimary }]}>{emergencyNumber}</Text>
+          <Text style={[sc.editRowAction, { color: activeColors.primary }]}>Change</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={[styles.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Notifications</Text>
+      <Text style={[sc.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Notifications</Text>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={async () => {
           if (notificationsEnabled) {
             Alert.alert('Notifications', 'Push notifications are enabled. To disable, go to your device Settings.');
@@ -287,16 +326,16 @@ export function SettingsScreen({ navigation }: any) {
           );
         }}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons name="notifications-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
-          <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>Push Notifications</Text>
+          <Text style={[sc.linkText, { color: activeColors.textPrimary }]}>Push Notifications</Text>
         </View>
-        <View style={[styles.toggleDot, { borderColor: activeColors.border, backgroundColor: activeColors.surface }, notificationsEnabled && { borderColor: activeColors.primary, backgroundColor: activeColors.primary }]} />
+        <View style={[sc.toggleDot, { borderColor: activeColors.border, backgroundColor: activeColors.surface }, notificationsEnabled && { borderColor: activeColors.primary, backgroundColor: activeColors.primary }]} />
       </TouchableOpacity>
 
-      <Text style={[styles.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Medication Reminders</Text>
+      <Text style={[sc.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Medication Reminders</Text>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={async () => {
           const next = !medicationReminders;
           try {
@@ -327,9 +366,9 @@ export function SettingsScreen({ navigation }: any) {
           }
         }}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons name="alarm-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
-          <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>Enable Reminders</Text>
+          <Text style={[sc.linkText, { color: activeColors.textPrimary }]}>Enable Reminders</Text>
         </View>
         <Switch
           value={medicationReminders}
@@ -339,13 +378,13 @@ export function SettingsScreen({ navigation }: any) {
       </TouchableOpacity>
 
       {medicationReminders && (
-        <View style={[styles.timeSection, { backgroundColor: activeColors.surface }]}>
-          <Text style={[styles.timeSectionLabel, { color: activeColors.textSecondary }]}>Reminder Times</Text>
+        <View style={[sc.timeSection, { backgroundColor: activeColors.surface }]}>
+          <Text style={[sc.timeSectionLabel, { color: activeColors.textSecondary }]}>Reminder Times</Text>
 
-          <View style={styles.timeRow}>
-            <Text style={[styles.timeLabel, { color: activeColors.textPrimary }]}>Morning</Text>
+          <View style={sc.timeRow}>
+            <Text style={[sc.timeLabel, { color: activeColors.textPrimary }]}>Morning</Text>
             <TextInput
-              style={[styles.timeInput, { borderColor: activeColors.border, color: activeColors.textPrimary, backgroundColor: activeColors.surfaceAlt }]}
+              style={[sc.timeInput, { borderColor: activeColors.border, color: activeColors.textPrimary, backgroundColor: activeColors.surfaceAlt }]}
               value={reminderMorningTime}
               onChangeText={(t) => {
                 if (/^\d{0,2}:\d{0,2}$/.test(t) || t === '') {
@@ -369,10 +408,10 @@ export function SettingsScreen({ navigation }: any) {
             />
           </View>
 
-          <View style={styles.timeRow}>
-            <Text style={[styles.timeLabel, { color: activeColors.textPrimary }]}>Afternoon</Text>
+          <View style={sc.timeRow}>
+            <Text style={[sc.timeLabel, { color: activeColors.textPrimary }]}>Afternoon</Text>
             <TextInput
-              style={[styles.timeInput, { borderColor: activeColors.border, color: activeColors.textPrimary, backgroundColor: activeColors.surfaceAlt }]}
+              style={[sc.timeInput, { borderColor: activeColors.border, color: activeColors.textPrimary, backgroundColor: activeColors.surfaceAlt }]}
               value={reminderAfternoonTime}
               onChangeText={(t) => {
                 if (/^\d{0,2}:\d{0,2}$/.test(t) || t === '') {
@@ -396,10 +435,10 @@ export function SettingsScreen({ navigation }: any) {
             />
           </View>
 
-          <View style={styles.timeRow}>
-            <Text style={[styles.timeLabel, { color: activeColors.textPrimary }]}>Night</Text>
+          <View style={sc.timeRow}>
+            <Text style={[sc.timeLabel, { color: activeColors.textPrimary }]}>Night</Text>
             <TextInput
-              style={[styles.timeInput, { borderColor: activeColors.border, color: activeColors.textPrimary, backgroundColor: activeColors.surfaceAlt }]}
+              style={[sc.timeInput, { borderColor: activeColors.border, color: activeColors.textPrimary, backgroundColor: activeColors.surfaceAlt }]}
               value={reminderNightTime}
               onChangeText={(t) => {
                 if (/^\d{0,2}:\d{0,2}$/.test(t) || t === '') {
@@ -425,83 +464,83 @@ export function SettingsScreen({ navigation }: any) {
         </View>
       )}
 
-      <Text style={[styles.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Privacy & Legal</Text>
+      <Text style={[sc.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Privacy & Legal</Text>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={() => Linking.openURL('https://solarisxd.github.io/PulseSense/').catch(() => {})}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons name="shield-checkmark-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
-          <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>Privacy Policy</Text>
+          <Text style={[sc.linkText, { color: activeColors.textPrimary }]}>Privacy Policy</Text>
         </View>
         <Ionicons name="open-outline" size={18} color={activeColors.textSecondary} />
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={() => setTermsModalVisible(true)}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons name="document-text-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
-          <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>Terms of Service</Text>
+          <Text style={[sc.linkText, { color: activeColors.textPrimary }]}>Terms of Service</Text>
         </View>
-        <Text style={[styles.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
+        <Text style={[sc.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={() => setDisclaimerModalVisible(true)}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons name="warning-outline" size={20} color={activeColors.danger} style={{ marginRight: spacing.space3 }} />
-          <Text style={[styles.linkText, { color: activeColors.danger, fontWeight: '600' }]}>Medico-Legal Disclaimer</Text>
+          <Text style={[sc.linkText, { color: activeColors.danger, fontWeight: '600' }]}>Medico-Legal Disclaimer</Text>
         </View>
-        <Text style={[styles.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
+        <Text style={[sc.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
       </TouchableOpacity>
 
-      <Text style={[styles.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>System</Text>
+      <Text style={[sc.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>System</Text>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={() => Alert.alert('Check for Updates', 'PulseSense v1.0.0 — You are on the latest version.')}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons name="cloud-download-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
-          <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>Check for Updates</Text>
+          <Text style={[sc.linkText, { color: activeColors.textPrimary }]}>Check for Updates</Text>
         </View>
-        <Text style={[styles.linkBadge, { color: activeColors.primary, backgroundColor: activeColors.primarySurface }]}>v1.0.0</Text>
+        <Text style={[sc.linkBadge, { color: activeColors.primary, backgroundColor: activeColors.primarySurface }]}>v1.0.0</Text>
       </TouchableOpacity>
 
-      <Text style={[styles.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Data</Text>
+      <Text style={[sc.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Data</Text>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={() => navigation.navigate('CustomVitals')}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons name="pulse-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
-          <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>Manage Custom Vitals</Text>
+          <Text style={[sc.linkText, { color: activeColors.textPrimary }]}>Manage Custom Vitals</Text>
         </View>
-        <Text style={[styles.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
+        <Text style={[sc.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={() => navigation.navigate('HealthConnection')}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons name="fitness-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
-          <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>Apple Health / Health Connect</Text>
+          <Text style={[sc.linkText, { color: activeColors.textPrimary }]}>Apple Health / Health Connect</Text>
         </View>
-        <Text style={[styles.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
+        <Text style={[sc.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={() => navigation.navigate('Export')}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons name="download-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
-          <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>Export All Data as PDF</Text>
+          <Text style={[sc.linkText, { color: activeColors.textPrimary }]}>Export All Data as PDF</Text>
         </View>
-        <Text style={[styles.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
+        <Text style={[sc.linkArrow, { color: activeColors.textSecondary }]}>→</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={async () => {
           setBackingUp(true);
           try {
@@ -514,16 +553,16 @@ export function SettingsScreen({ navigation }: any) {
         }}
         disabled={backingUp}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons name="cloud-upload-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
-          <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>
+          <Text style={[sc.linkText, { color: activeColors.textPrimary }]}>
             {backingUp ? 'Creating backup...' : 'Backup Data'}
           </Text>
         </View>
         <Ionicons name="share-outline" size={18} color={activeColors.textSecondary} />
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={() => {
           Alert.alert(
             'Restore Data',
@@ -554,31 +593,31 @@ export function SettingsScreen({ navigation }: any) {
         }}
         disabled={restoring}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons name="cloud-download-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />
-          <Text style={[styles.linkText, { color: activeColors.textPrimary }]}>
+          <Text style={[sc.linkText, { color: activeColors.textPrimary }]}>
             {restoring ? 'Restoring...' : 'Restore Data'}
           </Text>
         </View>
         <Ionicons name="folder-open-outline" size={18} color={activeColors.textSecondary} />
       </TouchableOpacity>
 
-      <Text style={[styles.sectionTitle, { marginTop: spacing.space6, color: activeColors.danger }]}>Danger Zone</Text>
+      <Text style={[sc.sectionTitle, { marginTop: spacing.space6, color: activeColors.danger }]}>Danger Zone</Text>
       <TouchableOpacity
-        style={[styles.linkRow, { backgroundColor: activeColors.surface }]}
+        style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
         onPress={handleDeleteProfile}
       >
-        <View style={styles.linkRowLeft}>
+        <View style={sc.linkRowLeft}>
           <Ionicons name="trash-outline" size={20} color={activeColors.danger} style={{ marginRight: spacing.space3 }} />
-          <Text style={[styles.linkText, { color: activeColors.danger }]}>Delete Profile</Text>
+          <Text style={[sc.linkText, { color: activeColors.danger }]}>Delete Profile</Text>
         </View>
-        <Text style={[styles.linkArrow, { color: activeColors.danger }]}>→</Text>
+        <Text style={[sc.linkArrow, { color: activeColors.danger }]}>→</Text>
       </TouchableOpacity>
 
-      <Text style={[styles.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>About</Text>
-      <View style={[styles.aboutCard, { backgroundColor: activeColors.surface }]}>
-        <Text style={[styles.aboutText, { color: activeColors.textPrimary }]}>PulseSense v1.0.0</Text>
-        <Text style={[styles.aboutPrivacy, { color: activeColors.textSecondary }]}>
+      <Text style={[sc.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>About</Text>
+      <View style={[sc.aboutCard, { backgroundColor: activeColors.surface }]}>
+        <Text style={[sc.aboutText, { color: activeColors.textPrimary }]}>PulseSense v1.0.0</Text>
+        <Text style={[sc.aboutPrivacy, { color: activeColors.textSecondary }]}>
           All data stored locally on this device only. No data is sent to any server.
           PulseSense provides general health guidance and emergency checklists. It does not
           diagnose medical conditions. Always consult a qualified healthcare professional.
@@ -595,13 +634,13 @@ export function SettingsScreen({ navigation }: any) {
         onRequestClose={() => setEmergencyModalVisible(false)}
       >
         <KeyboardAvoidingView
-          style={[styles.modalOverlay, { backgroundColor: activeColors.overlay }]}
+          style={[sc.modalOverlay, { backgroundColor: activeColors.overlay }]}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={[styles.modalCard, { backgroundColor: activeColors.surface }]}>
-            <Text style={[styles.modalTitle, { color: activeColors.textPrimary }]}>Emergency Number</Text>
+          <View style={[sc.modalCard, { backgroundColor: activeColors.surface }]}>
+            <Text style={[sc.modalTitle, { color: activeColors.textPrimary }]}>Emergency Number</Text>
             <TextInput
-              style={[styles.modalInput, { borderColor: activeColors.border, color: activeColors.textPrimary, backgroundColor: activeColors.surfaceAlt }]}
+              style={[sc.modalInput, { borderColor: activeColors.border, color: activeColors.textPrimary, backgroundColor: activeColors.surfaceAlt }]}
               value={emergencyEditValue}
               onChangeText={setEmergencyEditValue}
               placeholder="Enter emergency number"
@@ -609,15 +648,15 @@ export function SettingsScreen({ navigation }: any) {
               keyboardType="phone-pad"
               autoFocus
             />
-            <View style={styles.modalButtons}>
+            <View style={sc.modalButtons}>
               <TouchableOpacity
-                style={[styles.modalCancelBtn, { borderColor: activeColors.border }]}
+                style={[sc.modalCancelBtn, { borderColor: activeColors.border }]}
                 onPress={() => setEmergencyModalVisible(false)}
               >
-                <Text style={[styles.modalCancelText, { color: activeColors.textSecondary }]}>Cancel</Text>
+                <Text style={[sc.modalCancelText, { color: activeColors.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalSaveBtn, { backgroundColor: activeColors.primary }]}
+                style={[sc.modalSaveBtn, { backgroundColor: activeColors.primary }]}
                 onPress={async () => {
                   if (emergencyEditValue.trim()) {
                     try {
@@ -632,7 +671,7 @@ export function SettingsScreen({ navigation }: any) {
                   setEmergencyModalVisible(false);
                 }}
               >
-                <Text style={styles.modalSaveText}>Save</Text>
+                <Text style={sc.modalSaveText}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -646,14 +685,14 @@ export function SettingsScreen({ navigation }: any) {
         animationType="fade"
         onRequestClose={() => setDisclaimerModalVisible(false)}
       >
-        <KeyboardAvoidingView style={[styles.modalOverlay, { backgroundColor: activeColors.overlay }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={[styles.modalCard, { backgroundColor: activeColors.surface }]}>
+        <KeyboardAvoidingView style={[sc.modalOverlay, { backgroundColor: activeColors.overlay }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={[sc.modalCard, { backgroundColor: activeColors.surface }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.space4 }}>
               <Ionicons name="warning" size={22} color={activeColors.danger} style={{ marginRight: spacing.space2 }} />
-              <Text style={[styles.modalTitle, { color: activeColors.danger, marginBottom: 0 }]}>Medico-Legal Disclaimer</Text>
+              <Text style={[sc.modalTitle, { color: activeColors.danger, marginBottom: 0 }]}>Medico-Legal Disclaimer</Text>
             </View>
             <ScrollView style={{ maxHeight: 350 }}>
-              <Text style={[styles.modalBody, { color: activeColors.textSecondary }]}>
+              <Text style={[sc.modalBody, { color: activeColors.textSecondary }]}>
                 <Text style={{ fontWeight: '700', color: activeColors.danger }}>PulseSense is not a medical device.</Text>{'\n\n'}
                 It has not been cleared or approved by the FDA, MHRA, or any other regulatory body. It does not provide a medical diagnosis, treatment recommendation, or clinical decision support.{'\n\n'}
                 The emergency triage engine uses a static, rule-based checklist for informational guidance only. It may produce false positives, false negatives, or be inappropriate for your specific condition.{'\n\n'}
@@ -666,8 +705,8 @@ export function SettingsScreen({ navigation }: any) {
                 • Any PDF exports generated by the app are informational summaries, not clinical documents, and may not be suitable for medical records.
               </Text>
             </ScrollView>
-            <TouchableOpacity style={[styles.modalSaveBtn, { backgroundColor: activeColors.danger }]} onPress={() => setDisclaimerModalVisible(false)}>
-              <Text style={styles.modalSaveText}>I Understand</Text>
+            <TouchableOpacity style={[sc.modalSaveBtn, { backgroundColor: activeColors.danger }]} onPress={() => setDisclaimerModalVisible(false)}>
+              <Text style={sc.modalSaveText}>I Understand</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -680,11 +719,11 @@ export function SettingsScreen({ navigation }: any) {
         animationType="fade"
         onRequestClose={() => setTermsModalVisible(false)}
       >
-        <KeyboardAvoidingView style={[styles.modalOverlay, { backgroundColor: activeColors.overlay }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={[styles.modalCard, { backgroundColor: activeColors.surface }]}>
-            <Text style={[styles.modalTitle, { color: activeColors.textPrimary }]}>Terms of Service</Text>
+        <KeyboardAvoidingView style={[sc.modalOverlay, { backgroundColor: activeColors.overlay }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={[sc.modalCard, { backgroundColor: activeColors.surface }]}>
+            <Text style={[sc.modalTitle, { color: activeColors.textPrimary }]}>Terms of Service</Text>
             <ScrollView style={{ maxHeight: 300 }}>
-              <Text style={[styles.modalBody, { color: activeColors.textSecondary }]}>
+              <Text style={[sc.modalBody, { color: activeColors.textSecondary }]}>
                 By using PulseSense you agree to the following terms:{'\n\n'}
                 1. PulseSense is a health information organizer and emergency checklist tool.
                 It does NOT provide medical diagnosis, treatment, or advice.{'\n\n'}
@@ -698,8 +737,8 @@ export function SettingsScreen({ navigation }: any) {
                 shall not be liable for any damages arising from use of this software.
               </Text>
             </ScrollView>
-            <TouchableOpacity style={[styles.modalSaveBtn, { backgroundColor: activeColors.primary }]} onPress={() => setTermsModalVisible(false)}>
-              <Text style={styles.modalSaveText}>Close</Text>
+            <TouchableOpacity style={[sc.modalSaveBtn, { backgroundColor: activeColors.primary }]} onPress={() => setTermsModalVisible(false)}>
+              <Text style={sc.modalSaveText}>Close</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -713,42 +752,42 @@ export function SettingsScreen({ navigation }: any) {
         onRequestClose={() => setDeleteModalVisible(false)}
       >
         <KeyboardAvoidingView
-          style={[styles.modalOverlay, { backgroundColor: activeColors.overlay }]}
+          style={[sc.modalOverlay, { backgroundColor: activeColors.overlay }]}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={[styles.deleteModalCard, { backgroundColor: activeColors.surface }]}>
-            <View style={[styles.deleteIconCircle, { backgroundColor: activeColors.dangerSurface }]}>
+          <View style={[sc.deleteModalCard, { backgroundColor: activeColors.surface }]}>
+            <View style={[sc.deleteIconCircle, { backgroundColor: activeColors.dangerSurface }]}>
               <Ionicons name="trash" size={28} color={activeColors.danger} />
             </View>
 
-            <Text style={[styles.deleteModalTitle, { color: activeColors.textPrimary }]}>
+            <Text style={[sc.deleteModalTitle, { color: activeColors.textPrimary }]}>
               Delete Profile
             </Text>
-            <Text style={[styles.deleteModalSubtitle, { color: activeColors.textSecondary }]}>
+            <Text style={[sc.deleteModalSubtitle, { color: activeColors.textSecondary }]}>
               This will permanently remove all data for:
             </Text>
 
-            <View style={[styles.deleteDataCard, { backgroundColor: activeColors.dangerSurface }]}>
+            <View style={[sc.deleteDataCard, { backgroundColor: activeColors.dangerSurface }]}>
               {['Profile & Personal Info', 'Vitals History', 'Medications & Prescriptions',
                 'Medical Conditions', 'Allergies', 'Emergency Contacts', 'Settings & Preferences',
               ].map((item) => (
-                <View key={item} style={styles.deleteDataRow}>
-                  <View style={[styles.deleteDataBullet, { backgroundColor: activeColors.danger }]} />
-                  <Text style={[styles.deleteDataText, { color: activeColors.textPrimary }]}>{item}</Text>
+                <View key={item} style={sc.deleteDataRow}>
+                  <View style={[sc.deleteDataBullet, { backgroundColor: activeColors.danger }]} />
+                  <Text style={[sc.deleteDataText, { color: activeColors.textPrimary }]}>{item}</Text>
                 </View>
               ))}
             </View>
 
-            <Text style={[styles.deleteConfirmLabel, { color: activeColors.textSecondary }]}>
+            <Text style={[sc.deleteConfirmLabel, { color: activeColors.textSecondary }]}>
               Type <Text style={{ fontWeight: '700', color: activeColors.danger }}>DELETE {profileName}</Text> to confirm
             </Text>
 
-            <View style={styles.deleteInputRow}>
+            <View style={sc.deleteInputRow}>
               <TextInput
                 style={[
-                  styles.deleteInput,
+                  sc.deleteInput,
                   {
-                    borderColor: deleteConfirmText.trim() === `DELETE ${profileName}`
+                    borderColor: deleteConfirmText.trim().toLowerCase() === `DELETE ${profileName}`.toLowerCase()
                       ? activeColors.success
                       : activeColors.border,
                     color: activeColors.textPrimary,
@@ -759,39 +798,39 @@ export function SettingsScreen({ navigation }: any) {
                 onChangeText={setDeleteConfirmText}
                 placeholder={`DELETE ${profileName}`}
                 placeholderTextColor={activeColors.textDisabled}
-                autoCapitalize="characters"
+                autoCapitalize="none"
                 autoFocus
                 editable={!deleting}
               />
-              {deleteConfirmText.trim() === `DELETE ${profileName}` && (
+              {deleteConfirmText.trim().toLowerCase() === `DELETE ${profileName}`.toLowerCase() && (
                 <Ionicons
                   name="checkmark-circle"
                   size={24}
                   color={activeColors.success}
-                  style={styles.deleteMatchIcon}
+                  style={sc.deleteMatchIcon}
                 />
               )}
             </View>
 
-            <View style={styles.deleteModalButtons}>
+            <View style={sc.deleteModalButtons}>
               <TouchableOpacity
-                style={[styles.deleteCancelBtn, { borderColor: activeColors.border }]}
+                style={[sc.deleteCancelBtn, { borderColor: activeColors.border }]}
                 onPress={() => {
                   setDeleteModalVisible(false);
                   setDeleteConfirmText('');
                 }}
                 disabled={deleting}
               >
-                <Text style={[styles.deleteCancelText, { color: activeColors.textSecondary }]}>Cancel</Text>
+                <Text style={[sc.deleteCancelText, { color: activeColors.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
-              <View style={styles.deleteConfirmBtnWrap}>
+              <View style={sc.deleteConfirmBtnWrap}>
                 <Button
                   title={deleting ? 'Deleting...' : 'Delete Everything'}
                   onPress={handleDeleteConfirm}
-                  variant={deleteConfirmText.trim() === `DELETE ${profileName}` ? 'danger' : 'disabled'}
+                  variant={deleteConfirmText.trim().toLowerCase() === `DELETE ${profileName}`.toLowerCase() ? 'danger' : 'disabled'}
                   size="medium"
                   loading={deleting}
-                  disabled={deleteConfirmText.trim() !== `DELETE ${profileName}` || deleting}
+                  disabled={deleteConfirmText.trim().toLowerCase() !== `DELETE ${profileName}`.toLowerCase() || deleting}
                 />
               </View>
             </View>
@@ -802,7 +841,9 @@ export function SettingsScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(fs: number) {
+  const fn = (size: number) => scaleSize(size, fs);
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -811,7 +852,7 @@ const styles = StyleSheet.create({
     padding: spacing.space4,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: fn(14),
     fontWeight: '700',
     color: colors.textSecondary,
     textTransform: 'uppercase',
@@ -823,7 +864,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.space5,
   },
   settingLabel: {
-    fontSize: 14,
+    fontSize: fn(14),
     fontWeight: '500',
     color: colors.textPrimary,
     fontFamily: fonts.body,
@@ -848,7 +889,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySurface,
   },
   optionText: {
-    fontSize: 13,
+    fontSize: fn(13),
     color: colors.textPrimary,
     fontFamily: fonts.body,
   },
@@ -870,12 +911,12 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   editRowValue: {
-    fontSize: 16,
+    fontSize: fn(16),
     color: colors.textPrimary,
     fontFamily: fonts.mono,
   },
   editRowAction: {
-    fontSize: 13,
+    fontSize: fn(13),
     color: colors.primary,
     fontWeight: '500',
     fontFamily: fonts.body,
@@ -895,12 +936,12 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   linkText: {
-    fontSize: 15,
+    fontSize: fn(15),
     color: colors.textPrimary,
     fontFamily: fonts.body,
   },
   linkArrow: {
-    fontSize: 18,
+    fontSize: fn(18),
     color: colors.textSecondary,
   },
   linkRowLeft: {
@@ -908,7 +949,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   linkBadge: {
-    fontSize: 12,
+    fontSize: fn(12),
     color: colors.primary,
     fontWeight: '600',
     fontFamily: fonts.body,
@@ -941,7 +982,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   timeSectionLabel: {
-    fontSize: 12,
+    fontSize: fn(12),
     fontWeight: '600',
     color: colors.textSecondary,
     fontFamily: fonts.body,
@@ -956,7 +997,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.space3,
   },
   timeLabel: {
-    fontSize: 14,
+    fontSize: fn(14),
     fontWeight: '500',
     color: colors.textPrimary,
     fontFamily: fonts.body,
@@ -969,7 +1010,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.space3,
-    fontSize: 16,
+    fontSize: fn(16),
     color: colors.textPrimary,
     fontFamily: fonts.mono,
     backgroundColor: colors.surfaceAlt,
@@ -981,14 +1022,14 @@ const styles = StyleSheet.create({
     padding: spacing.space4,
   },
   aboutText: {
-    fontSize: 14,
+    fontSize: fn(14),
     fontWeight: '600',
     color: colors.textPrimary,
     fontFamily: fonts.body,
     marginBottom: spacing.space3,
   },
   aboutPrivacy: {
-    fontSize: 12,
+    fontSize: fn(12),
     color: colors.textSecondary,
     lineHeight: 18,
     fontFamily: fonts.body,
@@ -1013,7 +1054,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: fn(18),
     fontWeight: '700',
     color: colors.textPrimary,
     fontFamily: fonts.body,
@@ -1021,7 +1062,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   modalBody: {
-    fontSize: 13,
+    fontSize: fn(13),
     color: colors.textSecondary,
     fontFamily: fonts.body,
     lineHeight: 20,
@@ -1033,7 +1074,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.space3,
-    fontSize: 18,
+    fontSize: fn(18),
     color: colors.textPrimary,
     fontFamily: fonts.mono,
     backgroundColor: colors.surfaceAlt,
@@ -1055,7 +1096,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   modalCancelText: {
-    fontSize: 14,
+    fontSize: fn(14),
     fontWeight: '600',
     color: colors.textSecondary,
     fontFamily: fonts.body,
@@ -1070,7 +1111,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   modalSaveText: {
-    fontSize: 14,
+    fontSize: fn(14),
     fontWeight: '600',
     color: '#FFFFFF',
     fontFamily: fonts.body,
@@ -1097,7 +1138,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.space4,
   },
   deleteModalTitle: {
-    fontSize: 20,
+    fontSize: fn(20),
     fontWeight: '700',
     fontFamily: fonts.display,
     color: colors.textPrimary,
@@ -1105,7 +1146,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   deleteModalSubtitle: {
-    fontSize: 13,
+    fontSize: fn(13),
     fontFamily: fonts.body,
     color: colors.textSecondary,
     marginBottom: spacing.space4,
@@ -1129,12 +1170,12 @@ const styles = StyleSheet.create({
     marginRight: spacing.space3,
   },
   deleteDataText: {
-    fontSize: 13,
+    fontSize: fn(13),
     fontFamily: fonts.body,
     color: colors.textPrimary,
   },
   deleteConfirmLabel: {
-    fontSize: 13,
+    fontSize: fn(13),
     fontFamily: fonts.body,
     color: colors.textSecondary,
     marginBottom: spacing.space3,
@@ -1152,7 +1193,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.space3,
-    fontSize: 16,
+    fontSize: fn(16),
     fontFamily: fonts.mono,
     textAlign: 'center',
     letterSpacing: 1,
@@ -1175,7 +1216,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   deleteCancelText: {
-    fontSize: 14,
+    fontSize: fn(14),
     fontWeight: '600',
     fontFamily: fonts.body,
   },
@@ -1183,3 +1224,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+}

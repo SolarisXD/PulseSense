@@ -18,7 +18,7 @@ import { useColors } from '../../hooks/useColors';
 import { colorsDark } from '../../constants/colorsDark';
 import { useThemeStore } from '../../store/themeStore';
 import { spacing, borderRadius } from '../../constants/spacing';
-import { fonts } from '../../constants/typography';
+import { fonts, scaleSize } from '../../constants/typography';
 import { useProfileStore } from '../../store/profileStore';
 import { useAlertStore } from '../../store/alertStore';
 import { useAgeCalculator } from '../../hooks/useAgeCalculator';
@@ -41,6 +41,7 @@ import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useHealthInsights } from '../../hooks/useHealthInsights';
 import { InsightCard } from '../../components/health/InsightCard';
+import { useSettingsStore, FONT_SCALE_MULTIPLIERS } from '../../store/settingsStore';
 
 const { width } = Dimensions.get('window');
 
@@ -55,6 +56,9 @@ export function HomeScreen({ navigation }: any) {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const { insights, loading: insightsLoading } = useHealthInsights();
+  const fontScale = useSettingsStore((s) => s.fontScale);
+  const fs = FONT_SCALE_MULTIPLIERS[fontScale];
+  const sc = useMemo(() => createStyles(fs), [fs]);
 
   const gradientColors = useMemo(
     () => (isDark ? colorsDark.bgGradientHome : ['#F0F4F8', '#E8EEF4', '#E4ECF2'] as const) as readonly string[],
@@ -191,9 +195,9 @@ export function HomeScreen({ navigation }: any) {
 
   if (loading) {
     return (
-      <LinearGradient colors={['#F0F4F8', '#E8EEF4', '#E4ECF2']} style={styles.gradient}>
-        <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.greetingRow}>
+      <LinearGradient colors={['#F0F4F8', '#E8EEF4', '#E4ECF2']} style={sc.gradient}>
+        <ScrollView style={sc.container} contentContainerStyle={sc.content} showsVerticalScrollIndicator={false}>
+          <View style={sc.greetingRow}>
             <View style={{ flex: 1 }}>
               <Skeleton.Box width={120} height={14} style={{ marginBottom: 8 }} />
               <Skeleton.Box width={180} height={28} style={{ marginBottom: 6 }} />
@@ -202,11 +206,11 @@ export function HomeScreen({ navigation }: any) {
             <Skeleton.Circle size={46} />
           </View>
           <Skeleton.Box width="100%" height={64} borderRadius={10} style={{ marginBottom: 24 }} />
-          <View style={styles.sectionHeader}>
+          <View style={sc.sectionHeader}>
             <Skeleton.Box width={16} height={16} borderRadius={8} />
             <Skeleton.Box width={120} height={16} />
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.vitalsScroll}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={sc.vitalsScroll}>
             <Skeleton.Box width={135} height={110} borderRadius={10} style={{ marginRight: 12 }} />
             <Skeleton.Box width={135} height={110} borderRadius={10} style={{ marginRight: 12 }} />
             <Skeleton.Box width={135} height={110} borderRadius={10} />
@@ -220,34 +224,34 @@ export function HomeScreen({ navigation }: any) {
   return (
     <LinearGradient
       colors={gradientColors as any}
-      style={styles.gradient}
+      style={sc.gradient}
     >
       <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
+        style={sc.container}
+        contentContainerStyle={sc.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
         showsVerticalScrollIndicator={false}
       >
         <AnimatedSection index={0}>
-          <View style={styles.greetingRow}>
-            <View>
-              <Text style={[styles.greetingSub, { color: c.textSecondary }]}>{greeting}</Text>
-              <View style={styles.nameRow}>
-                <Text style={[styles.name, { color: c.textPrimary }]}>{profile?.full_name || 'User'}</Text>
-                {age ? <Text style={[styles.ageDot, { color: c.textDisabled }]}>·</Text> : null}
-                {age ? <Text style={[styles.age, { color: c.textSecondary }]}>{age}</Text> : null}
+          <View style={sc.greetingRow}>
+            <View style={{ flex: 1, marginRight: spacing.space3 }}>
+              <Text style={[sc.greetingSub, { color: c.textSecondary }]}>{greeting}</Text>
+              <View style={sc.nameRow}>
+                <Text style={[sc.name, { color: c.textPrimary }]}>{profile?.full_name || 'User'}</Text>
+                {age ? <Text style={[sc.ageDot, { color: c.textDisabled }]}>·</Text> : null}
+                {age ? <Text style={[sc.age, { color: c.textSecondary }]}>{age}</Text> : null}
               </View>
               {profile?.dob ? (
-                <Text style={[styles.dobText, { color: c.textDisabled }]}>DOB: {profile.dob}</Text>
+                <Text style={[sc.dobText, { color: c.textDisabled }]}>DOB: {profile.dob}</Text>
               ) : null}
-              <Text style={[styles.date, { color: c.textDisabled }]}>{formatTodayDisplay()}</Text>
+              <Text style={[sc.date, { color: c.textDisabled }]}>{formatTodayDisplay()}</Text>
             </View>
             <TouchableOpacity onPress={() => navigation.navigate('ProfileTab')} activeOpacity={0.7}>
               {profile?.photo_uri ? (
-                <Image source={{ uri: profile.photo_uri }} style={styles.avatarImage} />
+                <Image source={{ uri: profile.photo_uri }} style={sc.avatarImage} />
               ) : (
-                <View style={[styles.avatarCircle, { backgroundColor: c.primarySurface }]}>
-                  <Text style={[styles.avatarText, { color: c.primary }]}>
+                <View style={[sc.avatarCircle, { backgroundColor: c.primarySurface }]}>
+                  <Text style={[sc.avatarText, { color: c.primary }]}>
                     {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
                   </Text>
                 </View>
@@ -259,16 +263,16 @@ export function HomeScreen({ navigation }: any) {
         {bannerStatus && (
           <AnimatedSection index={1}>
             <TouchableOpacity
-              style={[styles.banner, { backgroundColor: bannerStatus.bg }]}
+              style={[sc.banner, { backgroundColor: bannerStatus.bg }]}
               onPress={() => navigation.navigate(bannerStatus.type === 'warning' ? 'AlertsTab' : 'HistoryTab')}
               activeOpacity={0.8}
             >
-              <View style={[styles.bannerIcon, { backgroundColor: bannerStatus.color + '25' }]}>
+              <View style={[sc.bannerIcon, { backgroundColor: bannerStatus.color + '25' }]}>
                 <Ionicons name={bannerStatus.icon} size={22} color={bannerStatus.color} />
               </View>
-              <View style={styles.bannerContent}>
-                <Text style={[styles.bannerTitle, { color: bannerStatus.color }]}>{bannerStatus.title}</Text>
-                <Text style={[styles.bannerMessage, { color: c.textSecondary }]}>{bannerStatus.message}</Text>
+              <View style={sc.bannerContent}>
+                <Text style={[sc.bannerTitle, { color: bannerStatus.color }]}>{bannerStatus.title}</Text>
+                <Text style={[sc.bannerMessage, { color: c.textSecondary }]}>{bannerStatus.message}</Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color={bannerStatus.color} />
             </TouchableOpacity>
@@ -276,18 +280,18 @@ export function HomeScreen({ navigation }: any) {
         )}
 
         <AnimatedSection index={2}>
-          <View style={styles.quickActionsRow}>
+          <View style={sc.quickActionsRow}>
             {quickActions.map((action) => (
               <TouchableOpacity
                 key={action.label}
-                style={[styles.quickActionCard, { backgroundColor: c.surface }]}
+                style={[sc.quickActionCard, { backgroundColor: c.surface }]}
                 onPress={() => navigation.navigate(action.nav)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.quickActionIcon, { backgroundColor: action.color + '18' }]}>
+                <View style={[sc.quickActionIcon, { backgroundColor: action.color + '18' }]}>
                   <Ionicons name={action.icon} size={20} color={action.color} />
                 </View>
-                <Text style={[styles.quickActionLabel, { color: c.textSecondary }]}>{action.label}</Text>
+                <Text style={[sc.quickActionLabel, { color: c.textSecondary }]}>{action.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -299,11 +303,11 @@ export function HomeScreen({ navigation }: any) {
 
         {unresolvedEmergencies.length > 0 && (
         <AnimatedSection index={4}>
-            <View style={styles.sectionHeader}>
+            <View style={sc.sectionHeader}>
               <Ionicons name="notifications" size={16} color={c.danger} />
-              <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Active Alerts</Text>
-              <View style={[styles.alertCount, { backgroundColor: c.dangerSurface }]}>
-                <Text style={[styles.alertCountText, { color: c.danger }]}>{unresolvedEmergencies.length}</Text>
+              <Text style={[sc.sectionTitle, { color: c.textPrimary }]}>Active Alerts</Text>
+              <View style={[sc.alertCount, { backgroundColor: c.dangerSurface }]}>
+                <Text style={[sc.alertCountText, { color: c.danger }]}>{unresolvedEmergencies.length}</Text>
               </View>
             </View>
             {unresolvedEmergencies.slice(0, 3).map((alert) => (
@@ -320,11 +324,11 @@ export function HomeScreen({ navigation }: any) {
         )}
 
         <AnimatedSection index={5}>
-          <View style={styles.sectionHeader}>
+          <View style={sc.sectionHeader}>
             <Ionicons name="bulb" size={16} color={c.primaryLight} />
-            <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Health Insights</Text>
+            <Text style={[sc.sectionTitle, { color: c.textPrimary }]}>Health Insights</Text>
             {sortedInsights.length > 0 && (
-              <Text style={[styles.insightCount, { color: c.textDisabled }]}>{sortedInsights.length} item{sortedInsights.length !== 1 ? 's' : ''}</Text>
+              <Text style={[sc.insightCount, { color: c.textDisabled }]}>{sortedInsights.length} item{sortedInsights.length !== 1 ? 's' : ''}</Text>
             )}
           </View>
           {insightsLoading ? (
@@ -334,22 +338,22 @@ export function HomeScreen({ navigation }: any) {
               <InsightCard key={insight.id} insight={insight} index={i} />
             ))
           ) : (
-            <View style={styles.emptyInsights}>
+            <View style={sc.emptyInsights}>
               <Ionicons name="bulb-outline" size={24} color={c.textDisabled} />
-              <Text style={[styles.emptyInsightsText, { color: c.textSecondary }]}>No insights yet — keep logging your vitals!</Text>
+              <Text style={[sc.emptyInsightsText, { color: c.textSecondary }]}>No insights yet — keep logging your vitals!</Text>
             </View>
           )}
         </AnimatedSection>
 
         <AnimatedSection index={6}>
-          <View style={styles.sectionHeader}>
+          <View style={sc.sectionHeader}>
             <Ionicons name="pulse" size={16} color={c.primary} />
-            <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Latest Vitals</Text>
+            <Text style={[sc.sectionTitle, { color: c.textPrimary }]}>Latest Vitals</Text>
             <TouchableOpacity onPress={() => navigation.navigate('HistoryTab')}>
-              <Text style={[styles.viewAll, { color: c.primary }]}>View All</Text>
+              <Text style={[sc.viewAll, { color: c.primary }]}>View All</Text>
             </TouchableOpacity>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.vitalsScroll}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={sc.vitalsScroll}>
             {vitalCards.length > 0 || latestCustomVitals.length > 0 ? (
               <>
                 {vitalCards.map((vc) => vc.component)}
@@ -368,10 +372,10 @@ export function HomeScreen({ navigation }: any) {
                 ))}
               </>
             ) : (
-              <View style={[styles.emptyVitals, { backgroundColor: c.surface, borderColor: c.borderLight }]}>
+              <View style={[sc.emptyVitals, { backgroundColor: c.surface, borderColor: c.borderLight }]}>
                 <Ionicons name="heart-outline" size={28} color={c.textDisabled} />
-                <Text style={[styles.emptyText, { color: c.textSecondary }]}>No vitals logged yet</Text>
-                <Text style={[styles.emptyHint, { color: c.textDisabled }]}>Tap "Log a Vital" to get started</Text>
+                <Text style={[sc.emptyText, { color: c.textSecondary }]}>No vitals logged yet</Text>
+                <Text style={[sc.emptyHint, { color: c.textDisabled }]}>Tap "Log a Vital" to get started</Text>
               </View>
             )}
           </ScrollView>
@@ -391,7 +395,7 @@ export function HomeScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(fs: number) { const fn = (size: number) => scaleSize(size, fs); return StyleSheet.create({
   gradient: {
     flex: 1,
   },
@@ -410,7 +414,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.space5,
   },
   greetingSub: {
-    fontSize: 14,
+    fontSize: fn(14),
     fontFamily: fonts.body,
     marginBottom: 2,
   },
@@ -420,27 +424,27 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   name: {
-    fontSize: 26,
+    fontSize: fn(26),
     fontWeight: '700',
     fontFamily: fonts.display,
     letterSpacing: -0.3,
   },
   ageDot: {
-    fontSize: 18,
+    fontSize: fn(18),
     fontFamily: fonts.body,
     marginHorizontal: 6,
   },
   age: {
-    fontSize: 14,
+    fontSize: fn(14),
     fontFamily: fonts.body,
   },
   dobText: {
-    fontSize: 12,
+    fontSize: fn(12),
     fontFamily: fonts.body,
     marginTop: 2,
   },
   date: {
-    fontSize: 12,
+    fontSize: fn(12),
     fontFamily: fonts.body,
     marginTop: 2,
   },
@@ -461,7 +465,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(26,95,122,0.1)',
   },
   avatarText: {
-    fontSize: 18,
+    fontSize: fn(18),
     fontWeight: '600',
     fontFamily: fonts.display,
   },
@@ -472,7 +476,7 @@ const styles = StyleSheet.create({
     gap: spacing.space2,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: fn(16),
     fontWeight: '600',
     fontFamily: fonts.display,
     flex: 1,
@@ -486,12 +490,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   alertCountText: {
-    fontSize: 11,
+    fontSize: fn(11),
     fontWeight: '700',
     fontFamily: fonts.body,
   },
   viewAll: {
-    fontSize: 13,
+    fontSize: fn(13),
     fontWeight: '500',
     fontFamily: fonts.body,
   },
@@ -509,7 +513,7 @@ const styles = StyleSheet.create({
     gap: spacing.space1,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: fn(14),
     fontFamily: fonts.body,
     fontWeight: '500',
   },
@@ -521,12 +525,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.space3,
   },
   emptyInsightsText: {
-    fontSize: 13,
+    fontSize: fn(13),
     fontFamily: fonts.body,
     textAlign: 'center',
   },
   emptyHint: {
-    fontSize: 11,
+    fontSize: fn(11),
     fontFamily: fonts.body,
   },
   banner: {
@@ -548,13 +552,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bannerTitle: {
-    fontSize: 15,
+    fontSize: fn(15),
     fontWeight: '600',
     fontFamily: fonts.display,
     marginBottom: 2,
   },
   bannerMessage: {
-    fontSize: 12,
+    fontSize: fn(12),
     fontFamily: fonts.body,
     lineHeight: 16,
   },
@@ -582,12 +586,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.space1 + 2,
   },
   quickActionLabel: {
-    fontSize: 11,
+    fontSize: fn(11),
     fontWeight: '500',
     fontFamily: fonts.body,
   },
   insightCount: {
-    fontSize: 12,
+    fontSize: fn(12),
     fontFamily: fonts.body,
   },
-});
+}); }

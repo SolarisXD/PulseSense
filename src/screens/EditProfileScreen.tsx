@@ -12,6 +12,7 @@ import { useDateInput } from '../hooks/useDateInput';
 import { useSettingsStore } from '../store/settingsStore';
 import { getDB, loadStores } from '../hooks/useDB';
 import { updateProfile, updateProfilePhoto } from '../db/queries/profile';
+import { saveProfilePhotoLocally } from '../utils/profilePhoto';
 
 const SEX_OPTIONS = ['Male', 'Female', 'Non-binary', 'Transgender Male', 'Transgender Female', 'Genderqueer', 'Intersex', 'Prefer not to say'];
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
@@ -40,9 +41,10 @@ export function EditProfileScreen({ navigation }: any) {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
       if (!result.canceled && result.assets[0]) {
-        setPhoto(result.assets[0].uri);
+        const savedUri = await saveProfilePhotoLocally(result.assets[0].uri);
+        setPhoto(savedUri);
         const db = await getDB();
-        await updateProfilePhoto(db, result.assets[0].uri);
+        await updateProfilePhoto(db, savedUri);
         await loadStores(db);
       }
     } catch (err) {

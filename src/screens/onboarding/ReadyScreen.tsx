@@ -1,8 +1,9 @@
 // PulseSense — Onboarding: Ready Screen
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../constants/colors';
 import { spacing } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
@@ -14,44 +15,56 @@ interface ReadyScreenProps {
 
 export function ReadyScreen({ onComplete }: ReadyScreenProps) {
   const [disclaimerAccepted, setDisclaimerAccepted] = React.useState(false);
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.checkCircle}>
-          <Ionicons name="checkmark" size={40} color={colors.success} weight="bold" />
-        </View>
-        <Text style={styles.heading}>You're all set!</Text>
-        <Text style={styles.subtext}>
-          PulseSense is ready to use. Your data stays on this device — always.
-        </Text>
-        <View style={styles.privacyNote}>
-          <Ionicons name="lock-closed-outline" size={20} color={colors.primary} style={{ marginRight: spacing.space3 }} />
-          <Text style={styles.privacyText}>
-            All health data is stored locally. No cloud, no accounts, no tracking.
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={styles.disclaimerRow}
-          onPress={() => setDisclaimerAccepted(!disclaimerAccepted)}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.checkbox, disclaimerAccepted && styles.checkboxChecked]}>
-            {disclaimerAccepted && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: Math.max(insets.top, spacing.space6),
+            paddingBottom: Math.max(insets.bottom, spacing.space6),
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
+          <View style={styles.checkCircle}>
+            <Ionicons name="checkmark" size={40} color={colors.success} />
           </View>
-          <Text style={styles.disclaimerText}>
-            I understand PulseSense is <Text style={{ fontWeight: '700' }}>not a medical device</Text> and does not provide diagnosis or treatment. In an emergency, I will call emergency services.
+          <Text style={styles.heading}>You're all set!</Text>
+          <Text style={styles.subtext}>
+            PulseSense is ready to use. Your data stays on this device — always.
           </Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.footer}>
-        <Button
-          title="Go to Home →"
-          onPress={onComplete}
-          variant={disclaimerAccepted ? 'primary' : 'disabled'}
-          disabled={!disclaimerAccepted}
-        />
-      </View>
+          <View style={styles.privacyNote}>
+            <Ionicons name="lock-closed-outline" size={20} color={colors.primary} style={{ marginRight: spacing.space3 }} />
+            <Text style={styles.privacyText}>
+              All health data is stored locally. No cloud, no accounts, no tracking.
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.disclaimerRow}
+            onPress={() => setDisclaimerAccepted(!disclaimerAccepted)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.checkbox, disclaimerAccepted && styles.checkboxChecked]}>
+              {disclaimerAccepted && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+            </View>
+            <Text style={styles.disclaimerText}>
+              I understand PulseSense is <Text style={{ fontWeight: '700' }}>not a medical device</Text> and does not provide diagnosis or treatment. In an emergency, I will call emergency services.
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.footer}>
+          <Button
+            title="Go to Home →"
+            onPress={onComplete}
+            variant={disclaimerAccepted ? 'primary' : 'disabled'}
+            disabled={!disclaimerAccepted}
+          />
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -60,12 +73,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: spacing.space6,
+    justifyContent: 'space-between',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: spacing.space6,
   },
   checkCircle: {
     width: 80,
@@ -96,7 +114,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     fontFamily: fonts.body,
-    marginBottom: spacing.space8,
+    marginBottom: spacing.space6,
     paddingHorizontal: spacing.space4,
   },
   privacyNote: {
@@ -105,7 +123,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySurface,
     padding: spacing.space4,
     borderRadius: 10,
-    maxWidth: 300,
+    maxWidth: 320,
   },
   privacyIcon: {
     marginRight: spacing.space3,
@@ -124,7 +142,7 @@ const styles = StyleSheet.create({
     padding: spacing.space4,
     borderRadius: 10,
     maxWidth: 320,
-    marginTop: spacing.space5,
+    marginTop: spacing.space4,
   },
   checkbox: {
     width: 22,
@@ -150,6 +168,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
   },
   footer: {
-    paddingBottom: spacing.space12,
+    paddingVertical: spacing.space4,
   },
 });

@@ -9,8 +9,9 @@ import { useColors } from '../../hooks/useColors';
 import { useThemeStore } from '../../store/themeStore';
 import { colorsDark } from '../../constants/colorsDark';
 import { spacing, borderRadius } from '../../constants/spacing';
-import { fonts } from '../../constants/typography';
+import { fonts, scaleSize } from '../../constants/typography';
 import { useProfileStore } from '../../store/profileStore';
+import { useSettingsStore, FONT_SCALE_MULTIPLIERS } from '../../store/settingsStore';
 import { useAgeCalculator } from '../../hooks/useAgeCalculator';
 import { getDB, loadStores } from '../../hooks/useDB';
 import { archiveCondition } from '../../db/queries/conditions';
@@ -28,6 +29,9 @@ import { Skeleton } from '../../components/ui/Skeleton';
 export function ProfileScreen({ navigation }: any) {
   const c = useColors();
   const isDark = useThemeStore((s) => s.isDark);
+  const fontScale = useSettingsStore((s) => s.fontScale);
+  const fs = FONT_SCALE_MULTIPLIERS[fontScale];
+  const sc = useMemo(() => createStyles(fs), [fs]);
   const profile = useProfileStore((s) => s.profile);
   const contacts = useProfileStore((s) => s.contacts);
   const conditions = useProfileStore((s) => s.conditions);
@@ -117,8 +121,8 @@ export function ProfileScreen({ navigation }: any) {
   // ---------- Skeleton Loading State ----------
   if (loading) {
     return (
-<LinearGradient colors={gradientColors as any} style={styles.gradient}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+<LinearGradient colors={gradientColors as any} style={sc.gradient}>
+        <ScrollView contentContainerStyle={sc.content} showsVerticalScrollIndicator={false}>
           <View style={{ alignItems: 'center', paddingVertical: 32, marginBottom: 16 }}>
             <Skeleton.Circle size={84} style={{ marginBottom: 16 }} />
             <Skeleton.Box width={160} height={26} style={{ marginBottom: 8 }} />
@@ -151,26 +155,26 @@ export function ProfileScreen({ navigation }: any) {
   }
 
   return (
-    <LinearGradient colors={gradientColors as any} style={styles.gradient}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <LinearGradient colors={gradientColors as any} style={sc.gradient}>
+      <ScrollView contentContainerStyle={sc.content} showsVerticalScrollIndicator={false}>
         {/* Profile Header */}
         <AnimatedSection index={0}>
-          <View style={styles.profileHeader}>
+          <View style={sc.profileHeader}>
             {profile?.photo_uri ? (
-              <Image source={{ uri: profile.photo_uri }} style={styles.avatarLargeImage} />
+              <Image source={{ uri: profile.photo_uri }} style={sc.avatarLargeImage} />
             ) : (
-              <View style={[styles.avatarLarge, { backgroundColor: c.primarySurface }]}>
-                <Text style={[styles.avatarLargeText, { color: c.primary }]}>
+              <View style={[sc.avatarLarge, { backgroundColor: c.primarySurface }]}>
+                <Text style={[sc.avatarLargeText, { color: c.primary }]}>
                   {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
                 </Text>
               </View>
             )}
-            <Text style={[styles.profileName, { color: c.textPrimary }]}>{profile?.full_name || 'User'}</Text>
-            <Text style={[styles.profileAge, { color: c.textSecondary }]}>
+            <Text style={[sc.profileName, { color: c.textPrimary }]}>{profile?.full_name || 'User'}</Text>
+            <Text style={[sc.profileAge, { color: c.textSecondary }]}>
               {profile?.dob ? `DOB: ${profile.dob}  ·  ${age || ''}` : age || ''}
             </Text>
-            <View style={styles.profileMeta}>
-              <Text style={[styles.profileMetaText, { color: c.textSecondary }]}>
+            <View style={sc.profileMeta}>
+              <Text style={[sc.profileMetaText, { color: c.textSecondary }]}>
                 {profile?.blood_group ? `Blood: ${profile.blood_group}` : ''}
                 {profile?.blood_group && profile?.sex ? '  |  ' : ''}
                 {profile?.sex || ''}
@@ -181,41 +185,41 @@ export function ProfileScreen({ navigation }: any) {
 
         {/* Emergency Contacts */}
         <AnimatedSection index={1}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionHeaderLeft}>
+          <View style={sc.section}>
+            <View style={sc.sectionHeader}>
+              <View style={sc.sectionHeaderLeft}>
                 <Ionicons name="call-outline" size={16} color={c.primary} />
-                <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Emergency Contacts</Text>
+                <Text style={[sc.sectionTitle, { color: c.textPrimary }]}>Emergency Contacts</Text>
               </View>
               <TouchableOpacity onPress={() => navigation.navigate('AddContact')} activeOpacity={0.7}>
-                <View style={styles.addButton}>
+                <View style={sc.addButton}>
                   <Ionicons name="add" size={16} color={c.primary} />
-                  <Text style={[styles.addLink, { color: c.primary }]}>Add</Text>
+                  <Text style={[sc.addLink, { color: c.primary }]}>Add</Text>
                 </View>
               </TouchableOpacity>
             </View>
 
             {doctorContacts.length > 0 && (
               <>
-                <Text style={[styles.subsectionLabel, { color: c.textSecondary }]}>Doctors</Text>
+                <Text style={[sc.subsectionLabel, { color: c.textSecondary }]}>Doctors</Text>
                 {doctorContacts.map((contact) => (
-                  <View key={contact.id} style={[styles.contactRow, { backgroundColor: c.surface }]}>
-                    <TouchableOpacity style={styles.contactInfoArea} onPress={() => handleDeleteContact(contact.id)} activeOpacity={0.7}>
-                      <View style={[styles.contactAvatar, { backgroundColor: c.primarySurface }]}>
+                  <View key={contact.id} style={[sc.contactRow, { backgroundColor: c.surface }]}>
+                    <TouchableOpacity style={sc.contactInfoArea} onPress={() => handleDeleteContact(contact.id)} activeOpacity={0.7}>
+                      <View style={[sc.contactAvatar, { backgroundColor: c.primarySurface }]}>
                         <Ionicons name="medkit-outline" size={18} color={c.primary} />
                       </View>
-                      <View style={styles.contactInfo}>
-                        <Text style={[styles.contactName, { color: c.textPrimary }]}>{contact.name}</Text>
-                        <Text style={[styles.contactDetail, { color: c.textSecondary }]}>{contact.relationship || ''} {contact.phone}</Text>
+                      <View style={sc.contactInfo}>
+                        <Text style={[sc.contactName, { color: c.textPrimary }]}>{contact.name}</Text>
+                        <Text style={[sc.contactDetail, { color: c.textSecondary }]}>{contact.relationship || ''} {contact.phone}</Text>
                       </View>
                     </TouchableOpacity>
-                    <View style={styles.contactActions}>
+                    <View style={sc.contactActions}>
                       {contact.is_primary ? (
-                        <View style={[styles.primaryBadge, { backgroundColor: c.primarySurface }]}>
-                          <Text style={[styles.primaryBadgeText, { color: c.primary }]}>PRIMARY</Text>
+                        <View style={[sc.primaryBadge, { backgroundColor: c.primarySurface }]}>
+                          <Text style={[sc.primaryBadgeText, { color: c.primary }]}>PRIMARY</Text>
                         </View>
                       ) : null}
-                      <TouchableOpacity style={[styles.callButton, { backgroundColor: c.success }]} onPress={() => handleCall(contact.phone)} activeOpacity={0.7}>
+                      <TouchableOpacity style={[sc.callButton, { backgroundColor: c.success }]} onPress={() => handleCall(contact.phone)} activeOpacity={0.7}>
                         <Ionicons name="call" size={16} color="#FFFFFF" />
                       </TouchableOpacity>
                     </View>
@@ -226,26 +230,26 @@ export function ProfileScreen({ navigation }: any) {
 
             {emergencyContacts.length > 0 && (
               <>
-                {doctorContacts.length > 0 && <View style={[styles.subsectionDivider, { backgroundColor: c.borderLight }]} />}
-                <Text style={[styles.subsectionLabel, { color: c.textSecondary }]}>Emergency Contacts</Text>
+                {doctorContacts.length > 0 && <View style={[sc.subsectionDivider, { backgroundColor: c.borderLight }]} />}
+                <Text style={[sc.subsectionLabel, { color: c.textSecondary }]}>Emergency Contacts</Text>
                 {emergencyContacts.map((contact) => (
-                  <View key={contact.id} style={[styles.contactRow, { backgroundColor: c.surface }]}>
-                    <TouchableOpacity style={styles.contactInfoArea} onPress={() => handleDeleteContact(contact.id)} activeOpacity={0.7}>
-                      <View style={[styles.contactAvatar, { backgroundColor: c.primarySurface }]}>
+                  <View key={contact.id} style={[sc.contactRow, { backgroundColor: c.surface }]}>
+                    <TouchableOpacity style={sc.contactInfoArea} onPress={() => handleDeleteContact(contact.id)} activeOpacity={0.7}>
+                      <View style={[sc.contactAvatar, { backgroundColor: c.primarySurface }]}>
                         <Ionicons name="person" size={18} color={c.primary} />
                       </View>
-                      <View style={styles.contactInfo}>
-                        <Text style={[styles.contactName, { color: c.textPrimary }]}>{contact.name}</Text>
-                        <Text style={[styles.contactDetail, { color: c.textSecondary }]}>{contact.relationship || ''} {contact.phone}</Text>
+                      <View style={sc.contactInfo}>
+                        <Text style={[sc.contactName, { color: c.textPrimary }]}>{contact.name}</Text>
+                        <Text style={[sc.contactDetail, { color: c.textSecondary }]}>{contact.relationship || ''} {contact.phone}</Text>
                       </View>
                     </TouchableOpacity>
-                    <View style={styles.contactActions}>
+                    <View style={sc.contactActions}>
                       {contact.is_primary ? (
-                        <View style={[styles.primaryBadge, { backgroundColor: c.primarySurface }]}>
-                          <Text style={[styles.primaryBadgeText, { color: c.primary }]}>PRIMARY</Text>
+                        <View style={[sc.primaryBadge, { backgroundColor: c.primarySurface }]}>
+                          <Text style={[sc.primaryBadgeText, { color: c.primary }]}>PRIMARY</Text>
                         </View>
                       ) : null}
-                      <TouchableOpacity style={[styles.callButton, { backgroundColor: c.success }]} onPress={() => handleCall(contact.phone)} activeOpacity={0.7}>
+                      <TouchableOpacity style={[sc.callButton, { backgroundColor: c.success }]} onPress={() => handleCall(contact.phone)} activeOpacity={0.7}>
                         <Ionicons name="call" size={16} color="#FFFFFF" />
                       </TouchableOpacity>
                     </View>
@@ -255,28 +259,28 @@ export function ProfileScreen({ navigation }: any) {
             )}
 
             {contacts.length === 0 && (
-              <Text style={[styles.emptyText, { color: c.textDisabled }]}>No emergency contacts added</Text>
+              <Text style={[sc.emptyText, { color: c.textDisabled }]}>No emergency contacts added</Text>
             )}
           </View>
         </AnimatedSection>
 
         {/* Conditions */}
         <AnimatedSection index={2}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionHeaderLeft}>
+          <View style={sc.section}>
+            <View style={sc.sectionHeader}>
+              <View style={sc.sectionHeaderLeft}>
                 <Ionicons name="medical-outline" size={16} color={c.primary} />
-                <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Conditions</Text>
+                <Text style={[sc.sectionTitle, { color: c.textPrimary }]}>Conditions</Text>
               </View>
               <TouchableOpacity onPress={() => navigation.navigate('AddCondition')} activeOpacity={0.7}>
-                <View style={styles.addButton}>
+                <View style={sc.addButton}>
                   <Ionicons name="add" size={16} color={c.primary} />
-                  <Text style={[styles.addLink, { color: c.primary }]}>Add</Text>
+                  <Text style={[sc.addLink, { color: c.primary }]}>Add</Text>
                 </View>
               </TouchableOpacity>
             </View>
             {conditions.length === 0 ? (
-              <Text style={[styles.emptyText, { color: c.textDisabled }]}>No conditions added</Text>
+              <Text style={[sc.emptyText, { color: c.textDisabled }]}>No conditions added</Text>
             ) : (
               conditions.map((cond) => (
                 <ConditionCard
@@ -296,32 +300,32 @@ export function ProfileScreen({ navigation }: any) {
 
         {/* Allergies */}
         <AnimatedSection index={3}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionHeaderLeft}>
+          <View style={sc.section}>
+            <View style={sc.sectionHeader}>
+              <View style={sc.sectionHeaderLeft}>
                 <Ionicons name="warning-outline" size={16} color={c.primary} />
-                <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Allergies</Text>
+                <Text style={[sc.sectionTitle, { color: c.textPrimary }]}>Allergies</Text>
               </View>
               <TouchableOpacity onPress={() => navigation.navigate('AddAllergy')} activeOpacity={0.7}>
-                <View style={styles.addButton}>
+                <View style={sc.addButton}>
                   <Ionicons name="add" size={16} color={c.primary} />
-                  <Text style={[styles.addLink, { color: c.primary }]}>Add</Text>
+                  <Text style={[sc.addLink, { color: c.primary }]}>Add</Text>
                 </View>
               </TouchableOpacity>
             </View>
-            <View style={styles.allergyChips}>
+            <View style={sc.allergyChips}>
               {allergies.length === 0 ? (
-                <Text style={[styles.emptyText, { color: c.textDisabled }]}>No allergies added</Text>
+                <Text style={[sc.emptyText, { color: c.textDisabled }]}>No allergies added</Text>
               ) : (
                 allergies.map((a) => (
                   <TouchableOpacity
                     key={a.id}
-                    style={[styles.allergyChip, { backgroundColor: severityColor(a.severity) + '18' }]}
+                    style={[sc.allergyChip, { backgroundColor: severityColor(a.severity) + '18' }]}
                     onPress={() => handleDeleteAllergy(a.id)}
                     activeOpacity={0.7}
                   >
-                    <View style={[styles.allergyDot, { backgroundColor: severityColor(a.severity) }]} />
-                    <Text style={[styles.allergyText, { color: severityColor(a.severity) }]}>
+                    <View style={[sc.allergyDot, { backgroundColor: severityColor(a.severity) }]} />
+                    <Text style={[sc.allergyText, { color: severityColor(a.severity) }]}>
                       {a.name}
                     </Text>
                   </TouchableOpacity>
@@ -333,16 +337,16 @@ export function ProfileScreen({ navigation }: any) {
 
         {/* Medications */}
         <AnimatedSection index={4}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionHeaderLeft}>
+          <View style={sc.section}>
+            <View style={sc.sectionHeader}>
+              <View style={sc.sectionHeaderLeft}>
                 <Ionicons name="medkit-outline" size={16} color={c.primary} />
-                <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Medications</Text>
+                <Text style={[sc.sectionTitle, { color: c.textPrimary }]}>Medications</Text>
               </View>
               <TouchableOpacity onPress={() => navigation.navigate('AddMedication')} activeOpacity={0.7}>
-                <View style={styles.addButton}>
+                <View style={sc.addButton}>
                   <Ionicons name="add" size={16} color={c.primary} />
-                  <Text style={[styles.addLink, { color: c.primary }]}>Add</Text>
+                  <Text style={[sc.addLink, { color: c.primary }]}>Add</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -357,22 +361,22 @@ export function ProfileScreen({ navigation }: any) {
 
         {/* Actions */}
         <AnimatedSection index={5}>
-          <View style={[styles.actionsSection, { backgroundColor: c.surface }]}>
-            <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.7}>
+          <View style={[sc.actionsSection, { backgroundColor: c.surface }]}>
+            <TouchableOpacity style={sc.actionRow} onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.7}>
               <Ionicons name="create-outline" size={20} color={c.textSecondary} />
-              <Text style={[styles.actionText, { color: c.textPrimary }]}>Edit Profile</Text>
+              <Text style={[sc.actionText, { color: c.textPrimary }]}>Edit Profile</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textDisabled} />
             </TouchableOpacity>
-            <View style={[styles.actionDivider, { backgroundColor: c.borderLight }]} />
-            <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate('Settings')} activeOpacity={0.7}>
+            <View style={[sc.actionDivider, { backgroundColor: c.borderLight }]} />
+            <TouchableOpacity style={sc.actionRow} onPress={() => navigation.navigate('Settings')} activeOpacity={0.7}>
               <Ionicons name="settings-outline" size={20} color={c.textSecondary} />
-              <Text style={[styles.actionText, { color: c.textPrimary }]}>Settings</Text>
+              <Text style={[sc.actionText, { color: c.textPrimary }]}>Settings</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textDisabled} />
             </TouchableOpacity>
-            <View style={[styles.actionDivider, { backgroundColor: c.borderLight }]} />
-            <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate('Export', { preSelectedType: 'medical_id' })} activeOpacity={0.7}>
+            <View style={[sc.actionDivider, { backgroundColor: c.borderLight }]} />
+            <TouchableOpacity style={sc.actionRow} onPress={() => navigation.navigate('Export', { preSelectedType: 'medical_id' })} activeOpacity={0.7}>
               <Ionicons name="document-text-outline" size={20} color={c.textSecondary} />
-              <Text style={[styles.actionText, { color: c.textPrimary }]}>Export Medical ID</Text>
+              <Text style={[sc.actionText, { color: c.textPrimary }]}>Export Medical ID</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textDisabled} />
             </TouchableOpacity>
           </View>
@@ -384,7 +388,9 @@ export function ProfileScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(fs: number) {
+  const fn = (size: number) => scaleSize(size, fs);
+  return StyleSheet.create({
   gradient: {
     flex: 1,
   },
@@ -415,19 +421,19 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(26,95,122,0.1)',
   },
   avatarLargeText: {
-    fontSize: 34,
+    fontSize: fn(34),
     fontWeight: '700',
     fontFamily: fonts.display,
   },
   profileName: {
-    fontSize: 26,
+    fontSize: fn(26),
     fontWeight: '700',
     fontFamily: fonts.display,
     letterSpacing: -0.3,
     marginBottom: spacing.space1,
   },
   profileAge: {
-    fontSize: 14,
+    fontSize: fn(14),
     fontFamily: fonts.body,
     marginBottom: spacing.space2,
   },
@@ -435,7 +441,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.space1,
   },
   profileMetaText: {
-    fontSize: 13,
+    fontSize: fn(13),
     fontFamily: fonts.body,
   },
   section: {
@@ -453,7 +459,7 @@ const styles = StyleSheet.create({
     gap: spacing.space2,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: fn(16),
     fontWeight: '600',
     fontFamily: fonts.display,
   },
@@ -463,12 +469,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   addLink: {
-    fontSize: 14,
+    fontSize: fn(14),
     fontWeight: '600',
     fontFamily: fonts.body,
   },
   subsectionLabel: {
-    fontSize: 12,
+    fontSize: fn(12),
     fontWeight: '600',
     fontFamily: fonts.body,
     textTransform: 'uppercase',
@@ -522,12 +528,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   contactName: {
-    fontSize: 15,
+    fontSize: fn(15),
     fontWeight: '600',
     fontFamily: fonts.body,
   },
   contactDetail: {
-    fontSize: 12,
+    fontSize: fn(12),
     fontFamily: fonts.body,
     marginTop: 2,
   },
@@ -537,7 +543,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   primaryBadgeText: {
-    fontSize: 10,
+    fontSize: fn(10),
     fontWeight: '700',
     fontFamily: fonts.body,
   },
@@ -561,12 +567,12 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   allergyText: {
-    fontSize: 12,
+    fontSize: fn(12),
     fontWeight: '600',
     fontFamily: fonts.body,
   },
   emptyText: {
-    fontSize: 13,
+    fontSize: fn(13),
     fontFamily: fonts.body,
     fontStyle: 'italic',
   },
@@ -587,7 +593,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     flex: 1,
-    fontSize: 15,
+    fontSize: fn(15),
     fontFamily: fonts.body,
     fontWeight: '500',
   },
@@ -595,4 +601,4 @@ const styles = StyleSheet.create({
     height: 1,
     marginHorizontal: spacing.space4,
   },
-});
+});}

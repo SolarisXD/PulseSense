@@ -2,11 +2,14 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
 import { colorsDark } from '../constants/colorsDark';
 import { fonts } from '../constants/typography';
 import { useThemeStore } from '../store/themeStore';
+import { useSettingsStore, FONT_SCALE_MULTIPLIERS } from '../store/settingsStore';
+import { scaleSize } from '../constants/typography';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { HomeScreen } from '../screens/tabs/HomeScreen';
 import { VitalsScreen } from '../screens/tabs/VitalsScreen';
@@ -17,11 +20,11 @@ import { AlertsScreen } from '../screens/tabs/AlertsScreen';
 const Tab = createBottomTabNavigator();
 
 function HomeTabScreen(props: any) {
-  return <ErrorBoundary><HomeScreen {...props} /></ErrorBoundary>;
+  return <ErrorBoundary iconName="home-outline" title="Home Error"><HomeScreen {...props} /></ErrorBoundary>;
 }
 
 function VitalsTabScreen(props: any) {
-  return <ErrorBoundary><VitalsScreen {...props} /></ErrorBoundary>;
+  return <ErrorBoundary iconName="pulse-outline" title="Vitals Error"><VitalsScreen {...props} /></ErrorBoundary>;
 }
 
 function HistoryTabScreen(props: any) {
@@ -39,6 +42,9 @@ function AlertsTabScreen(props: any) {
 export function TabNavigator() {
   const isDark = useThemeStore((s) => s.isDark);
   const activeColors = useMemo(() => (isDark ? { ...colors, ...colorsDark } : colors), [isDark]);
+  const insets = useSafeAreaInsets();
+  const fontScale = useSettingsStore((s) => s.fontScale);
+  const fs = FONT_SCALE_MULTIPLIERS[fontScale];
 
   return (
     <Tab.Navigator
@@ -65,8 +71,8 @@ export function TabNavigator() {
           backgroundColor: activeColors.tabBarBg,
           borderTopColor: activeColors.tabBarBorder,
           borderTopWidth: 0.5,
-          height: 68,
-          paddingBottom: 10,
+          height: 56 + Math.max(insets.bottom, spacing.space3),
+          paddingBottom: Math.max(insets.bottom, spacing.space2),
           paddingTop: 6,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -3 },
@@ -75,7 +81,7 @@ export function TabNavigator() {
           elevation: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: scaleSize(10, fs),
           fontWeight: '500',
           fontFamily: fonts.body,
           letterSpacing: 0.3,
@@ -88,7 +94,7 @@ export function TabNavigator() {
           borderBottomColor: activeColors.borderLight,
         },
         headerTitleStyle: {
-          fontSize: 18,
+          fontSize: scaleSize(18, fs),
           fontWeight: '600',
           color: activeColors.textPrimary,
           fontFamily: fonts.display,

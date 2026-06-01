@@ -90,3 +90,31 @@ export const typography = {
     lineHeight: 13,
   },
 } as const;
+
+export function scaleSize(size: number, scale: number): number {
+  return Math.round(size * scale);
+}
+
+function scaleStyle(style: Record<string, any>, scale: number): Record<string, any> {
+  const result = { ...style };
+  if (result.fontSize) result.fontSize = Math.round(result.fontSize * scale);
+  if (result.lineHeight) result.lineHeight = Math.round(result.lineHeight * scale);
+  return result;
+}
+
+export function getScaledTypography(scale: number) {
+  return {
+    ...typography,
+    display: scaleStyle(typography.display, scale),
+    h1: scaleStyle(typography.h1, scale),
+    h2: scaleStyle(typography.h2, scale),
+    h3: scaleStyle(typography.h3, scale),
+    body: scaleStyle(typography.body, scale),
+    bodyMedium: scaleStyle(typography.bodyMedium, scale),
+    label: scaleStyle(typography.label, scale),
+    caption: scaleStyle(typography.caption, scale),
+    vitalValue: scaleStyle(typography.vitalValue, scale),
+    vitalValueSmall: scaleStyle(typography.vitalValueSmall, scale),
+    badge: scaleStyle(typography.badge, scale),
+  };
+}

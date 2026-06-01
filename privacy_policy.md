@@ -85,7 +85,7 @@ By using PulseSense, you acknowledge that:
 
 For questions about this privacy policy, please open an issue at:
 
-**https://github.com/anomalyco/PulseSense/issues**
+**https://github.com/SolarisXD/PulseSense/issues**
 
 Or contact the developer directly:
 

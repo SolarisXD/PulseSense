@@ -1,8 +1,9 @@
 // PulseSense — Onboarding: Features Screen
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../constants/colors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
@@ -21,33 +22,55 @@ const features = [
 ];
 
 export function FeaturesScreen({ onNext, onBack }: FeaturesScreenProps) {
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.heading}>What PulseSense does</Text>
-        <Text style={styles.subtext}>Everything you need to manage your health, in one place.</Text>
-      </View>
-      <View style={styles.featuresList}>
-        {features.map((f, idx) => (
-          <View key={idx} style={styles.featureRow}>
-            <View style={[styles.featureIconContainer, { backgroundColor: f.color + '15' }]}>
-              <Ionicons name={f.icon} size={24} color={f.color} />
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: Math.max(insets.top, spacing.space6),
+            paddingBottom: spacing.space4,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.heading}>What PulseSense does</Text>
+          <Text style={styles.subtext}>Everything you need to manage your health, in one place.</Text>
+        </View>
+
+        <View style={styles.featuresList}>
+          {features.map((f, idx) => (
+            <View key={idx} style={styles.featureRow}>
+              <View style={[styles.featureIconContainer, { backgroundColor: f.color + '15' }]}>
+                <Ionicons name={f.icon} size={24} color={f.color} />
+              </View>
+              <View style={styles.featureContent}>
+                <Text style={styles.featureTitle}>{f.title}</Text>
+                <Text style={styles.featureDesc}>{f.desc}</Text>
+              </View>
             </View>
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>{f.title}</Text>
-              <Text style={styles.featureDesc}>{f.desc}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-      <View style={styles.footer}>
-        {onBack && (
-          <View style={styles.backWrapper}>
-            <Button title="Back" onPress={onBack} variant="ghost" size="small" />
-          </View>
-        )}
-        <Button title="Next" onPress={onNext} variant="primary" />
-      </View>
+          ))}
+        </View>
+
+        <View style={styles.footerRow}>
+          {onBack ? (
+            <>
+              <View style={{ flex: 1 }}>
+                <Button title="Back" onPress={onBack} variant="outline" size="full" />
+              </View>
+              <View style={{ width: spacing.space3 }} />
+              <View style={{ flex: 2 }}>
+                <Button title="Next" onPress={onNext} variant="primary" size="full" />
+              </View>
+            </>
+          ) : (
+            <Button title="Next" onPress={onNext} variant="primary" size="full" />
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -56,12 +79,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: spacing.space6,
+    justifyContent: 'space-between',
   },
   header: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    marginBottom: spacing.space6,
+    paddingVertical: spacing.space4,
+    marginBottom: spacing.space4,
   },
   heading: {
     fontSize: 26,
@@ -79,8 +105,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
   },
   featuresList: {
-    flex: 2,
+    flex: 1,
     justifyContent: 'center',
+    marginVertical: spacing.space4,
   },
   featureRow: {
     flexDirection: 'row',
@@ -112,11 +139,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontFamily: fonts.body,
   },
-  footer: {
-    paddingBottom: spacing.space12,
-  },
-  backWrapper: {
-    alignItems: 'flex-start',
-    marginBottom: spacing.space2,
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.space4,
   },
 });

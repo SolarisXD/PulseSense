@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, ActivityIndicator, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreenExpo from 'expo-splash-screen';
 import { useFonts, Syne_400Regular, Syne_500Medium, Syne_600SemiBold, Syne_700Bold, Syne_800ExtraBold } from '@expo-google-fonts/syne';
@@ -9,6 +9,33 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { initializeNotificationHandler } from './src/services/notificationService';
 import { useThemeStore } from './src/store/themeStore';
+
+// Disable system font scaling globally to prevent layout distortion on large accessibility settings
+const disableFontScaling = (Component: any) => {
+  if (!Component) return;
+  if (Component.render) {
+    const originalRender = Component.render;
+    Component.render = function (props: any, ref: any) {
+      return originalRender({ allowFontScaling: false, ...props }, ref);
+    };
+  } else if (Component.prototype && Component.prototype.render) {
+    const originalRender = Component.prototype.render;
+    Component.prototype.render = function () {
+      const origin = originalRender.call(this);
+      if (origin) {
+        return React.cloneElement(origin, { allowFontScaling: false });
+      }
+      return origin;
+    };
+  } else {
+    // Fallback for older React Native or simple components
+    Component.defaultProps = Component.defaultProps || {};
+    Component.defaultProps.allowFontScaling = false;
+  }
+};
+
+disableFontScaling(Text);
+disableFontScaling(TextInput);
 
 SplashScreenExpo.preventAutoHideAsync();
 

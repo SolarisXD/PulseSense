@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { spacing } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
+import { AppLogo } from './AppLogo';
 
 interface SplashScreenProps {
   onFinish: () => void;
@@ -13,7 +13,8 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
   const logoScale = useRef(new Animated.Value(0.8)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const taglineOpacity = useRef(new Animated.Value(0)).current;
-  const pulseScale = useRef(new Animated.Value(1)).current;
+  const outerRingScale = useRef(new Animated.Value(1)).current;
+  const innerRingScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -37,46 +38,74 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
       useNativeDriver: true,
     }).start();
 
-    const pulseLoop = Animated.loop(
+    const outerLoop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseScale, {
-          toValue: 1.03,
+        Animated.timing(outerRingScale, {
+          toValue: 1.08,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(outerRingScale, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    outerLoop.start();
+
+    const innerLoop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(400),
+        Animated.timing(innerRingScale, {
+          toValue: 1.05,
           duration: 1200,
           useNativeDriver: true,
         }),
-        Animated.timing(pulseScale, {
+        Animated.timing(innerRingScale, {
           toValue: 1,
           duration: 1200,
           useNativeDriver: true,
         }),
       ])
     );
-    pulseLoop.start();
+    innerLoop.start();
 
     const timer = setTimeout(() => {
       Animated.timing(logoOpacity, {
         toValue: 0,
         duration: 350,
         useNativeDriver: true,
-      }).start(() => onFinish());
-    }, 2000);
+      }).start(() => {
+        outerLoop.stop();
+        innerLoop.stop();
+        onFinish();
+      });
+    }, 2200);
 
     return () => {
       clearTimeout(timer);
-      pulseLoop.stop();
+      outerLoop.stop();
+      innerLoop.stop();
     };
   }, []);
 
   return (
-    <LinearGradient
-      colors={['#1A5F7A', '#154A61', '#0F3A4D']}
-      style={styles.splash}
-    >
+    <View style={[styles.splash, { backgroundColor: '#1A5F7A' }]}>
+      <LinearGradient
+        colors={['#0A2535', '#0F3A4D', 'transparent', 'transparent', '#0F3A4D', '#0A2535']}
+        locations={[0, 0.12, 0.35, 0.65, 0.88, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
       <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }] }}>
         <View style={styles.splashLogoContainer}>
-          <Animated.View style={[styles.splashRing, { transform: [{ scale: pulseScale }] }]} />
+          <Animated.View style={[styles.splashRingOuter, { transform: [{ scale: outerRingScale }] }]} />
+          <Animated.View style={[styles.splashRingInner, { transform: [{ scale: innerRingScale }] }]} />
           <View style={styles.splashLogoInner}>
-            <Ionicons name="heart" size={36} color="#FFFFFF" />
+            <AppLogo size={64} />
           </View>
         </View>
         <Text style={styles.splashTitle}>PulseSense</Text>
@@ -84,16 +113,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
           Your personal health companion
         </Animated.Text>
       </Animated.View>
-
-      <View style={styles.splashDots}>
-        {[0, 1, 2].map((i) => (
-          <View
-            key={i}
-            style={[styles.splashDot, { opacity: 0.3 + i * 0.15 }]}
-          />
-        ))}
-      </View>
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -112,7 +132,15 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: spacing.space5,
   },
-  splashRing: {
+  splashRingOuter: {
+    position: 'absolute',
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  splashRingInner: {
     position: 'absolute',
     width: 110,
     height: 110,
@@ -144,17 +172,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.space2,
     letterSpacing: 0.3,
   },
-  splashDots: {
-    position: 'absolute',
-    bottom: 60,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  splashDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#FFFFFF',
-  },
+
 });

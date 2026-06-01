@@ -2,6 +2,16 @@
 
 import { create } from 'zustand';
 
+export type FontScale = 'extra-small' | 'small' | 'normal' | 'large' | 'extra-large';
+
+export const FONT_SCALE_MULTIPLIERS: Record<FontScale, number> = {
+  'extra-small': 0.7,
+  small: 0.85,
+  normal: 1,
+  large: 1.15,
+  'extra-large': 1.3,
+};
+
 interface SettingsState {
   tempUnit: 'C' | 'F';
   weightUnit: 'kg' | 'lbs';
@@ -14,6 +24,7 @@ interface SettingsState {
   reminderMorningTime: string;
   reminderAfternoonTime: string;
   reminderNightTime: string;
+  fontScale: FontScale;
   isLoading: boolean;
 
   setTempUnit: (unit: 'C' | 'F') => void;
@@ -27,6 +38,7 @@ interface SettingsState {
   setReminderMorningTime: (val: string) => void;
   setReminderAfternoonTime: (val: string) => void;
   setReminderNightTime: (val: string) => void;
+  setFontScale: (val: FontScale) => void;
   setLoading: (loading: boolean) => void;
   hydrate: (settings: Record<string, string>) => void;
 }
@@ -43,6 +55,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   reminderMorningTime: '08:00',
   reminderAfternoonTime: '14:00',
   reminderNightTime: '21:00',
+  fontScale: 'normal',
   isLoading: true,
 
   setTempUnit: (tempUnit) => set({ tempUnit }),
@@ -56,6 +69,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setReminderMorningTime: (reminderMorningTime) => set({ reminderMorningTime }),
   setReminderAfternoonTime: (reminderAfternoonTime) => set({ reminderAfternoonTime }),
   setReminderNightTime: (reminderNightTime) => set({ reminderNightTime }),
+  setFontScale: (fontScale) => set({ fontScale }),
   setLoading: (isLoading) => set({ isLoading }),
 
   hydrate: (settings) =>
@@ -71,6 +85,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       reminderMorningTime: settings.reminder_morning || '08:00',
       reminderAfternoonTime: settings.reminder_afternoon || '14:00',
       reminderNightTime: settings.reminder_night || '21:00',
+      fontScale: (settings.font_scale as FontScale) || 'normal',
       isLoading: false,
     }),
 }));

@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../../hooks/useColors';
 import { colors } from '../../constants/colors';
 import { spacing, borderRadius } from '../../constants/spacing';
-import { fonts } from '../../constants/typography';
+import { fonts, scaleSize } from '../../constants/typography';
 import { TableHeader } from '../../components/vitals/TableHeader';
 import { TableRow } from '../../components/vitals/TableRow';
 import { getDB, loadStores } from '../../hooks/useDB';
@@ -29,6 +29,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { VitalChartCard } from '../../components/vitals/VitalChartCard';
 import type { VitalLogRow } from '../../db/queries/vitals';
 import type { CustomVitalLogRow } from '../../db/queries/customVitals';
+import { useSettingsStore, FONT_SCALE_MULTIPLIERS } from '../../store/settingsStore';
 
 const ALL_VITALS = 'all';
 const VITAL_OPTIONS: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -74,6 +75,9 @@ interface CustomVitalLookup {
 
 export function HistoryScreen({ navigation }: any) {
   const c = useColors();
+  const fontScale = useSettingsStore((s) => s.fontScale);
+  const fs = FONT_SCALE_MULTIPLIERS[fontScale];
+  const sc = useMemo(() => createStyles(fs), [fs]);
   const [selectedFilter, setSelectedFilter] = useState(ALL_VITALS);
   const [vitalLogs, setVitalLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -320,8 +324,8 @@ export function HistoryScreen({ navigation }: any) {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: c.background }]}>
-        <View style={[styles.filterBar, { backgroundColor: c.surface }]}>
+      <View style={[sc.container, { backgroundColor: c.background }]}>
+        <View style={[sc.filterBar, { backgroundColor: c.surface }]}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton.Box key={i} width={72} height={30} borderRadius={15} style={{ marginRight: 8 }} />
@@ -339,13 +343,13 @@ export function HistoryScreen({ navigation }: any) {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: c.background }]}>
+    <View style={[sc.container, { backgroundColor: c.background }]}>
       {/* Search Bar */}
-      <View style={[styles.searchBar, { backgroundColor: c.surface, borderBottomColor: c.borderLight }]}>
-        <View style={[styles.searchInputContainer, { backgroundColor: c.surfaceAlt }]}>
+      <View style={[sc.searchBar, { backgroundColor: c.surface, borderBottomColor: c.borderLight }]}>
+        <View style={[sc.searchInputContainer, { backgroundColor: c.surfaceAlt }]}>
           <Ionicons name="search" size={16} color={c.textDisabled} style={{ marginRight: spacing.space2 }} />
           <TextInput
-            style={[styles.searchInput, { color: c.textPrimary }]}
+            style={[sc.searchInput, { color: c.textPrimary }]}
             placeholder="Search readings, notes..."
             placeholderTextColor={c.textDisabled}
             value={searchQuery}
@@ -362,15 +366,15 @@ export function HistoryScreen({ navigation }: any) {
       </View>
 
       {/* Date Range Selector */}
-      <View style={[styles.dateRangeBar, { backgroundColor: c.surface, borderBottomColor: c.borderLight }]}>
+      <View style={[sc.dateRangeBar, { backgroundColor: c.surface, borderBottomColor: c.borderLight }]}>
         {DATE_RANGE_OPTIONS.map((opt) => (
           <TouchableOpacity
             key={opt.key}
-            style={[styles.dateChip, { backgroundColor: c.surfaceAlt, borderColor: c.borderLight }, dateRangeKey === opt.key && { backgroundColor: c.primarySurface, borderColor: c.primary }]}
+            style={[sc.dateChip, { backgroundColor: c.surfaceAlt, borderColor: c.borderLight }, dateRangeKey === opt.key && { backgroundColor: c.primarySurface, borderColor: c.primary }]}
             onPress={() => setDateRangeKey(opt.key)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.dateChipText, { color: c.textSecondary }, dateRangeKey === opt.key && { color: c.primary }]}>
+            <Text style={[sc.dateChipText, { color: c.textSecondary }, dateRangeKey === opt.key && { color: c.primary }]}>
               {opt.label}
             </Text>
           </TouchableOpacity>
@@ -378,12 +382,12 @@ export function HistoryScreen({ navigation }: any) {
       </View>
 
       {/* Vital Filter Bar */}
-      <View style={[styles.filterBar, { backgroundColor: c.surface, borderBottomColor: c.borderLight }]}>
+      <View style={[sc.filterBar, { backgroundColor: c.surface, borderBottomColor: c.borderLight }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {allOptions.map((opt) => (
             <TouchableOpacity
               key={opt.key}
-              style={[styles.filterChip, { backgroundColor: c.surfaceAlt }, selectedFilter === opt.key && { backgroundColor: c.primary }]}
+              style={[sc.filterChip, { backgroundColor: c.surfaceAlt }, selectedFilter === opt.key && { backgroundColor: c.primary }]}
               onPress={() => setSelectedFilter(opt.key)}
               activeOpacity={0.7}
             >
@@ -393,7 +397,7 @@ export function HistoryScreen({ navigation }: any) {
                 color={selectedFilter === opt.key ? '#FFFFFF' : c.textSecondary}
                 style={{ marginRight: 4 }}
               />
-              <Text style={[styles.filterText, { color: c.textSecondary }, selectedFilter === opt.key && { color: '#FFFFFF' }]}>
+              <Text style={[sc.filterText, { color: c.textSecondary }, selectedFilter === opt.key && { color: '#FFFFFF' }]}>
                 {opt.label}
               </Text>
             </TouchableOpacity>
@@ -402,22 +406,22 @@ export function HistoryScreen({ navigation }: any) {
       </View>
 
       {/* View Toggle */}
-      <View style={[styles.toggleBar, { backgroundColor: c.surface, borderBottomColor: c.borderLight }]}>
+      <View style={[sc.toggleBar, { backgroundColor: c.surface, borderBottomColor: c.borderLight }]}>
         <TouchableOpacity
-          style={[styles.toggleChip, viewMode === 'table' && { backgroundColor: c.primary }]}
+          style={[sc.toggleChip, viewMode === 'table' && { backgroundColor: c.primary }]}
           onPress={() => setViewMode('table')}
           activeOpacity={0.7}
         >
           <Ionicons name="list-outline" size={14} color={viewMode === 'table' ? '#FFFFFF' : c.textSecondary} style={{ marginRight: 4 }} />
-          <Text style={[styles.toggleText, { color: viewMode === 'table' ? '#FFFFFF' : c.textSecondary }]}>Table</Text>
+          <Text style={[sc.toggleText, { color: viewMode === 'table' ? '#FFFFFF' : c.textSecondary }]}>Table</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.toggleChip, viewMode === 'charts' && { backgroundColor: c.primary }]}
+          style={[sc.toggleChip, viewMode === 'charts' && { backgroundColor: c.primary }]}
           onPress={() => setViewMode('charts')}
           activeOpacity={0.7}
         >
           <Ionicons name="trending-up-outline" size={14} color={viewMode === 'charts' ? '#FFFFFF' : c.textSecondary} style={{ marginRight: 4 }} />
-          <Text style={[styles.toggleText, { color: viewMode === 'charts' ? '#FFFFFF' : c.textSecondary }]}>Charts</Text>
+          <Text style={[sc.toggleText, { color: viewMode === 'charts' ? '#FFFFFF' : c.textSecondary }]}>Charts</Text>
         </TouchableOpacity>
       </View>
 
@@ -438,23 +442,23 @@ export function HistoryScreen({ navigation }: any) {
             />
           )}
           ListEmptyComponent={
-            <View style={styles.empty}>
+            <View style={sc.empty}>
               <Ionicons name="analytics-outline" size={48} color={c.textDisabled} />
-              <Text style={[styles.emptyText, { color: c.textSecondary }]}>
+              <Text style={[sc.emptyText, { color: c.textSecondary }]}>
                 {searchQuery ? 'No matching readings found' : 'No vitals recorded in this range'}
               </Text>
-              <Text style={[styles.emptyHint, { color: c.textDisabled }]}>
+              <Text style={[sc.emptyHint, { color: c.textDisabled }]}>
                 {searchQuery ? 'Try a different search term' : 'Log your first vital from the Log tab'}
               </Text>
             </View>
           }
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={sc.listContent}
           showsVerticalScrollIndicator={false}
         />
       ) : (
         <ScrollView
-          style={styles.chartsScroll}
-          contentContainerStyle={styles.chartsContent}
+          style={sc.chartsScroll}
+          contentContainerStyle={sc.chartsContent}
           showsVerticalScrollIndicator={false}
         >
           {chartSections.length > 0 ? (
@@ -476,12 +480,12 @@ export function HistoryScreen({ navigation }: any) {
               />
             ))
           ) : (
-            <View style={styles.empty}>
+            <View style={sc.empty}>
               <Ionicons name="analytics-outline" size={48} color={c.textDisabled} />
-              <Text style={[styles.emptyText, { color: c.textSecondary }]}>
+              <Text style={[sc.emptyText, { color: c.textSecondary }]}>
                 No vitals recorded in this range
               </Text>
-              <Text style={[styles.emptyHint, { color: c.textDisabled }]}>
+              <Text style={[sc.emptyHint, { color: c.textDisabled }]}>
                 Log vitals from the Log tab to see trends
               </Text>
             </View>
@@ -490,7 +494,7 @@ export function HistoryScreen({ navigation }: any) {
       )}
 
       {/* Export Button */}
-      <View style={[styles.exportBar, { backgroundColor: c.surface, borderTopColor: c.borderLight }]}>
+      <View style={[sc.exportBar, { backgroundColor: c.surface, borderTopColor: c.borderLight }]}>
         <Button
           title="Export Selected"
           onPress={() => navigation.navigate('Export', {
@@ -505,7 +509,7 @@ export function HistoryScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(fs: number) { const fn = (size: number) => scaleSize(size, fs); return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -527,7 +531,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: fn(13),
     color: colors.textPrimary,
     fontFamily: fonts.body,
     padding: 0,
@@ -554,7 +558,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   dateChipText: {
-    fontSize: 11,
+    fontSize: fn(11),
     fontWeight: '500',
     color: colors.textSecondary,
     fontFamily: fonts.body,
@@ -583,7 +587,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   filterText: {
-    fontSize: 12,
+    fontSize: fn(12),
     fontWeight: '500',
     color: colors.textSecondary,
     fontFamily: fonts.body,
@@ -600,13 +604,13 @@ const styles = StyleSheet.create({
     gap: spacing.space2,
   },
   emptyText: {
-    fontSize: 15,
+    fontSize: fn(15),
     color: colors.textSecondary,
     fontFamily: fonts.body,
     fontWeight: '500',
   },
   emptyHint: {
-    fontSize: 12,
+    fontSize: fn(12),
     color: colors.textDisabled,
     fontFamily: fonts.body,
     marginTop: spacing.space1,
@@ -629,7 +633,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
   },
   toggleText: {
-    fontSize: 12,
+    fontSize: fn(12),
     fontWeight: '500',
     fontFamily: fonts.body,
   },
@@ -647,4 +651,4 @@ const styles = StyleSheet.create({
     borderTopColor: colors.borderLight,
     alignItems: 'center',
   },
-});
+}); }
