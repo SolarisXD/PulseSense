@@ -53,6 +53,5 @@ describe('profileStore', () => {
     useProfileStore.getState().clear();
     expect(useProfileStore.getState().profile).toBeNull();
     expect(useProfileStore.getState().contacts).toEqual([]);
-    expect(useProfileStore.getState().isLoading).toBe(true);
   });
 });

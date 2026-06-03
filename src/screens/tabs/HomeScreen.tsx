@@ -153,7 +153,7 @@ export function HomeScreen({ navigation }: any) {
     const hasInfo = insights.some((i) => i.type === 'info');
     const warningCount = insights.filter((i) => i.type === 'warning').length;
     if (hasWarning) {
-      return { type: 'warning' as const, icon: 'alert-triangle' as const, color: c.danger, bg: c.dangerSurface, title: 'Needs Attention', message: `${warningCount} health item${warningCount > 1 ? 's' : ''} flagged for review` };
+      return { type: 'warning' as const, icon: 'warning' as const, color: c.danger, bg: c.dangerSurface, title: 'Needs Attention', message: `${warningCount} health item${warningCount > 1 ? 's' : ''} flagged for review` };
     }
     if (hasInfo) {
       return { type: 'info' as const, icon: 'information-circle' as const, color: c.primary, bg: c.primarySurface, title: 'Health Updates', message: 'Review your insights for important health information' };

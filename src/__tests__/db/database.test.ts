@@ -7,25 +7,23 @@ describe('database module', () => {
     jest.resetModules();
   });
 
-  it('getDBInstance always returns null (no longer cached)', () => {
+  it('getDBInstance returns null before first getDB call', () => {
     const { getDBInstance } = require('../../db/database');
     expect(getDBInstance()).toBeNull();
   });
 
-  it('getDB opens database and returns instance', async () => {
-    const { getDB } = require('../../db/database');
+  it('getDBInstance returns cached db after getDB', async () => {
+    const { getDB, getDBInstance } = require('../../db/database');
     const db = await getDB();
-    expect(db).toBeDefined();
-    expect(typeof db.getAllAsync).toBe('function');
+    expect(getDBInstance()).toBe(db);
   });
 
-  it('getDB returns a new object each call', async () => {
+  it('getDB returns same cached instance on subsequent calls', async () => {
     const { getDB } = require('../../db/database');
     const db1 = await getDB();
     const db2 = await getDB();
-    expect(db1).not.toBe(db2);
+    expect(db1).toBe(db2);
     expect(db1.getAllAsync).toBeDefined();
-    expect(db2.getAllAsync).toBeDefined();
   });
 
   it('initializeDatabase runs migrations once', async () => {
@@ -43,4 +41,6 @@ describe('database module', () => {
     await getDB();
     expect(runMigrations).not.toHaveBeenCalled();
   });
+
+
 });

@@ -63,33 +63,39 @@ export function ProfileScreen({ navigation }: any) {
   const handleArchiveCondition = (id: number) => {
     Alert.alert('Archive Condition', 'Move this condition to archive?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Archive', style: 'destructive', onPress: async () => {
-        const db = await getDB();
-        await archiveCondition(db, id);
-        await loadStores(db);
-      }},
+      {
+        text: 'Archive', style: 'destructive', onPress: async () => {
+          const db = await getDB();
+          await archiveCondition(db, id);
+          await loadStores(db);
+        }
+      },
     ]);
   };
 
   const handleDeleteAllergy = (id: number) => {
     Alert.alert('Delete Allergy', 'Remove this allergy?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
-        const db = await getDB();
-        await deleteAllergy(db, id);
-        await loadStores(db);
-      }},
+      {
+        text: 'Delete', style: 'destructive', onPress: async () => {
+          const db = await getDB();
+          await deleteAllergy(db, id);
+          await loadStores(db);
+        }
+      },
     ]);
   };
 
   const handleDeleteContact = (id: number) => {
     Alert.alert('Delete Contact', 'Remove this emergency contact?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
-        const db = await getDB();
-        await deleteContact(db, id);
-        await loadStores(db);
-      }},
+      {
+        text: 'Delete', style: 'destructive', onPress: async () => {
+          const db = await getDB();
+          await deleteContact(db, id);
+          await loadStores(db);
+        }
+      },
     ]);
   };
 
@@ -120,7 +126,7 @@ export function ProfileScreen({ navigation }: any) {
   // ---------- Skeleton Loading State ----------
   if (loading) {
     return (
-<LinearGradient colors={gradientColors as any} style={sc.gradient}>
+      <LinearGradient colors={gradientColors as any} style={sc.gradient}>
         <ScrollView contentContainerStyle={sc.content} showsVerticalScrollIndicator={false}>
           <View style={{ alignItems: 'center', paddingVertical: 32, marginBottom: 16 }}>
             <Skeleton.Circle size={84} style={{ marginBottom: 16 }} />
@@ -375,7 +381,7 @@ export function ProfileScreen({ navigation }: any) {
             <View style={[sc.actionDivider, { backgroundColor: c.borderLight }]} />
             <TouchableOpacity style={sc.actionRow} onPress={() => navigation.navigate('Export', { preSelectedType: 'medical_id' })} activeOpacity={0.7}>
               <Ionicons name="document-text-outline" size={20} color={c.textSecondary} />
-              <Text style={[sc.actionText, { color: c.textPrimary }]}>Export Medical ID</Text>
+              <Text style={[sc.actionText, { color: c.textPrimary }]}>Export Data</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textDisabled} />
             </TouchableOpacity>
           </View>
@@ -390,214 +396,215 @@ export function ProfileScreen({ navigation }: any) {
 function createStyles(fs: number) {
   const fn = (size: number) => scaleSize(size, fs);
   return StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
-  content: {
-    padding: spacing.space4,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    paddingVertical: spacing.space6,
-    marginBottom: spacing.space4,
-  },
-  avatarLarge: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.space4,
-    borderWidth: 3,
-    borderColor: 'rgba(26,95,122,0.1)',
-  },
-  avatarLargeImage: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    marginBottom: spacing.space4,
-    borderWidth: 3,
-    borderColor: 'rgba(26,95,122,0.1)',
-  },
-  avatarLargeText: {
-    fontSize: fn(34),
-    fontWeight: '700',
-    fontFamily: fonts.display,
-  },
-  profileName: {
-    fontSize: fn(26),
-    fontWeight: '700',
-    fontFamily: fonts.display,
-    letterSpacing: -0.3,
-    marginBottom: spacing.space1,
-  },
-  profileAge: {
-    fontSize: fn(14),
-    fontFamily: fonts.body,
-    marginBottom: spacing.space2,
-  },
-  profileMeta: {
-    marginTop: spacing.space1,
-  },
-  profileMetaText: {
-    fontSize: fn(13),
-    fontFamily: fonts.body,
-  },
-  section: {
-    marginBottom: spacing.space5,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.space3,
-  },
-  sectionHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.space2,
-  },
-  sectionTitle: {
-    fontSize: fn(16),
-    fontWeight: '600',
-    fontFamily: fonts.display,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  addLink: {
-    fontSize: fn(14),
-    fontWeight: '600',
-    fontFamily: fonts.body,
-  },
-  subsectionLabel: {
-    fontSize: fn(12),
-    fontWeight: '600',
-    fontFamily: fonts.body,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: spacing.space2,
-    marginTop: spacing.space1,
-  },
-  subsectionDivider: {
-    height: 1,
-    marginVertical: spacing.space3,
-  },
-  contactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: borderRadius.md,
-    padding: spacing.space4,
-    marginBottom: spacing.space2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
-    gap: spacing.space3,
-  },
-  contactInfoArea: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.space3,
-  },
-  contactAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  contactInfo: {
-    flex: 1,
-  },
-  contactActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.space2,
-  },
-  callButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  contactName: {
-    fontSize: fn(15),
-    fontWeight: '600',
-    fontFamily: fonts.body,
-  },
-  contactDetail: {
-    fontSize: fn(12),
-    fontFamily: fonts.body,
-    marginTop: 2,
-  },
-  primaryBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  primaryBadgeText: {
-    fontSize: fn(10),
-    fontWeight: '700',
-    fontFamily: fonts.body,
-  },
-  allergyChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  allergyChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.space2,
-    paddingHorizontal: spacing.space3,
-    borderRadius: borderRadius.full,
-    marginRight: spacing.space2,
-    marginBottom: spacing.space2,
-    gap: spacing.space1 + 2,
-  },
-  allergyDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  allergyText: {
-    fontSize: fn(12),
-    fontWeight: '600',
-    fontFamily: fonts.body,
-  },
-  emptyText: {
-    fontSize: fn(13),
-    fontFamily: fonts.body,
-    fontStyle: 'italic',
-  },
-  actionsSection: {
-    borderRadius: borderRadius.md,
-    marginTop: spacing.space4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.space4,
-    gap: spacing.space3,
-  },
-  actionText: {
-    flex: 1,
-    fontSize: fn(15),
-    fontFamily: fonts.body,
-    fontWeight: '500',
-  },
-  actionDivider: {
-    height: 1,
-    marginHorizontal: spacing.space4,
-  },
-});}
+    gradient: {
+      flex: 1,
+    },
+    content: {
+      padding: spacing.space4,
+    },
+    profileHeader: {
+      alignItems: 'center',
+      paddingVertical: spacing.space6,
+      marginBottom: spacing.space4,
+    },
+    avatarLarge: {
+      width: 84,
+      height: 84,
+      borderRadius: 42,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.space4,
+      borderWidth: 3,
+      borderColor: 'rgba(26,95,122,0.1)',
+    },
+    avatarLargeImage: {
+      width: 84,
+      height: 84,
+      borderRadius: 42,
+      marginBottom: spacing.space4,
+      borderWidth: 3,
+      borderColor: 'rgba(26,95,122,0.1)',
+    },
+    avatarLargeText: {
+      fontSize: fn(34),
+      fontWeight: '700',
+      fontFamily: fonts.display,
+    },
+    profileName: {
+      fontSize: fn(26),
+      fontWeight: '700',
+      fontFamily: fonts.display,
+      letterSpacing: -0.3,
+      marginBottom: spacing.space1,
+    },
+    profileAge: {
+      fontSize: fn(14),
+      fontFamily: fonts.body,
+      marginBottom: spacing.space2,
+    },
+    profileMeta: {
+      marginTop: spacing.space1,
+    },
+    profileMetaText: {
+      fontSize: fn(13),
+      fontFamily: fonts.body,
+    },
+    section: {
+      marginBottom: spacing.space5,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.space3,
+    },
+    sectionHeaderLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.space2,
+    },
+    sectionTitle: {
+      fontSize: fn(16),
+      fontWeight: '600',
+      fontFamily: fonts.display,
+    },
+    addButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+    },
+    addLink: {
+      fontSize: fn(14),
+      fontWeight: '600',
+      fontFamily: fonts.body,
+    },
+    subsectionLabel: {
+      fontSize: fn(12),
+      fontWeight: '600',
+      fontFamily: fonts.body,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: spacing.space2,
+      marginTop: spacing.space1,
+    },
+    subsectionDivider: {
+      height: 1,
+      marginVertical: spacing.space3,
+    },
+    contactRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: borderRadius.md,
+      padding: spacing.space4,
+      marginBottom: spacing.space2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 2,
+      elevation: 1,
+      gap: spacing.space3,
+    },
+    contactInfoArea: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.space3,
+    },
+    contactAvatar: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    contactInfo: {
+      flex: 1,
+    },
+    contactActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.space2,
+    },
+    callButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    contactName: {
+      fontSize: fn(15),
+      fontWeight: '600',
+      fontFamily: fonts.body,
+    },
+    contactDetail: {
+      fontSize: fn(12),
+      fontFamily: fonts.body,
+      marginTop: 2,
+    },
+    primaryBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 4,
+    },
+    primaryBadgeText: {
+      fontSize: fn(10),
+      fontWeight: '700',
+      fontFamily: fonts.body,
+    },
+    allergyChips: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    allergyChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.space2,
+      paddingHorizontal: spacing.space3,
+      borderRadius: borderRadius.full,
+      marginRight: spacing.space2,
+      marginBottom: spacing.space2,
+      gap: spacing.space1 + 2,
+    },
+    allergyDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+    },
+    allergyText: {
+      fontSize: fn(12),
+      fontWeight: '600',
+      fontFamily: fonts.body,
+    },
+    emptyText: {
+      fontSize: fn(13),
+      fontFamily: fonts.body,
+      fontStyle: 'italic',
+    },
+    actionsSection: {
+      borderRadius: borderRadius.md,
+      marginTop: spacing.space4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    actionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.space4,
+      gap: spacing.space3,
+    },
+    actionText: {
+      flex: 1,
+      fontSize: fn(15),
+      fontFamily: fonts.body,
+      fontWeight: '500',
+    },
+    actionDivider: {
+      height: 1,
+      marginHorizontal: spacing.space4,
+    },
+  });
+}
