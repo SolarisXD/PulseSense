@@ -26,7 +26,7 @@ describe('profileStore', () => {
   });
 
   it('setContacts stores contacts', () => {
-    const contacts = [{ id: 1, name: 'Emergency Contact', relationship: 'Spouse', phone: '+1234567890', contact_type: 'emergency', is_primary: 1, sort_order: 0, created_at: '' }];
+    const contacts = [{ id: 1, name: 'Emergency Contact', relationship: 'Spouse', phone: '+1234567890', contact_type: 'emergency' as const, is_primary: 1, sort_order: 0, created_at: '' }];
     useProfileStore.getState().setContacts(contacts);
     expect(useProfileStore.getState().contacts).toEqual(contacts);
   });

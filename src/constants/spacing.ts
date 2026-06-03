@@ -20,12 +20,4 @@ export const borderRadius = {
   full: 9999,
 } as const;
 
-export const hitSlop = {
-  top: 8,
-  bottom: 8,
-  left: 8,
-  right: 8,
-} as const;
 
-// Minimum tap target per Apple HIG
-export const minTapTarget = 44;

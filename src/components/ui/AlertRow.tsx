@@ -33,6 +33,7 @@ export const AlertRow = React.memo(function AlertRow({ title, message, severity,
       onPress={onPress}
       activeOpacity={0.7}
       disabled={!onPress}
+      accessibilityLabel="View alert details"
     >
       <View style={styles.header}>
         <Ionicons name={config.icon} size={16} color={config.color} />

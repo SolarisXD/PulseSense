@@ -1,6 +1,6 @@
 // PulseSense — Vital Summary Card (Home Screen)
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withDelay, Easing } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,7 +38,7 @@ export const VitalCard = React.memo(function VitalCard({ name, value, unit, stat
   }));
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.7} accessibilityLabel="View vital history">
       <Animated.View style={[styles.card, { backgroundColor: c.surface }, animatedStyle]}>
         <View style={styles.header}>
           <Ionicons name={iconName} size={14} color={c.textSecondary} />

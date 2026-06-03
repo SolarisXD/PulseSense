@@ -20,7 +20,7 @@ interface VitalInputFieldProps {
   statusLabel?: string;
 }
 
-export function VitalInputField({
+export const VitalInputField = React.memo(function VitalInputField({
   label,
   value,
   onChangeText,
@@ -50,7 +50,7 @@ export function VitalInputField({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

@@ -175,7 +175,11 @@ export async function restoreDatabase(): Promise<{ success: boolean; message: st
   }
 
   // Reload stores
-  await loadStores(db);
+  try {
+    await loadStores(db);
+  } catch (err) {
+    console.warn('backupService: loadStores after restore failed', err);
+  }
 
   return { success: true, message: `Data restored successfully from backup created ${new Date(backup.exportedAt).toLocaleDateString()}` };
 }

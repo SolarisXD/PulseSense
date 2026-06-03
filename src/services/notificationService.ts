@@ -31,6 +31,7 @@ async function getNotifications(): Promise<NotificationsModule | null> {
   }
 }
 
+// @unused
 export function initializeNotificationHandler(): void {
   getNotifications().then((mod) => {
     if (!mod) return;
@@ -44,7 +45,7 @@ export function initializeNotificationHandler(): void {
         }),
       });
     } catch (e) { console.warn('[notif] setNotificationHandler failed', e); }
-  });
+  }).catch((e) => console.warn('[notif] getNotifications failed', e));
 }
 
 async function ensureAndroidChannel(): Promise<void> {
@@ -206,10 +207,10 @@ export async function cancelMedicationReminders(identifier: string): Promise<voi
   if (!mod) return;
 
   const ids = reminderIdentifiers(identifier);
-  await Promise.all([
-    mod.cancelScheduledNotificationAsync(ids.morning).catch(() => {}),
-    mod.cancelScheduledNotificationAsync(ids.afternoon).catch(() => {}),
-    mod.cancelScheduledNotificationAsync(ids.night).catch(() => {}),
+  await Promise.allSettled([
+    mod.cancelScheduledNotificationAsync(ids.morning),
+    mod.cancelScheduledNotificationAsync(ids.afternoon),
+    mod.cancelScheduledNotificationAsync(ids.night),
   ]);
 }
 

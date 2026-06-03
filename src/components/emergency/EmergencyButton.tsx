@@ -15,7 +15,7 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
 
@@ -23,7 +23,8 @@ interface EmergencyButtonProps {
   onPress: () => void;
 }
 
-export function EmergencyButton({ onPress }: EmergencyButtonProps) {
+export const EmergencyButton = React.memo(function EmergencyButton({ onPress }: EmergencyButtonProps) {
+  const c = useColors();
   const pulseOpacity = useSharedValue(1);
   const pulseScale = useSharedValue(1);
   const glowIntensity = useSharedValue(0);
@@ -68,12 +69,12 @@ export function EmergencyButton({ onPress }: EmergencyButtonProps) {
   return (
     <View style={styles.wrapper}>
       {/* Outer glow ring */}
-      <Animated.View style={[styles.glowRing, glowStyle]} />
+      <Animated.View style={[styles.glowRing, { backgroundColor: c.danger }, glowStyle]} />
       {/* Pulsing ring */}
-      <Animated.View style={[styles.pulseRing, ringStyle]} />
+      <Animated.View style={[styles.pulseRing, { backgroundColor: c.danger }, ringStyle]} />
       {/* Button */}
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, { backgroundColor: c.danger }]}
         onPress={onPress}
         activeOpacity={0.85}
         accessibilityLabel="Emergency Check — tap if someone feels unwell"
@@ -90,7 +91,7 @@ export function EmergencyButton({ onPress }: EmergencyButtonProps) {
       </TouchableOpacity>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrapper: {
@@ -104,7 +105,6 @@ const styles = StyleSheet.create({
     right: -8,
     bottom: -8,
     borderRadius: borderRadius.md + 8,
-    backgroundColor: colors.danger,
   },
   pulseRing: {
     position: 'absolute',
@@ -113,12 +113,10 @@ const styles = StyleSheet.create({
     right: -4,
     bottom: -4,
     borderRadius: borderRadius.md + 4,
-    backgroundColor: colors.danger,
   },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.danger,
     borderRadius: borderRadius.md,
     padding: spacing.space4,
     minHeight: 80,

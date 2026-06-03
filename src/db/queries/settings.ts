@@ -28,6 +28,7 @@ export async function getAllSettings(db: SQLiteDatabase): Promise<SettingRow[]> 
   return rows;
 }
 
+// @unused
 export async function getMultipleSettings(
   db: SQLiteDatabase,
   keys: string[]
@@ -48,6 +49,7 @@ export async function getMultipleSettings(
   return result;
 }
 
+// @unused
 export async function isOnboardingComplete(db: SQLiteDatabase): Promise<boolean> {
   const value = await getSetting(db, 'onboarding_complete');
   return value === 'true';

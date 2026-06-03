@@ -24,6 +24,37 @@ import {
   type VitalStatus,
 } from '../utils/vitalStatus';
 
+// Memoized nearby log row to avoid inline arrow function re-creation
+const NearbyLogRow = React.memo(function NearbyLogRow({
+  nearby,
+  onNavigate,
+}: {
+  nearby: VitalLogRow;
+  onNavigate: (logId: number) => void;
+}) {
+  const c = useColors();
+  return (
+    <TouchableOpacity
+      key={nearby.id}
+      style={[styles.nearbyRow, { backgroundColor: c.surface }]}
+      onPress={() => onNavigate(nearby.id)}
+    >
+      <Text style={[styles.nearbyDate, { color: c.textPrimary }]}>
+        {formatDisplayDate(nearby.logged_at_display)} {formatDisplayTime(nearby.logged_at_display)}
+      </Text>
+      <Text style={[styles.nearbySummary, { color: c.textSecondary }]}>
+        {[
+          nearby.bp_sys ? `BP ${nearby.bp_sys}/${nearby.bp_dia}` : null,
+          nearby.pulse != null ? `Pulse ${nearby.pulse}` : null,
+          nearby.spo2 != null ? `SpO2 ${nearby.spo2}%` : null,
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+      </Text>
+    </TouchableOpacity>
+  );
+});
+
 
 
 function VitalTag({
@@ -202,6 +233,10 @@ export function VitalDetailScreen({ route, navigation }: any) {
     return items;
   }, [log, allLogs, c]);
 
+  const onNavigateToDetail = useCallback((logId: number) => {
+    navigation.replace('VitalDetail', { logId });
+  }, [navigation]);
+
   if (!log) {
     return (
       <View style={[styles.center, { backgroundColor: c.background }]}>
@@ -261,24 +296,11 @@ export function VitalDetailScreen({ route, navigation }: any) {
         <View style={styles.nearbySection}>
           <Text style={[styles.nearbyTitle, { color: c.textPrimary }]}>Recent Readings</Text>
           {nearbyLogs.map((nearby) => (
-            <TouchableOpacity
+            <NearbyLogRow
               key={nearby.id}
-              style={[styles.nearbyRow, { backgroundColor: c.surface }]}
-              onPress={() => navigation.replace('VitalDetail', { logId: nearby.id })}
-            >
-              <Text style={[styles.nearbyDate, { color: c.textPrimary }]}>
-                {formatDisplayDate(nearby.logged_at_display)} {formatDisplayTime(nearby.logged_at_display)}
-              </Text>
-              <Text style={[styles.nearbySummary, { color: c.textSecondary }]}>
-                {[
-                  nearby.bp_sys ? `BP ${nearby.bp_sys}/${nearby.bp_dia}` : null,
-                  nearby.pulse != null ? `Pulse ${nearby.pulse}` : null,
-                  nearby.spo2 != null ? `SpO2 ${nearby.spo2}%` : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </Text>
-            </TouchableOpacity>
+              nearby={nearby}
+              onNavigate={onNavigateToDetail}
+            />
           ))}
         </View>
       )}

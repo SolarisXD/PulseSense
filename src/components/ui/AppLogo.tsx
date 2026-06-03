@@ -6,6 +6,6 @@ interface AppLogoProps {
   size?: number;
 }
 
-export function AppLogo({ size = 40 }: AppLogoProps) {
+export const AppLogo = React.memo(function AppLogo({ size = 40 }: AppLogoProps) {
   return <SvgXml xml={LOGO_SVG} width={size} height={size} />;
-}
+});

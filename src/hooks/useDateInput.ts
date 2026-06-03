@@ -49,8 +49,7 @@ export function useDateTimeInput(initialValue?: string) {
 
   const handleChange = useCallback((text: string) => {
     // Allow digits, slash, space, colon
-    const cleaned = text.replace(/[^\d/: ]/g, '');
-    const digits = cleaned.replace(/\D/g, '');
+    const digits = text.replace(/\D/g, '');
     let formatted = '';
 
     if (digits.length <= 2) {

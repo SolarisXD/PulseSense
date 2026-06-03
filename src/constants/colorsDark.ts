@@ -56,4 +56,4 @@ export const colorsDark = {
   shadowDanger: 'rgba(230,57,70,0.3)',
 } as const;
 
-export type DarkColorName = keyof typeof colorsDark;
+

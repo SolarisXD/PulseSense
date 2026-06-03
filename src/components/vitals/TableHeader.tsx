@@ -4,7 +4,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { fonts } from '../../constants/typography';
-import { colors } from '../../constants/colors';
 import { spacing } from '../../constants/spacing';
 import { useColors } from '../../hooks/useColors';
 
@@ -12,7 +11,7 @@ interface TableHeaderProps {
   columns: string[];
 }
 
-export function TableHeader({ columns }: TableHeaderProps) {
+export const TableHeader = React.memo(function TableHeader({ columns }: TableHeaderProps) {
   const c = useColors();
   return (
     <View style={[styles.header, { backgroundColor: c.surfaceAlt, borderBottomColor: c.border }]}>
@@ -27,7 +26,7 @@ export function TableHeader({ columns }: TableHeaderProps) {
       ))}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   header: {

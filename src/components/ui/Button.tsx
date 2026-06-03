@@ -1,6 +1,6 @@
 // PulseSense — Button Component
 
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback } from 'react';
 import {
   TouchableWithoutFeedback,
   Text,

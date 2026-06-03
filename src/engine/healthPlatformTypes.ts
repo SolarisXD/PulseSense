@@ -37,8 +37,10 @@ export interface HealthPermissions {
   steps: HealthPermission;
 }
 
+// @unused
 export type SyncDirection = 'import' | 'export';
 
+// @unused
 export interface SyncResult {
   direction: SyncDirection;
   vitalLogsCreated: number;

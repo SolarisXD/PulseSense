@@ -110,6 +110,7 @@ export async function insertRuleTriggers(
   );
 }
 
+// @unused
 export async function saveEmergencyEvent(
   db: SQLiteDatabase,
   input: SymptomInput,
@@ -130,6 +131,7 @@ export async function saveEmergencyEvent(
   }
 }
 
+// @unused
 export async function getSymptomEvents(db: SQLiteDatabase): Promise<SymptomEventRow[]> {
   const rows = await db.getAllAsync<SymptomEventRow>(
     'SELECT * FROM symptom_events ORDER BY occurred_at DESC LIMIT 50'

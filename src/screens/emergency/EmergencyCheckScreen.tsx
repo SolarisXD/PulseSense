@@ -13,7 +13,6 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { fonts } from '../../constants/typography';
@@ -22,7 +21,7 @@ import { evaluateSymptoms } from '../../engine/ruleEngine';
 import { getDB } from '../../hooks/useDB';
 import { insertSymptomEvent, insertRuleTriggers, insertAlert, getActiveAlerts } from '../../db/queries/emergency';
 import { useAlertStore } from '../../store/alertStore';
-import type { SymptomInput, RuleResult } from '../../constants/rules';
+import type { SymptomInput } from '../../constants/rules';
 import { nowIso } from '../../utils/dateUtils';
 
 export function EmergencyCheckScreen({ navigation }: any) {

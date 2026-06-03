@@ -73,6 +73,7 @@ export async function insertVitalLog(db: SQLiteDatabase, data: VitalLogInput): P
   return result.lastInsertRowId;
 }
 
+// @unused
 export async function getLatestVitalLogs(db: SQLiteDatabase): Promise<VitalLogRow[]> {
   const rows = await db.getAllAsync<VitalLogRow>(
     `SELECT * FROM vital_logs WHERE is_deleted = 0
@@ -117,6 +118,7 @@ export async function getLatestPerVital(db: SQLiteDatabase): Promise<Record<stri
   };
 }
 
+// @unused
 export async function softDeleteVitalLog(db: SQLiteDatabase, id: number): Promise<void> {
   await db.runAsync('UPDATE vital_logs SET is_deleted = 1 WHERE id = ?', [id]);
 }

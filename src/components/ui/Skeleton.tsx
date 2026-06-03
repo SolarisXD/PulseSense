@@ -5,7 +5,7 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, ViewStyle, DimensionValue } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing, withDelay } from 'react-native-reanimated';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 
 // ---------- Core Skeleton Box ----------
 
@@ -17,6 +17,7 @@ interface SkeletonBoxProps {
 }
 
 function SkeletonBox({ width = '100%', height = 16, borderRadius = 4, style }: SkeletonBoxProps) {
+  const c = useColors();
   const opacity = useSharedValue(1);
 
   useEffect(() => {
@@ -41,7 +42,7 @@ function SkeletonBox({ width = '100%', height = 16, borderRadius = 4, style }: S
           width: width as DimensionValue,
           height,
           borderRadius,
-          backgroundColor: colors.surfaceAlt,
+          backgroundColor: c.surfaceAlt,
         },
         animatedStyle,
         style,
@@ -107,8 +108,8 @@ function SkeletonCard({ height = 100, style }: SkeletonCardProps) {
 // ---------- Export ----------
 
 export const Skeleton = {
-  Box: SkeletonBox,
-  Circle: SkeletonCircle,
-  Text: SkeletonText,
-  Card: SkeletonCard,
+  Box: React.memo(SkeletonBox),
+  Circle: React.memo(SkeletonCircle),
+  Text: React.memo(SkeletonText),
+  Card: React.memo(SkeletonCard),
 };

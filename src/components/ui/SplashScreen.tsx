@@ -9,7 +9,7 @@ interface SplashScreenProps {
   onFinish: () => void;
 }
 
-export function SplashScreen({ onFinish }: SplashScreenProps) {
+export const SplashScreen = React.memo(function SplashScreen({ onFinish }: SplashScreenProps) {
   const logoScale = useRef(new Animated.Value(0.8)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const taglineOpacity = useRef(new Animated.Value(0)).current;
@@ -115,7 +115,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
       </Animated.View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   splash: {

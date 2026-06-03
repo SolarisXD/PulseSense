@@ -40,6 +40,6 @@ export const useProfileStore = create<ProfileState>((set) => ({
       contacts: [],
       conditions: [],
       allergies: [],
-      isLoading: false,
+      isLoading: true,
     }),
 }));

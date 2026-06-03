@@ -6,8 +6,11 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v54.0.0/ before 
 ## Architecture
 - Expo SDK 54, expo-sqlite (local), Zustand for state
 - @react-navigation/stack + bottom-tabs (5 tabs: Home, Vitals, History, Profile, Alerts)
-- 13 SQLite tables with FK relationships
+- 14 SQLite tables with FK relationships (health_sync was added)
 - Rule engine: pure TS (evaluateSymptoms + evaluateVitalThresholds)
+- Health Platform: Platform adapter pattern (IHealthAdapter interface) with IOSAdapter (Apple HealthKit via react-native-health) and AndroidAdapter (Health Connect via react-native-health-connect). Lazy singleton adapter, unified public API for read/write/disconnect, ConnectionStatus tracking
+- Export Module: three-tier architecture — pdfTemplates.ts (HTML generation), csvExport.ts (CSV generation), exportService.ts (orchestrator with generateExportHtml/generateExport/previewPdf/sharePdf for PDF, and csv export functions)
+- Backup Service: JSON backup/restore with FK-safe restore (PRAGMA foreign_keys=OFF during data re-insertion, reverse-dependency table clearing, schema version validation, column sanitization)
 
 ## Accomplished
 ### Bug Fixes

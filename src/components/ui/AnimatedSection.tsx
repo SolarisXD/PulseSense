@@ -10,7 +10,7 @@ interface AnimatedSectionProps {
   translateY?: number;
 }
 
-export function AnimatedSection({
+export const AnimatedSection = React.memo(function AnimatedSection({
   children,
   index = 0,
   style,
@@ -33,4 +33,4 @@ export function AnimatedSection({
   }));
 
   return <Animated.View style={[animatedStyle, style]}>{children}</Animated.View>;
-}
+});

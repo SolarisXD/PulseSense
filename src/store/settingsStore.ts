@@ -74,18 +74,18 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 
   hydrate: (settings) =>
     set({
-      tempUnit: (settings.temp_unit as 'C' | 'F') || 'C',
-      weightUnit: (settings.weight_unit as 'kg' | 'lbs') || 'kg',
-      glucoseUnit: (settings.glucose_unit as 'mg/dL' | 'mmol/L') || 'mg/dL',
-      heightUnit: (settings.height_unit as 'cm' | 'ft_in') || 'cm',
-      bpDefaultPosition: (settings.bp_default_position as 'sitting' | 'standing' | 'lying') || 'sitting',
+      tempUnit: ['C', 'F'].includes(settings.temp_unit) ? (settings.temp_unit as 'C' | 'F') : 'C',
+      weightUnit: ['kg', 'lbs'].includes(settings.weight_unit) ? (settings.weight_unit as 'kg' | 'lbs') : 'kg',
+      glucoseUnit: ['mg/dL', 'mmol/L'].includes(settings.glucose_unit) ? (settings.glucose_unit as 'mg/dL' | 'mmol/L') : 'mg/dL',
+      heightUnit: ['cm', 'ft_in'].includes(settings.height_unit) ? (settings.height_unit as 'cm' | 'ft_in') : 'cm',
+      bpDefaultPosition: ['sitting', 'standing', 'lying'].includes(settings.bp_default_position) ? (settings.bp_default_position as 'sitting' | 'standing' | 'lying') : 'sitting',
       emergencyNumber: settings.emergency_number || '112',
       onboardingComplete: settings.onboarding_complete === 'true',
       medicationReminders: settings.medication_reminders === 'true',
       reminderMorningTime: settings.reminder_morning || '08:00',
       reminderAfternoonTime: settings.reminder_afternoon || '14:00',
       reminderNightTime: settings.reminder_night || '21:00',
-      fontScale: (settings.font_scale as FontScale) || 'normal',
+      fontScale: (['extra-small', 'small', 'normal', 'large', 'extra-large'] as FontScale[]).includes(settings.font_scale as FontScale) ? (settings.font_scale as FontScale) : 'normal',
       isLoading: false,
     }),
 }));

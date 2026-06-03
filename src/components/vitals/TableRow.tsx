@@ -4,9 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { fonts } from '../../constants/typography';
-import { colors } from '../../constants/colors';
 import { spacing } from '../../constants/spacing';
-import { VitalStatusBadge } from '../ui/VitalStatusBadge';
 import type { VitalStatus } from '../../utils/vitalStatus';
 import { useColors } from '../../hooks/useColors';
 
@@ -44,7 +42,7 @@ export const TableRow = React.memo(function TableRow({ date, time, cells, isEven
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7} accessibilityLabel="View vital details">
         {content}
       </TouchableOpacity>
     );

@@ -51,6 +51,7 @@ export function CustomVitalsScreen() {
       setShowForm(false);
       await loadDefs();
     } catch (err: any) {
+      console.error('Failed to save custom vital', err);
       Alert.alert('Error', err.message || 'Failed to save.');
     }
     setSaving(false);

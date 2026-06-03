@@ -10,7 +10,6 @@ import {
   StyleSheet,
   Alert,
   Linking,
-  Platform,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { fonts } from '../../constants/typography';
@@ -61,7 +60,8 @@ export function EmergencyActionScreen({ route, navigation }: any) {
         ].filter(Boolean);
         setAddress(parts.join(', '));
       }
-    } catch {
+    } catch (e) {
+      console.warn('getLocation failed', e);
       setAddress('Unable to determine location');
     }
     setLocating(false);

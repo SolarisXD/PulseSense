@@ -13,7 +13,7 @@ interface CycleDropdownProps {
   formatValue?: (value: string) => string;
 }
 
-export function CycleDropdown({ label, value, options, onChange, formatValue }: CycleDropdownProps) {
+export const CycleDropdown = React.memo(function CycleDropdown({ label, value, options, onChange, formatValue }: CycleDropdownProps) {
   const c = useColors();
   const cycle = () => {
     const idx = options.indexOf(value);
@@ -22,7 +22,7 @@ export function CycleDropdown({ label, value, options, onChange, formatValue }: 
   };
 
   return (
-    <TouchableOpacity style={[styles.dropdown, { borderColor: c.border, backgroundColor: c.surface }]} onPress={cycle} activeOpacity={0.7}>
+    <TouchableOpacity style={[styles.dropdown, { borderColor: c.border, backgroundColor: c.surface }]} onPress={cycle} activeOpacity={0.7} accessibilityLabel="Cycle through options">
       <Text style={[styles.label, { color: c.textSecondary }]}>{label}</Text>
       <View style={styles.valueRow}>
         <Text style={[styles.value, { color: c.textPrimary }]}>{formatValue ? formatValue(value) : value}</Text>
@@ -30,7 +30,7 @@ export function CycleDropdown({ label, value, options, onChange, formatValue }: 
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   dropdown: {

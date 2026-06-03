@@ -456,7 +456,7 @@ export function SettingsScreen({ navigation }: any) {
       <Text style={[sc.sectionTitle, { marginTop: spacing.space6, color: activeColors.textSecondary }]}>Privacy & Legal</Text>
       <TouchableOpacity
         style={[sc.linkRow, { backgroundColor: activeColors.surface }]}
-        onPress={() => Linking.openURL('https://solarisxd.github.io/PulseSense/').catch(() => {})}
+        onPress={() => Linking.openURL('https://solarisxd.github.io/PulseSense/').catch((e) => console.warn('Failed to open URL:', e))}
       >
         <View style={sc.linkRowLeft}>
           <Ionicons name="shield-checkmark-outline" size={20} color={activeColors.textSecondary} style={{ marginRight: spacing.space3 }} />

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,25 +13,24 @@ interface DataPoint {
 
 interface VitalChartCardProps {
   title: string;
-  unit: string;
-  icon: keyof typeof Ionicons.glyphMap;
   data: DataPoint[];
   data2?: DataPoint[];
   color: string;
   color2?: string;
+  unit: string;
+  icon: keyof typeof Ionicons.glyphMap;
   label?: string;
   label2?: string;
-  minValue?: number;
-  maxValue?: number;
   noOfSections?: number;
-  formatYLabel?: (value: string) => string;
+  maxValue?: number;
+  formatYLabel?: (label: string) => string;
 }
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_H_PADDING = spacing.space4 * 2;
 const CHART_CONTAINER_PADDING = spacing.space4;
 const CHART_VISIBLE_WIDTH = SCREEN_WIDTH - CARD_H_PADDING - CHART_CONTAINER_PADDING * 2;
-const MIN_POINT_SPACING = 50;
+const MIN_POINT_SPACING = 60;
 
 function shortDate(display: string): string {
   const [datePart] = display.split(' ');
@@ -40,7 +39,7 @@ function shortDate(display: string): string {
   return `${parseInt(m)}/${parseInt(d)}`;
 }
 
-export function VitalChartCard({
+export const VitalChartCard = React.memo(function VitalChartCard({
   title,
   unit,
   icon,
@@ -51,7 +50,6 @@ export function VitalChartCard({
   label: legendLabel,
   label2: legendLabel2,
   noOfSections = 4,
-  minValue,
   maxValue,
   formatYLabel,
 }: VitalChartCardProps) {
@@ -60,11 +58,6 @@ export function VitalChartCard({
   const chartDates = useMemo(() => {
     return [...data].reverse().map((pt) => pt.date);
   }, [data]);
-
-  const chartDates2 = useMemo(() => {
-    if (!data2 || data2.length === 0) return [];
-    return [...data2].reverse().map((pt) => pt.date);
-  }, [data2]);
 
   const chartData = useMemo(() => {
     const sorted = [...data].reverse();
@@ -84,12 +77,41 @@ export function VitalChartCard({
   }, [data2]);
 
   const chartWidth = useMemo(() => {
-    const needed = data.length * MIN_POINT_SPACING;
-    return Math.max(CHART_VISIBLE_WIDTH, Math.min(needed, CHART_VISIBLE_WIDTH * 2));
-  }, [data.length]);
+    if (chartData.length === 0) return CHART_VISIBLE_WIDTH;
+    const dynamic = chartData.length * MIN_POINT_SPACING;
+    return Math.max(CHART_VISIBLE_WIDTH, Math.min(dynamic, CHART_VISIBLE_WIDTH * 2));
+  }, [chartData]);
 
   const hasData = chartData.length > 0;
   const hasTwoLines = !!chartData2 && chartData2.length > 0;
+
+  const pointerLabelCb = useCallback((items: any[], pointerIndex: number) => {
+    const dateStr = chartDates[pointerIndex] || '';
+    return (
+      <View style={[styles.tooltip, { backgroundColor: c.surface, shadowColor: c.shadowSubtle }]}>
+        <Text style={[styles.tooltipDate, { color: c.textSecondary }]}>{dateStr}</Text>
+        <Text style={[styles.tooltipValue, { color }]}>
+          {items[0]?.value} {unit}
+        </Text>
+        {hasTwoLines && items[1] && (
+          <Text style={[styles.tooltipValue, { color: color2 || c.primary }]}>
+            {items[1]?.value} {unit}
+          </Text>
+        )}
+      </View>
+    );
+  }, [chartDates, c.surface, c.shadowSubtle, c.textSecondary, color, unit, hasTwoLines, color2, c.primary]);
+
+  const pointerConfig = useMemo(() => ({
+    pointerStripHeight: 180,
+    pointerStripWidth: 1,
+    pointerStripColor: c.border,
+    pointerColor: color,
+    pointerLabelWidth: hasTwoLines ? 130 : 100,
+    pointerLabelHeight: 70,
+    autoAdjustPointerLabelPosition: true,
+    pointerLabelComponent: pointerLabelCb,
+  }), [c.border, color, hasTwoLines, pointerLabelCb]);
 
   return (
     <View style={[styles.card, { backgroundColor: c.surface, shadowColor: c.shadowSubtle }]}>
@@ -122,7 +144,6 @@ export function VitalChartCard({
             curved
             isAnimated
             animationDuration={400}
-            isScrollable={chartWidth > CHART_VISIBLE_WIDTH}
             showVerticalLines
             verticalLinesColor={c.borderLight}
             yAxisThickness={1}
@@ -133,39 +154,15 @@ export function VitalChartCard({
             xAxisLabelTextStyle={{ color: c.textDisabled, fontSize: 9 }}
             noOfSections={noOfSections}
             maxValue={maxValue}
-            minValue={minValue}
+            disableScroll={chartWidth <= CHART_VISIBLE_WIDTH}
             initialSpacing={20}
             endSpacing={20}
             yAxisLabelWidth={38}
             {...(formatYLabel ? { formatYLabel } : {})}
-            pointerConfig={{
-              pointerStripHeight: 180,
-              pointerStripWidth: 1,
-              pointerStripColor: c.border,
-              pointerColor: color,
-              pointerLabelWidth: hasTwoLines ? 130 : 100,
-              pointerLabelHeight: 70,
-              autoAdjustPointerLabelPosition: true,
-              pointerLabelComponent: (items: any[], pointerIndex: number) => {
-                const dateStr = chartDates[pointerIndex] || '';
-                return (
-                  <View style={[styles.tooltip, { backgroundColor: c.surface, shadowColor: c.shadowSubtle }]}>
-                    <Text style={[styles.tooltipDate, { color: c.textSecondary }]}>{dateStr}</Text>
-                    <Text style={[styles.tooltipValue, { color }]}>
-                      {items[0]?.value} {unit}
-                    </Text>
-                    {hasTwoLines && items[1] && (
-                      <Text style={[styles.tooltipValue, { color: color2 || c.primary }]}>
-                        {items[1]?.value} {unit}
-                      </Text>
-                    )}
-                  </View>
-                );
-              },
-            }}
+            pointerConfig={pointerConfig}
           />
           {hasTwoLines && (
-            <View style={styles.legend}>
+            <View style={[styles.legend, { borderTopColor: c.borderLight }]}>
               {legendLabel && (
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: color }]} />
@@ -190,7 +187,7 @@ export function VitalChartCard({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {
@@ -247,7 +244,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.space3,
     paddingTop: spacing.space2,
     borderTopWidth: 0.5,
-    borderTopColor: '#E9EDF2',
   },
   legendItem: {
     flexDirection: 'row',

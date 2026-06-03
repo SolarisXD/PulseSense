@@ -24,7 +24,6 @@ import { Button } from '../../components/ui/Button';
 import { useDateInput } from '../../hooks/useDateInput';
 import { getDB } from '../../hooks/useDB';
 import { insertProfile, updateProfilePhoto } from '../../db/queries/profile';
-import { setOnboardingComplete } from '../../db/queries/settings';
 import { loadStores } from '../../hooks/useDB';
 import { useSettingsStore } from '../../store/settingsStore';
 import { saveProfilePhotoLocally } from '../../utils/profilePhoto';

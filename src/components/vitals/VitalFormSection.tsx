@@ -11,7 +11,7 @@ interface VitalFormSectionProps {
   children: React.ReactNode;
 }
 
-export function VitalFormSection({ icon, title, children }: VitalFormSectionProps) {
+export const VitalFormSection = React.memo(function VitalFormSection({ icon, title, children }: VitalFormSectionProps) {
   const c = useColors();
   return (
     <View style={[styles.section, { backgroundColor: c.surface }]}>
@@ -22,7 +22,7 @@ export function VitalFormSection({ icon, title, children }: VitalFormSectionProp
       {children}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   section: {

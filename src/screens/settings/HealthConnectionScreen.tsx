@@ -7,7 +7,7 @@ import { fonts } from '../../constants/typography';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { getDB } from '../../hooks/useDB';
 import { getSyncMetadata, recordImport, recordExport, ensureHealthSyncSchema } from '../../db/queries/healthSync';
-import { insertVitalLog } from '../../db/queries/vitals';
+import { insertVitalLog, getVitalLogsByDateRange } from '../../db/queries/vitals';
 import {
   isHealthAvailable,
   getPlatform,
@@ -66,7 +66,7 @@ export function HealthConnectionScreen() {
       await ensureHealthSyncSchema(db);
       const meta = await getSyncMetadata(db);
       setSyncMeta(meta);
-    } catch { /* ignore */ }
+    } catch (e) { console.warn('[HealthConnection] getSyncMetadata failed', e); }
   }, []);
 
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
@@ -175,7 +175,6 @@ export function HealthConnectionScreen() {
     setSyncing('exporting');
     try {
       const db = await getDB();
-      const { getVitalLogsByDateRange } = require('../../db/queries/vitals');
       const start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const end = new Date().toISOString();
       const logs = await getVitalLogsByDateRange(db, start, end);
@@ -331,7 +330,7 @@ export function HealthConnectionScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: c.secondary }]}
+              style={[styles.actionBtn, { backgroundColor: c.primaryLight }]}
               onPress={handleExport}
               disabled={syncing !== 'none'}
             >

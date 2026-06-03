@@ -5,7 +5,6 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts } from '../../constants/typography';
-import { colors } from '../../constants/colors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import { useColors } from '../../hooks/useColors';
 
@@ -18,7 +17,7 @@ interface ExportTypeCardProps {
   onPress: () => void;
 }
 
-export function ExportTypeCard({ title, description, iconName, iconColor, selected, onPress }: ExportTypeCardProps) {
+export const ExportTypeCard = React.memo(function ExportTypeCard({ title, description, iconName, iconColor, selected, onPress }: ExportTypeCardProps) {
   const c = useColors();
   return (
     <TouchableOpacity
@@ -29,6 +28,7 @@ export function ExportTypeCard({ title, description, iconName, iconColor, select
       ]}
       onPress={onPress}
       activeOpacity={0.7}
+      accessibilityLabel="Select export type"
     >
       <View style={[styles.iconContainer, { backgroundColor: c.surfaceAlt }, selected && { backgroundColor: c.primary }]}>
         <Ionicons
@@ -46,7 +46,7 @@ export function ExportTypeCard({ title, description, iconName, iconColor, select
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

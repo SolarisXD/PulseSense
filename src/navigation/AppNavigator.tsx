@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { colors } from '../constants/colors';
 import { spacing } from '../constants/spacing';
@@ -76,7 +76,7 @@ export function AppNavigator() {
   const h = (title: string) => screenHeader(title, activeColors);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={isDark ? DarkTheme : DefaultTheme}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {initialRoute === 'onboarding' ? (
           <Stack.Screen name="Onboarding" component={OnboardingStack} />

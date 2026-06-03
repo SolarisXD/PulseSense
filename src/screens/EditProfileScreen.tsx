@@ -100,7 +100,7 @@ export function EditProfileScreen({ navigation }: any) {
       <TextInput style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} value={dobInput.value} onChangeText={dobInput.handleChange} placeholder="DD/MM/YYYY" placeholderTextColor={c.textDisabled} keyboardType="number-pad" maxLength={10} />
 
       <Text style={[styles.label, { color: c.textSecondary }]}>SEX</Text>
-      <TouchableOpacity style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} onPress={() => setShowSexPicker(!showSexPicker)}>
+      <TouchableOpacity style={[styles.input, { borderColor: c.border, backgroundColor: c.surface }]} onPress={() => setShowSexPicker(!showSexPicker)}>
         <Text style={[styles.inputText, { color: c.textPrimary }, !sex && { color: c.textDisabled }]}>{sex || 'Select sex'}</Text>
       </TouchableOpacity>
       {showSexPicker && SEX_OPTIONS.map((opt) => (
@@ -110,7 +110,7 @@ export function EditProfileScreen({ navigation }: any) {
       ))}
 
       <Text style={[styles.label, { color: c.textSecondary }]}>BLOOD GROUP</Text>
-      <TouchableOpacity style={[styles.input, { borderColor: c.border, color: c.textPrimary, backgroundColor: c.surface }]} onPress={() => setShowBloodPicker(!showBloodPicker)}>
+      <TouchableOpacity style={[styles.input, { borderColor: c.border, backgroundColor: c.surface }]} onPress={() => setShowBloodPicker(!showBloodPicker)}>
         <Text style={[styles.inputText, { color: c.textPrimary }, !bloodGroup && { color: c.textDisabled }]}>{bloodGroup || 'Select blood group'}</Text>
       </TouchableOpacity>
       {showBloodPicker && BLOOD_GROUPS.map((bg) => (

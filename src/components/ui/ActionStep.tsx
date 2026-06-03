@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { fonts } from '../../constants/typography';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 
 interface ActionStepProps {
@@ -13,16 +13,18 @@ interface ActionStepProps {
   isLast?: boolean;
 }
 
-export function ActionStep({ number, text, isLast = false }: ActionStepProps) {
+export const ActionStep = React.memo(function ActionStep({ number, text, isLast = false }: ActionStepProps) {
+  const c = useColors();
+
   return (
     <View style={[styles.container, isLast && styles.lastChild]}>
-      <View style={styles.circle}>
-        <Text style={styles.number}>{number}</Text>
+      <View style={[styles.circle, { backgroundColor: c.primarySurface }]}>
+        <Text style={[styles.number, { color: c.primary }]}>{number}</Text>
       </View>
-      <Text style={styles.text}>{text}</Text>
+      <Text style={[styles.text, { color: c.textPrimary }]}>{text}</Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -37,7 +39,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.primarySurface,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.space3,
@@ -46,13 +47,11 @@ const styles = StyleSheet.create({
   number: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.primary,
     fontFamily: fonts.body,
   },
   text: {
     flex: 1,
     fontSize: 14,
-    color: colors.textPrimary,
     lineHeight: 20,
     fontFamily: fonts.body,
   },

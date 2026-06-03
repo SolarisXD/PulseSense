@@ -11,7 +11,7 @@ import {
   TextInputProps,
 } from 'react-native';
 import { fonts } from '../../constants/typography';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 
 interface InputProps extends TextInputProps {
@@ -22,7 +22,7 @@ interface InputProps extends TextInputProps {
   containerStyle?: ViewStyle;
 }
 
-export function Input({
+export const Input = React.memo(function Input({
   label,
   error,
   unit,
@@ -32,31 +32,32 @@ export function Input({
   ...props
 }: InputProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const c = useColors();
 
   const borderColor = error
-    ? colors.danger
+    ? c.danger
     : isFocused
-    ? colors.primary
-    : colors.border;
+    ? c.primary
+    : c.border;
 
   return (
     <View style={[styles.container, containerStyle]}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputWrapper, { borderColor }]}>
+      <Text style={[styles.label, { color: c.textSecondary }]}>{label}</Text>
+      <View style={[styles.inputWrapper, { borderColor, backgroundColor: c.surface }]}>
         <TextInput
-          style={[styles.input, style]}
-          placeholderTextColor={colors.textSecondary}
+          style={[styles.input, { color: c.textPrimary }, style]}
+          placeholderTextColor={c.textSecondary}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           {...props}
         />
-        {unit && <Text style={styles.unit}>{unit}</Text>}
+        {unit && <Text style={[styles.unit, { color: c.textSecondary }]}>{unit}</Text>}
         {rightComponent}
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={[styles.error, { color: c.danger }]}>{error}</Text> : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -65,7 +66,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '500',
-    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: spacing.space2,
@@ -77,26 +77,22 @@ const styles = StyleSheet.create({
     height: 48,
     borderWidth: 1.5,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.surface,
     paddingHorizontal: spacing.space3,
   },
   input: {
     flex: 1,
     fontSize: 14,
-    color: colors.textPrimary,
     fontFamily: fonts.body,
     paddingVertical: 0,
     height: '100%',
   },
   unit: {
     fontSize: 12,
-    color: colors.textSecondary,
     fontFamily: fonts.body,
     marginLeft: spacing.space2,
   },
   error: {
     fontSize: 11,
-    color: colors.danger,
     fontFamily: fonts.body,
     marginTop: spacing.space1,
   },

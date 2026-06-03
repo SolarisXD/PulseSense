@@ -56,7 +56,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <Text style={[styles.message, { color: c.textSecondary }]}>
             {this.state.error?.message || 'An unexpected error occurred'}
           </Text>
-          <TouchableOpacity style={[styles.retryButton, { backgroundColor: c.primary }]} onPress={this.handleRetry} activeOpacity={0.7}>
+          <TouchableOpacity style={[styles.retryButton, { backgroundColor: c.primary }]} onPress={this.handleRetry} activeOpacity={0.7} accessibilityLabel="Retry loading the screen">
             <Ionicons name="refresh" size={16} color="#FFFFFF" style={{ marginRight: spacing.space2 }} />
             <Text style={styles.retryText}>Tap to Retry</Text>
           </TouchableOpacity>

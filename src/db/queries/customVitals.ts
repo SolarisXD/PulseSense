@@ -40,6 +40,7 @@ export async function getCustomVitalDefinitions(db: SQLiteDatabase): Promise<Cus
   return rows;
 }
 
+// @unused
 export async function getAllCustomVitalDefinitions(db: SQLiteDatabase): Promise<CustomVitalDefinitionRow[]> {
   const rows = await db.getAllAsync<CustomVitalDefinitionRow>(
     'SELECT * FROM custom_vital_definitions ORDER BY sort_order ASC, name ASC'
@@ -59,6 +60,7 @@ export async function insertCustomVitalDefinition(
   return result.lastInsertRowId;
 }
 
+// @unused
 export async function updateCustomVitalDefinition(
   db: SQLiteDatabase,
   id: number,
@@ -108,6 +110,7 @@ export async function insertCustomVitalLog(
   return result.lastInsertRowId;
 }
 
+// @unused
 export async function getCustomVitalLogs(
   db: SQLiteDatabase,
   definitionId: number,

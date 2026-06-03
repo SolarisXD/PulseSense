@@ -2,36 +2,45 @@ jest.mock('../../db/migrations', () => ({
   runMigrations: jest.fn().mockResolvedValue(undefined),
 }));
 
-import { getDBInstance, getDB, initializeDatabase } from '../../db/database';
-
 describe('database module', () => {
   beforeEach(() => {
-    (getDB as any)._reset?.();
+    jest.resetModules();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('getDBInstance returns null before initialization', () => {
+  it('getDBInstance always returns null (no longer cached)', () => {
+    const { getDBInstance } = require('../../db/database');
     expect(getDBInstance()).toBeNull();
   });
 
   it('getDB opens database and returns instance', async () => {
+    const { getDB } = require('../../db/database');
     const db = await getDB();
     expect(db).toBeDefined();
-    expect(getDBInstance()).toBe(db);
+    expect(typeof db.getAllAsync).toBe('function');
   });
 
-  it('getDB returns same instance on subsequent calls', async () => {
+  it('getDB returns a new object each call', async () => {
+    const { getDB } = require('../../db/database');
     const db1 = await getDB();
     const db2 = await getDB();
-    expect(db1).toBe(db2);
+    expect(db1).not.toBe(db2);
+    expect(db1.getAllAsync).toBeDefined();
+    expect(db2.getAllAsync).toBeDefined();
   });
 
-  it('initializeDatabase runs migrations', async () => {
+  it('initializeDatabase runs migrations once', async () => {
     const { runMigrations } = require('../../db/migrations');
-    const db = await initializeDatabase();
-    expect(runMigrations).toHaveBeenCalledWith(db);
+    const { initializeDatabase } = require('../../db/database');
+    await initializeDatabase();
+    expect(runMigrations).toHaveBeenCalledTimes(1);
+  });
+
+  it('getDB does not re-run migrations after init', async () => {
+    const { runMigrations } = require('../../db/migrations');
+    const { initializeDatabase, getDB } = require('../../db/database');
+    await initializeDatabase();
+    jest.clearAllMocks();
+    await getDB();
+    expect(runMigrations).not.toHaveBeenCalled();
   });
 });

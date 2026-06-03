@@ -55,10 +55,4 @@ export const SEVERITY_ORDER: Record<SeverityLevel, number> = {
   LOG_ONLY: 3,
 };
 
-export interface Rule {
-  id: string;
-  category: string;
-  name: string;
-  evaluate: (input: SymptomInput) => RuleResult | null;
-  isHardOverride: boolean;
-}
+

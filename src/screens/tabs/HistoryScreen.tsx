@@ -31,6 +31,29 @@ import type { VitalLogRow } from '../../db/queries/vitals';
 import type { CustomVitalLogRow } from '../../db/queries/customVitals';
 import { useSettingsStore, FONT_SCALE_MULTIPLIERS } from '../../store/settingsStore';
 
+// Memoized FlatList row component to avoid inline arrow function re-creation per render
+const HistoryTableRow = React.memo(function HistoryTableRow({
+  item,
+  index,
+  onNavigate,
+  getCellData,
+}: {
+  item: any;
+  index: number;
+  onNavigate: (logId: number) => void;
+  getCellData: (log: any) => any;
+}) {
+  return (
+    <TableRow
+      date={formatDisplayDate(item.logged_at_display)}
+      time={formatDisplayTime(item.logged_at_display)}
+      cells={getCellData(item)}
+      isEven={index % 2 === 1}
+      onPress={() => onNavigate(item.id)}
+    />
+  );
+});
+
 const ALL_VITALS = 'all';
 const VITAL_OPTIONS: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: ALL_VITALS, label: 'All Vitals', icon: 'grid-outline' },
@@ -177,7 +200,7 @@ export function HistoryScreen({ navigation }: any) {
     return headers;
   }, [customVitalKeys]);
 
-  const getCellData = (log: any) => {
+  const getCellData = useCallback((log: any) => {
     const lookup = customVitalsLookup[log.id] || {};
     return allColumns.map((col) => {
       if (VITAL_TYPE_KEYS.includes(col as any)) {
@@ -192,7 +215,7 @@ export function HistoryScreen({ navigation }: any) {
       }
       return { value: '-', status: 'unknown' as VitalStatus };
     });
-  };
+  }, [customVitalsLookup, allColumns]);
 
   const searchedLogs = useMemo(() => {
     if (!searchQuery.trim()) return vitalLogs;
@@ -240,6 +263,19 @@ export function HistoryScreen({ navigation }: any) {
     return [...VITAL_OPTIONS, ...customFilterOptions];
   }, [customFilterOptions]);
 
+  const onNavigateToDetail = useCallback((logId: number) => {
+    navigation.navigate('VitalDetail', { logId });
+  }, [navigation]);
+
+  const renderTableRow = useCallback(({ item, index }: { item: any; index: number }) => (
+    <HistoryTableRow
+      item={item}
+      index={index}
+      onNavigate={onNavigateToDetail}
+      getCellData={getCellData}
+    />
+  ), [onNavigateToDetail, getCellData]);
+
   const chartSections = useMemo(() => {
     const logs = vitalLogs;
     type ChartSection = {
@@ -249,7 +285,7 @@ export function HistoryScreen({ navigation }: any) {
       data2?: { value: number; date: string }[];
       color: string; color2?: string;
       label?: string; label2?: string;
-      minValue?: number; maxValue?: number;
+      maxValue?: number;
       noOfSections?: number;
       formatYLabel?: (val: string) => string;
     };
@@ -259,15 +295,15 @@ export function HistoryScreen({ navigation }: any) {
       color: string; color2?: string; label?: string; label2?: string;
       extract1: (log: VitalLogRow) => number | null;
       extract2?: (log: VitalLogRow) => number | null;
-      minValue?: number; maxValue?: number; noOfSections?: number;
+      maxValue?: number; noOfSections?: number;
     }[] = [
-      { key: 'bp', title: 'Blood Pressure', unit: 'mmHg', icon: 'heart-half', color: c.danger, color2: c.primary, label: 'Systolic', label2: 'Diastolic', extract1: (l) => l.bp_sys, extract2: (l) => l.bp_dia, minValue: 40, maxValue: 200, noOfSections: 4 },
-      { key: 'pulse', title: 'Pulse', unit: 'bpm', icon: 'pulse', color: c.primaryLight, extract1: (l) => l.pulse, minValue: 30, maxValue: 180, noOfSections: 5 },
-      { key: 'spo2', title: 'SpO2', unit: '%', icon: 'analytics-outline', color: c.success, extract1: (l) => l.spo2, minValue: 85, maxValue: 100, noOfSections: 3 },
-      { key: 'glucose', title: 'Glucose', unit: 'mg/dL', icon: 'water-outline', color: c.warning, extract1: (l) => l.glucose_value, minValue: 50, maxValue: 300, noOfSections: 5 },
-      { key: 'temp', title: 'Temperature', unit: '°C', icon: 'thermometer-outline', color: c.urgent, extract1: (l) => l.temp_value, minValue: 34, maxValue: 42, noOfSections: 4 },
+      { key: 'bp', title: 'Blood Pressure', unit: 'mmHg', icon: 'heart-half', color: c.danger, color2: c.primary, label: 'Systolic', label2: 'Diastolic', extract1: (l) => l.bp_sys, extract2: (l) => l.bp_dia, maxValue: 200, noOfSections: 4 },
+      { key: 'pulse', title: 'Pulse', unit: 'bpm', icon: 'pulse', color: c.primaryLight, extract1: (l) => l.pulse, maxValue: 180, noOfSections: 5 },
+      { key: 'spo2', title: 'SpO2', unit: '%', icon: 'analytics-outline', color: c.success, extract1: (l) => l.spo2, maxValue: 100, noOfSections: 3 },
+      { key: 'glucose', title: 'Glucose', unit: 'mg/dL', icon: 'water-outline', color: c.warning, extract1: (l) => l.glucose_value, maxValue: 300, noOfSections: 5 },
+      { key: 'temp', title: 'Temperature', unit: '°C', icon: 'thermometer-outline', color: c.urgent, extract1: (l) => l.temp_value, maxValue: 42, noOfSections: 4 },
       { key: 'weight', title: 'Weight', unit: 'kg', icon: 'scale-outline', color: c.primary, extract1: (l) => l.weight_value, noOfSections: 4 },
-      { key: 'pain', title: 'Pain Level', unit: '/10', icon: 'bandage-outline', color: c.danger, extract1: (l) => l.pain_level, minValue: 0, maxValue: 10, noOfSections: 5 },
+      { key: 'pain', title: 'Pain Level', unit: '/10', icon: 'bandage-outline', color: c.danger, extract1: (l) => l.pain_level, maxValue: 10, noOfSections: 5 },
     ];
     for (const config of configs) {
       if (selectedFilter !== ALL_VITALS && selectedFilter !== config.key) continue;
@@ -286,7 +322,7 @@ export function HistoryScreen({ navigation }: any) {
           key: config.key, title: config.title, unit: config.unit, icon: config.icon,
           data: data1, data2: config.extract2 && data2.length > 0 ? data2 : undefined,
           color: config.color, color2: config.color2, label: config.label, label2: config.label2,
-          minValue: config.minValue, maxValue: config.maxValue, noOfSections: config.noOfSections,
+          maxValue: config.maxValue, noOfSections: config.noOfSections,
         });
       }
     }
@@ -313,7 +349,6 @@ export function HistoryScreen({ navigation }: any) {
           icon: 'flask-outline' as const,
           data: pts,
           color: c.primaryLight,
-          minValue: Math.max(0, Math.floor(minData - pad)),
           maxValue: Math.ceil(maxData + pad),
           noOfSections: 4,
         });
@@ -432,15 +467,7 @@ export function HistoryScreen({ navigation }: any) {
           keyExtractor={(item) => String(item.id)}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
           ListHeaderComponent={<TableHeader columns={allColumns.map((k) => allHeaders[k] || k)} />}
-          renderItem={({ item, index }) => (
-            <TableRow
-              date={formatDisplayDate(item.logged_at_display)}
-              time={formatDisplayTime(item.logged_at_display)}
-              cells={getCellData(item)}
-              isEven={index % 2 === 1}
-              onPress={() => navigation.navigate('VitalDetail', { logId: item.id })}
-            />
-          )}
+          renderItem={renderTableRow}
           ListEmptyComponent={
             <View style={sc.empty}>
               <Ionicons name="analytics-outline" size={48} color={c.textDisabled} />
@@ -474,7 +501,6 @@ export function HistoryScreen({ navigation }: any) {
                 color2={s.color2}
                 label={s.label}
                 label2={s.label2}
-                minValue={s.minValue}
                 maxValue={s.maxValue}
                 noOfSections={s.noOfSections}
               />

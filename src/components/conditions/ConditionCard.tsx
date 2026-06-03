@@ -18,7 +18,7 @@ interface ConditionCardProps {
   onArchive?: () => void;
 }
 
-export function ConditionCard({
+export const ConditionCard = React.memo(function ConditionCard({
   name,
   type,
   diagnosedDate,
@@ -40,11 +40,12 @@ export function ConditionCard({
       style={[styles.card, { backgroundColor: c.surface, borderLeftColor: accentColor }]}
       onPress={onPress}
       activeOpacity={0.7}
+      accessibilityLabel="View condition details"
     >
       <View style={styles.header}>
         <Text style={[styles.name, { color: c.textPrimary }]}>{name}</Text>
         {onArchive && (
-          <TouchableOpacity onPress={onArchive} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity onPress={onArchive} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel="Archive condition">
             <Ionicons name="archive-outline" size={18} color={c.textDisabled} />
           </TouchableOpacity>
         )}
@@ -66,7 +67,7 @@ export function ConditionCard({
       {notes && <Text style={[styles.notes, { color: c.textSecondary }]}>{notes}</Text>}
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

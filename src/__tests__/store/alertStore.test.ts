@@ -1,4 +1,5 @@
 import { useAlertStore } from '../../store/alertStore';
+import type { SeverityLevel } from '../../constants/rules';
 
 beforeEach(() => {
   useAlertStore.getState().clear();
@@ -36,7 +37,7 @@ describe('alertStore', () => {
   });
 
   it('setLastEmergencyResult stores result', () => {
-    const mockResult = [{ severity: 'EMERGENCY_NOW', ruleId: 'TEST', category: 'test', message: 'Test', triggeredBy: [], actionSteps: [], isHardOverride: false, evidenceNote: '' }];
+    const mockResult = [{ severity: 'EMERGENCY_NOW' as SeverityLevel, ruleId: 'TEST', category: 'test', message: 'Test', triggeredBy: [], actionSteps: [], isHardOverride: false, evidenceNote: '' }];
     useAlertStore.getState().setLastEmergencyResult(mockResult);
     expect(useAlertStore.getState().lastEmergencyResult).toEqual(mockResult);
   });

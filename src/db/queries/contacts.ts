@@ -29,6 +29,7 @@ export async function getContacts(db: SQLiteDatabase): Promise<EmergencyContactR
   return rows;
 }
 
+// @unused
 export async function getPrimaryContact(db: SQLiteDatabase): Promise<EmergencyContactRow | null> {
   const row = await db.getFirstAsync<EmergencyContactRow>(
     'SELECT * FROM emergency_contacts WHERE is_primary = 1 LIMIT 1'
@@ -52,6 +53,7 @@ export async function insertContact(db: SQLiteDatabase, data: EmergencyContactIn
   return result.lastInsertRowId;
 }
 
+// @unused
 export async function updateContact(db: SQLiteDatabase, id: number, data: EmergencyContactInput): Promise<void> {
   await db.runAsync(
     `UPDATE emergency_contacts SET name = ?, relationship = ?, phone = ?, contact_type = ?, is_primary = ?, sort_order = ?
@@ -64,6 +66,7 @@ export async function deleteContact(db: SQLiteDatabase, id: number): Promise<voi
   await db.runAsync('DELETE FROM emergency_contacts WHERE id = ?', [id]);
 }
 
+// @unused
 export async function setPrimaryContact(db: SQLiteDatabase, id: number): Promise<void> {
   await db.execAsync('BEGIN');
   try {

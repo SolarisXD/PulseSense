@@ -22,7 +22,7 @@ const shadows: Record<number, ViewStyle> = {
   3: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 16, elevation: 6 },
 };
 
-export function Card({ children, style, onPress, accentColor, shadowLevel = 1, index = 0 }: CardProps) {
+export const Card = React.memo(function Card({ children, style, onPress, accentColor, shadowLevel = 1, index = 0 }: CardProps) {
   const c = useColors();
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(20);
@@ -52,11 +52,11 @@ export function Card({ children, style, onPress, accentColor, shadowLevel = 1, i
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7} accessibilityLabel="View details">
         {cardContent}
       </TouchableOpacity>
     );
   }
 
   return cardContent;
-}
+});

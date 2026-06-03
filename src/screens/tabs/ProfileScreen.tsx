@@ -20,8 +20,6 @@ import { deleteContact } from '../../db/queries/contacts';
 import { deleteMedication } from '../../db/queries/medications';
 import { AnimatedSection } from '../../components/ui/AnimatedSection';
 import { ConditionCard } from '../../components/conditions/ConditionCard';
-import { DosageDisplay } from '../../components/medications/DosageDisplay';
-import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 

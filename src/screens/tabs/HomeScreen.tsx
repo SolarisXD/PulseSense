@@ -45,10 +45,10 @@ import { useSettingsStore, FONT_SCALE_MULTIPLIERS } from '../../store/settingsSt
 
 const { width } = Dimensions.get('window');
 
-const quickActions = [
-  { icon: 'pulse-outline' as const, label: 'Log Vital', color: null as any, nav: 'VitalsTab' },
-  { icon: 'medkit-outline' as const, label: 'Emergency', color: null as any, nav: 'EmergencyCheck' },
-  { icon: 'bar-chart-outline' as const, label: 'History', color: null as any, nav: 'HistoryTab' },
+const quickActionDefs = [
+  { icon: 'pulse-outline' as const, label: 'Log Vital', colorKey: 'primary' as const, nav: 'VitalsTab' },
+  { icon: 'medkit-outline' as const, label: 'Emergency', colorKey: 'danger' as const, nav: 'EmergencyCheck' },
+  { icon: 'bar-chart-outline' as const, label: 'History', colorKey: 'primaryLight' as const, nav: 'HistoryTab' },
 ];
 
 const vitalCardConfigs: Array<{
@@ -173,10 +173,6 @@ export function HomeScreen({ navigation }: any) {
 
   const vitalCards = useMemo(() => {
     const cards: Array<{ key: string; component: React.ReactNode }> = [];
-    const actionColor = { primary: c.primary, danger: c.danger, primaryLight: c.primaryLight };
-    quickActions[0].color = actionColor.primary;
-    quickActions[1].color = actionColor.danger;
-    quickActions[2].color = actionColor.primaryLight;
     vitalCardConfigs.forEach((config) => {
       const data = latestVitals[config.dataKey];
       if (!data) return;
@@ -276,7 +272,7 @@ export function HomeScreen({ navigation }: any) {
               activeOpacity={0.8}
             >
               <View style={[sc.bannerIcon, { backgroundColor: bannerStatus.color + '25' }]}>
-                <Ionicons name={bannerStatus.icon} size={22} color={bannerStatus.color} />
+                <Ionicons name={bannerStatus.icon as keyof typeof Ionicons.glyphMap} size={22} color={bannerStatus.color} />
               </View>
               <View style={sc.bannerContent}>
                 <Text style={[sc.bannerTitle, { color: bannerStatus.color }]}>{bannerStatus.title}</Text>
@@ -289,19 +285,22 @@ export function HomeScreen({ navigation }: any) {
 
         <AnimatedSection index={2}>
           <View style={sc.quickActionsRow}>
-            {quickActions.map((action) => (
-              <TouchableOpacity
-                key={action.label}
-                style={[sc.quickActionCard, { backgroundColor: c.surface }]}
-                onPress={() => navigation.navigate(action.nav)}
-                activeOpacity={0.7}
-              >
-                <View style={[sc.quickActionIcon, { backgroundColor: action.color + '18' }]}>
-                  <Ionicons name={action.icon} size={20} color={action.color} />
-                </View>
-                <Text style={[sc.quickActionLabel, { color: c.textSecondary }]}>{action.label}</Text>
-              </TouchableOpacity>
-            ))}
+            {quickActionDefs.map((action) => {
+              const actionColor = c[action.colorKey];
+              return (
+                <TouchableOpacity
+                  key={action.label}
+                  style={[sc.quickActionCard, { backgroundColor: c.surface }]}
+                  onPress={() => navigation.navigate(action.nav)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[sc.quickActionIcon, { backgroundColor: actionColor + '18' }]}>
+                    <Ionicons name={action.icon} size={20} color={actionColor} />
+                  </View>
+                  <Text style={[sc.quickActionLabel, { color: c.textSecondary }]}>{action.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </AnimatedSection>
 

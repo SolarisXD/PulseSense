@@ -2,6 +2,14 @@ import { calculateAge, formatTodayDisplay, isoToDisplay } from '../utils/dateUti
 import { formatDosage } from '../utils/dosageFormatter';
 import { formatVitalHtmlCell, VITAL_HEADERS } from '../utils/vitalFormatters';
 
+interface PdfProfile {
+  full_name: string;
+  dob: string;
+  blood_group: string | null;
+  sex: string | null;
+  photo_uri?: string | null;
+}
+
 function escapeHtml(s: string | null | undefined): string {
   if (s == null) return '';
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');

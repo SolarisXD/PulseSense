@@ -15,8 +15,8 @@ describe('schema', () => {
     }
   });
 
-  it('has 7 CREATE INDEX statements', () => {
-    expect(CREATE_INDEXES).toHaveLength(7);
+  it('has 17 CREATE INDEX statements', () => {
+    expect(CREATE_INDEXES).toHaveLength(17);
   });
 
   describe('individual tables', () => {

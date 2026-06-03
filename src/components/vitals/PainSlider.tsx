@@ -1,7 +1,7 @@
 // PulseSense — Pain Slider Component (0-10)
 // Color changes live: green (0-3) → amber (4-6) → red (7-10)
 
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { fonts } from '../../constants/typography';
@@ -47,7 +47,7 @@ function getPainColor(level: number, c: ReturnType<typeof useColors>): string {
   return c.danger;
 }
 
-export function PainSlider({ value, onChange }: PainSliderProps) {
+export const PainSlider = React.memo(function PainSlider({ value, onChange }: PainSliderProps) {
   const c = useColors();
   const color = getPainColor(value, c);
 
@@ -78,7 +78,7 @@ export function PainSlider({ value, onChange }: PainSliderProps) {
       <Text style={[styles.description, { color: c.textSecondary }]}>{painDescriptions[value]}</Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

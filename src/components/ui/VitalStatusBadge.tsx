@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { fonts } from '../../constants/typography';
-import { colors } from '../../constants/colors';
+import { useColors } from '../../hooks/useColors';
 import { spacing, borderRadius } from '../../constants/spacing';
 import type { VitalStatus } from '../../utils/vitalStatus';
 
@@ -13,14 +13,16 @@ interface VitalStatusBadgeProps {
   size?: 'small' | 'medium';
 }
 
-const statusConfig: Record<VitalStatus, { dotColor: string; bg: string; textColor: string; label: string }> = {
-  normal: { dotColor: colors.success, bg: colors.successSurface, textColor: '#065F46', label: 'Normal' },
-  warning: { dotColor: colors.warning, bg: colors.warningSurface, textColor: '#92400E', label: 'Borderline' },
-  danger: { dotColor: colors.danger, bg: colors.dangerSurface, textColor: '#991B1B', label: 'High/Low' },
-  unknown: { dotColor: colors.textDisabled, bg: colors.surfaceAlt, textColor: colors.textSecondary, label: 'Unknown' },
-};
+export const VitalStatusBadge = React.memo(function VitalStatusBadge({ status, size = 'medium' }: VitalStatusBadgeProps) {
+  const c = useColors();
 
-export function VitalStatusBadge({ status, size = 'medium' }: VitalStatusBadgeProps) {
+  const statusConfig: Record<VitalStatus, { dotColor: string; bg: string; textColor: string; label: string }> = {
+    normal: { dotColor: c.success, bg: c.successSurface, textColor: '#065F46', label: 'Normal' },
+    warning: { dotColor: c.warning, bg: c.warningSurface, textColor: '#92400E', label: 'Borderline' },
+    danger: { dotColor: c.danger, bg: c.dangerSurface, textColor: '#991B1B', label: 'High/Low' },
+    unknown: { dotColor: c.textDisabled, bg: c.surfaceAlt, textColor: c.textSecondary, label: 'Unknown' },
+  };
+
   const config = statusConfig[status] || statusConfig.unknown;
 
   return (
@@ -31,7 +33,7 @@ export function VitalStatusBadge({ status, size = 'medium' }: VitalStatusBadgePr
       </Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   badge: {

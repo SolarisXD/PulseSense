@@ -60,6 +60,7 @@ export function ExportScreen({ route }: any) {
       };
       await previewPdf(opts);
     } catch (err) {
+      console.error('Preview generation failed', err);
       Alert.alert('Error', 'Failed to generate preview. Please try again.');
     } finally {
       setGenerating(false);
@@ -79,6 +80,7 @@ export function ExportScreen({ route }: any) {
       const uri = exportFormat === 'csv' ? await generateCsv(opts) : await generateExport(opts);
       setResultUri(uri);
     } catch (err) {
+      console.error('Generate failed', err);
       Alert.alert('Error', `Failed to generate ${exportFormat.toUpperCase()}. Please try again.`);
     }
 
@@ -94,6 +96,7 @@ export function ExportScreen({ route }: any) {
         await sharePdf(resultUri);
       }
     } catch (err) {
+      console.error('Share failed', err);
       Alert.alert('Error', `Failed to share ${exportFormat.toUpperCase()}.`);
     }
   };

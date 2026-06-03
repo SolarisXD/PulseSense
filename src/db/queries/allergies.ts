@@ -35,6 +35,7 @@ export async function insertAllergy(db: SQLiteDatabase, data: AllergyInput): Pro
   return result.lastInsertRowId;
 }
 
+// @unused
 export async function updateAllergy(db: SQLiteDatabase, id: number, data: AllergyInput): Promise<void> {
   await db.runAsync(
     `UPDATE allergies SET name = ?, category = ?, reaction = ?, severity = ? WHERE id = ?`,
