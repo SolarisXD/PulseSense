@@ -70,28 +70,18 @@ const UNIT_OPTIONS: Record<string, { key: string; label: string; options: { valu
 };
 
 export function SettingsScreen({ navigation }: any) {
-  const tempUnit = useSettingsStore((s) => s.tempUnit);
-  const weightUnit = useSettingsStore((s) => s.weightUnit);
-  const glucoseUnit = useSettingsStore((s) => s.glucoseUnit);
-  const heightUnit = useSettingsStore((s) => s.heightUnit);
-  const bpDefaultPosition = useSettingsStore((s) => s.bpDefaultPosition);
+  const units = useSettingsStore((s) => ({
+    tempUnit: s.tempUnit, weightUnit: s.weightUnit, glucoseUnit: s.glucoseUnit,
+    heightUnit: s.heightUnit, bpDefaultPosition: s.bpDefaultPosition,
+  }));
+  const { tempUnit, weightUnit, glucoseUnit, heightUnit, bpDefaultPosition } = units;
   const emergencyNumber = useSettingsStore((s) => s.emergencyNumber);
-  const medicationReminders = useSettingsStore((s) => s.medicationReminders);
-  const reminderMorningTime = useSettingsStore((s) => s.reminderMorningTime);
-  const reminderAfternoonTime = useSettingsStore((s) => s.reminderAfternoonTime);
-  const reminderNightTime = useSettingsStore((s) => s.reminderNightTime);
-  const setTempUnit = useSettingsStore((s) => s.setTempUnit);
-  const setWeightUnit = useSettingsStore((s) => s.setWeightUnit);
-  const setGlucoseUnit = useSettingsStore((s) => s.setGlucoseUnit);
-  const setHeightUnit = useSettingsStore((s) => s.setHeightUnit);
-  const setBpDefaultPosition = useSettingsStore((s) => s.setBpDefaultPosition);
+  const reminders = useSettingsStore((s) => ({
+    medicationReminders: s.medicationReminders, reminderMorningTime: s.reminderMorningTime,
+    reminderAfternoonTime: s.reminderAfternoonTime, reminderNightTime: s.reminderNightTime,
+  }));
+  const { medicationReminders, reminderMorningTime, reminderAfternoonTime, reminderNightTime } = reminders;
   const fontScale = useSettingsStore((s) => s.fontScale);
-  const setFontScale = useSettingsStore((s) => s.setFontScale);
-  const setEmergencyNumber = useSettingsStore((s) => s.setEmergencyNumber);
-  const setMedicationReminders = useSettingsStore((s) => s.setMedicationReminders);
-  const setReminderMorningTime = useSettingsStore((s) => s.setReminderMorningTime);
-  const setReminderAfternoonTime = useSettingsStore((s) => s.setReminderAfternoonTime);
-  const setReminderNightTime = useSettingsStore((s) => s.setReminderNightTime);
   const isDark = useThemeStore((s) => s.isDark);
   const setDark = useThemeStore((s) => s.setDark);
   const [backingUp, setBackingUp] = useState(false);
@@ -120,14 +110,13 @@ export function SettingsScreen({ navigation }: any) {
     try {
       const db = await getDB();
       await setSetting(db, dbKey, value);
-      const setters: Record<string, (val: any) => void> = {
-        tempUnit: useSettingsStore.getState().setTempUnit,
-        weightUnit: useSettingsStore.getState().setWeightUnit,
-        glucoseUnit: useSettingsStore.getState().setGlucoseUnit,
-        heightUnit: useSettingsStore.getState().setHeightUnit,
-        bpDefaultPosition: useSettingsStore.getState().setBpDefaultPosition,
+      const s = useSettingsStore.getState();
+      const setterMap: Record<string, (val: any) => void> = {
+        tempUnit: s.setTempUnit, weightUnit: s.setWeightUnit,
+        glucoseUnit: s.setGlucoseUnit, heightUnit: s.setHeightUnit,
+        bpDefaultPosition: s.setBpDefaultPosition,
       };
-      setters[storeKey]?.(value);
+      setterMap[storeKey]?.(value);
     } catch (err) {
       console.error(err);
       Alert.alert('Error', 'Failed to save setting.');
@@ -272,7 +261,7 @@ export function SettingsScreen({ navigation }: any) {
                 fontScale === size && { borderColor: activeColors.primary, backgroundColor: activeColors.primarySurface },
               ]}
               onPress={async () => {
-                setFontScale(size);
+                useSettingsStore.getState().setFontScale(size);
                 try {
                   const db = await getDB();
                   await setSetting(db, 'font_scale', size);
@@ -341,7 +330,7 @@ export function SettingsScreen({ navigation }: any) {
           try {
             const db = await getDB();
             await setSetting(db, 'medication_reminders', next ? 'true' : 'false');
-            setMedicationReminders(next);
+            useSettingsStore.getState().setMedicationReminders(next);
 
             if (next) {
               // Request permissions and schedule all active reminders
@@ -388,15 +377,15 @@ export function SettingsScreen({ navigation }: any) {
               value={reminderMorningTime}
               onChangeText={(t) => {
                 if (/^\d{0,2}:\d{0,2}$/.test(t) || t === '') {
-                  setReminderMorningTime(t);
+                  useSettingsStore.getState().setReminderMorningTime(t);
                 }
               }}
               onBlur={async () => {
-                const cleaned = reminderMorningTime.padEnd(5, '0').replace(/(\d{2}):(\d{2}).*/, '$1:$2');
-                const valid = /^([01]\d|2[0-3]):[0-5]\d$/.test(cleaned) ? cleaned : '08:00';
-                setReminderMorningTime(valid);
-                await saveReminderTimes();
                 const state = useSettingsStore.getState();
+                const cleaned = state.reminderMorningTime.padEnd(5, '0').replace(/(\d{2}):(\d{2}).*/, '$1:$2');
+                const valid = /^([01]\d|2[0-3]):[0-5]\d$/.test(cleaned) ? cleaned : '08:00';
+                state.setReminderMorningTime(valid);
+                await saveReminderTimes();
                 if (state.medicationReminders) {
                   await rescheduleAllMedicationReminders(valid, state.reminderAfternoonTime, state.reminderNightTime);
                 }
@@ -415,15 +404,15 @@ export function SettingsScreen({ navigation }: any) {
               value={reminderAfternoonTime}
               onChangeText={(t) => {
                 if (/^\d{0,2}:\d{0,2}$/.test(t) || t === '') {
-                  setReminderAfternoonTime(t);
+                  useSettingsStore.getState().setReminderAfternoonTime(t);
                 }
               }}
               onBlur={async () => {
-                const cleaned = reminderAfternoonTime.padEnd(5, '0').replace(/(\d{2}):(\d{2}).*/, '$1:$2');
-                const valid = /^([01]\d|2[0-3]):[0-5]\d$/.test(cleaned) ? cleaned : '14:00';
-                setReminderAfternoonTime(valid);
-                await saveReminderTimes();
                 const state = useSettingsStore.getState();
+                const cleaned = state.reminderAfternoonTime.padEnd(5, '0').replace(/(\d{2}):(\d{2}).*/, '$1:$2');
+                const valid = /^([01]\d|2[0-3]):[0-5]\d$/.test(cleaned) ? cleaned : '14:00';
+                state.setReminderAfternoonTime(valid);
+                await saveReminderTimes();
                 if (state.medicationReminders) {
                   await rescheduleAllMedicationReminders(state.reminderMorningTime, valid, state.reminderNightTime);
                 }
@@ -442,15 +431,15 @@ export function SettingsScreen({ navigation }: any) {
               value={reminderNightTime}
               onChangeText={(t) => {
                 if (/^\d{0,2}:\d{0,2}$/.test(t) || t === '') {
-                  setReminderNightTime(t);
+                  useSettingsStore.getState().setReminderNightTime(t);
                 }
               }}
               onBlur={async () => {
-                const cleaned = reminderNightTime.padEnd(5, '0').replace(/(\d{2}):(\d{2}).*/, '$1:$2');
-                const valid = /^([01]\d|2[0-3]):[0-5]\d$/.test(cleaned) ? cleaned : '21:00';
-                setReminderNightTime(valid);
-                await saveReminderTimes();
                 const state = useSettingsStore.getState();
+                const cleaned = state.reminderNightTime.padEnd(5, '0').replace(/(\d{2}):(\d{2}).*/, '$1:$2');
+                const valid = /^([01]\d|2[0-3]):[0-5]\d$/.test(cleaned) ? cleaned : '21:00';
+                state.setReminderNightTime(valid);
+                await saveReminderTimes();
                 if (state.medicationReminders) {
                   await rescheduleAllMedicationReminders(state.reminderMorningTime, state.reminderAfternoonTime, valid);
                 }
@@ -662,7 +651,7 @@ export function SettingsScreen({ navigation }: any) {
                     try {
                       const db = await getDB();
                       await setSetting(db, 'emergency_number', emergencyEditValue.trim());
-                      setEmergencyNumber(emergencyEditValue.trim());
+                      useSettingsStore.getState().setEmergencyNumber(emergencyEditValue.trim());
                     } catch (err) {
                       console.error(err);
                       Alert.alert('Error', 'Failed to save emergency number.');

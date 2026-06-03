@@ -23,7 +23,7 @@ interface TableRowProps {
   onPress?: () => void;
 }
 
-export function TableRow({ date, time, cells, isEven, onPress }: TableRowProps) {
+export const TableRow = React.memo(function TableRow({ date, time, cells, isEven, onPress }: TableRowProps) {
   const c = useColors();
 
   const content = (
@@ -51,7 +51,7 @@ export function TableRow({ date, time, cells, isEven, onPress }: TableRowProps) 
   }
 
   return content;
-}
+});
 
 const styles = StyleSheet.create({
   row: {

@@ -134,7 +134,7 @@ export const CREATE_TABLES = [
   // 10. custom_vital_logs
   `CREATE TABLE IF NOT EXISTS custom_vital_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    vital_definition_id INTEGER NOT NULL REFERENCES custom_vital_definitions(id),
+    vital_definition_id INTEGER NOT NULL REFERENCES custom_vital_definitions(id) ON DELETE CASCADE,
     vital_log_id INTEGER REFERENCES vital_logs(id) ON DELETE CASCADE,
     logged_at_display TEXT,
     logged_at_iso TEXT,
@@ -176,7 +176,7 @@ export const CREATE_TABLES = [
   // 12. rule_triggers
   `CREATE TABLE IF NOT EXISTS rule_triggers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    symptom_event_id INTEGER NOT NULL REFERENCES symptom_events(id),
+    symptom_event_id INTEGER NOT NULL REFERENCES symptom_events(id) ON DELETE CASCADE,
     rule_id TEXT NOT NULL,
     rule_category TEXT NOT NULL,
     severity_level TEXT NOT NULL,
@@ -195,8 +195,8 @@ export const CREATE_TABLES = [
     title TEXT NOT NULL,
     message TEXT NOT NULL,
     vitals_snapshot TEXT,
-    symptom_event_id INTEGER REFERENCES symptom_events(id),
-    vital_log_id INTEGER REFERENCES vital_logs(id),
+    symptom_event_id INTEGER REFERENCES symptom_events(id) ON DELETE CASCADE,
+    vital_log_id INTEGER REFERENCES vital_logs(id) ON DELETE CASCADE,
     is_resolved INTEGER DEFAULT 0,
     resolved_at TEXT,
     created_at TEXT DEFAULT (datetime('now'))
@@ -206,10 +206,20 @@ export const CREATE_TABLES = [
 // Indexes for performance
 export const CREATE_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_vital_logs_date ON vital_logs(logged_at_iso DESC);`,
+  `CREATE INDEX IF NOT EXISTS idx_vital_logs_active_date ON vital_logs(is_deleted, logged_at_iso DESC);`,
   `CREATE INDEX IF NOT EXISTS idx_custom_vital_logs_date ON custom_vital_logs(logged_at_iso DESC);`,
   `CREATE INDEX IF NOT EXISTS idx_custom_vital_logs_def ON custom_vital_logs(vital_definition_id);`,
   `CREATE INDEX IF NOT EXISTS idx_vital_logs_not_deleted ON vital_logs(is_deleted);`,
   `CREATE INDEX IF NOT EXISTS idx_alerts_created ON alerts(created_at DESC);`,
+  `CREATE INDEX IF NOT EXISTS idx_alerts_resolved ON alerts(is_resolved);`,
+  `CREATE INDEX IF NOT EXISTS idx_alerts_symptom_event ON alerts(symptom_event_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_alerts_vital_log ON alerts(vital_log_id);`,
   `CREATE INDEX IF NOT EXISTS idx_rule_triggers_event ON rule_triggers(symptom_event_id);`,
   `CREATE INDEX IF NOT EXISTS idx_medication_items_parent ON medication_items(medication_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_medications_active ON medications(is_active);`,
+  `CREATE INDEX IF NOT EXISTS idx_conditions_active ON conditions(is_active);`,
+  `CREATE INDEX IF NOT EXISTS idx_allergies_active ON allergies(is_active);`,
+  `CREATE INDEX IF NOT EXISTS idx_custom_vitals_active ON custom_vital_definitions(is_active);`,
+  `CREATE INDEX IF NOT EXISTS idx_custom_vital_logs_vital_log ON custom_vital_logs(vital_log_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_symptom_events_occurred ON symptom_events(occurred_at DESC);`,
 ];

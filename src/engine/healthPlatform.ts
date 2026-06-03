@@ -36,6 +36,7 @@ function createAdapter(): IHealthAdapter | null {
 
 function createIOSAdapter(): IHealthAdapter {
   let initialized = false;
+  let initPromise: Promise<void> | null = null;
   const AppleHealthKit = require('react-native-health').default;
 
   const perms = AppleHealthKit.Constants.Permissions;
@@ -43,7 +44,8 @@ function createIOSAdapter(): IHealthAdapter {
 
   function init(): Promise<void> {
     if (initialized) return Promise.resolve();
-    return new Promise((resolve, reject) => {
+    if (initPromise) return initPromise;
+    return initPromise = new Promise((resolve, reject) => {
       AppleHealthKit.initHealthKit(
         {
           permissions: {
@@ -231,15 +233,20 @@ function createIOSAdapter(): IHealthAdapter {
 
 function createAndroidAdapter(): IHealthAdapter {
   let initialized = false;
+  let initPromise: Promise<void> | null = null;
 
   const HC = require('react-native-health-connect');
 
   async function ensureInit(): Promise<void> {
     if (initialized) return;
-    const status = await HC.getSdkStatus();
-    if (status !== 3) throw new Error('Health Connect not available');
-    await HC.initialize();
-    initialized = true;
+    if (initPromise) return initPromise;
+    initPromise = (async () => {
+      const status = await HC.getSdkStatus();
+      if (status !== 3) throw new Error('Health Connect not available');
+      await HC.initialize();
+      initialized = true;
+    })();
+    return initPromise;
   }
 
   return {

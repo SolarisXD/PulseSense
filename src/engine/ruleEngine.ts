@@ -276,7 +276,9 @@ export function evaluateSymptoms(input: SymptomInput): RuleResult[] {
   return results.sort((a, b) => {
     if (a.isHardOverride && !b.isHardOverride) return -1;
     if (!a.isHardOverride && b.isHardOverride) return 1;
-    return SEVERITY_ORDER[a.severity as SeverityLevel] - SEVERITY_ORDER[b.severity as SeverityLevel];
+    const sa = SEVERITY_ORDER[a.severity as SeverityLevel] ?? 999;
+    const sb = SEVERITY_ORDER[b.severity as SeverityLevel] ?? 999;
+    return sa - sb;
   });
 }
 

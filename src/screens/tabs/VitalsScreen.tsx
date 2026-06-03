@@ -40,6 +40,16 @@ import { tryParseNumber, tryParseInt, hasInvalidNumber } from '../../utils/vital
 import { nowDisplay, isFutureDate, displayToIso } from '../../utils/dateUtils';
 import { useSettingsStore, FONT_SCALE_MULTIPLIERS } from '../../store/settingsStore';
 
+const vitalOptionsConfig: Array<{ key: string; label: string; iconName: keyof typeof Ionicons.glyphMap }> = [
+  { key: 'bp', label: 'Blood Pressure', iconName: 'heart-half' },
+  { key: 'pulse', label: 'Pulse', iconName: 'pulse' },
+  { key: 'spo2', label: 'SpO2', iconName: 'analytics-outline' },
+  { key: 'glucose', label: 'Glucose', iconName: 'water-outline' },
+  { key: 'temp', label: 'Temperature', iconName: 'thermometer-outline' },
+  { key: 'weight', label: 'Weight', iconName: 'scale-outline' },
+  { key: 'pain', label: 'Pain Level', iconName: 'bandage-outline' },
+];
+
 export function VitalsScreen({ navigation }: any) {
   const c = useColors();
   const isDark = useThemeStore((s) => s.isDark);
@@ -47,6 +57,8 @@ export function VitalsScreen({ navigation }: any) {
   const fontScale = useSettingsStore((s) => s.fontScale);
   const fs = FONT_SCALE_MULTIPLIERS[fontScale];
   const sc = useMemo(() => createStyles(fs), [fs]);
+  const isSavingRef = useRef(false);
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [showSelector, setShowSelector] = useState(true);
   const [selectedVitals, setSelectedVitals] = useState<string[]>([]);
   const [dateTime, setDateTime] = useState(nowDisplay());
@@ -80,6 +92,12 @@ export function VitalsScreen({ navigation }: any) {
     pageOpacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.ease) });
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
+
   const pageStyle = useAnimatedStyle(() => ({ opacity: pageOpacity.value }));
 
   useFocusEffect(
@@ -101,15 +119,10 @@ export function VitalsScreen({ navigation }: any) {
     }
   };
 
-  const vitalOptions: Array<{ key: string; label: string; iconName: keyof typeof Ionicons.glyphMap; selected: boolean }> = [
-    { key: 'bp', label: 'Blood Pressure', iconName: 'heart-half', selected: selectedVitals.includes('bp') },
-    { key: 'pulse', label: 'Pulse', iconName: 'pulse', selected: selectedVitals.includes('pulse') },
-    { key: 'spo2', label: 'SpO2', iconName: 'analytics-outline', selected: selectedVitals.includes('spo2') },
-    { key: 'glucose', label: 'Glucose', iconName: 'water-outline', selected: selectedVitals.includes('glucose') },
-    { key: 'temp', label: 'Temperature', iconName: 'thermometer-outline', selected: selectedVitals.includes('temp') },
-    { key: 'weight', label: 'Weight', iconName: 'scale-outline', selected: selectedVitals.includes('weight') },
-    { key: 'pain', label: 'Pain Level', iconName: 'bandage-outline', selected: selectedVitals.includes('pain') },
-  ];
+  const vitalOptions = useMemo(() =>
+    vitalOptionsConfig.map((v) => ({ ...v, selected: selectedVitals.includes(v.key) })),
+    [selectedVitals]
+  );
 
   const toggleVital = (key: string) => {
     setSelectedVitals((prev) =>
@@ -118,6 +131,7 @@ export function VitalsScreen({ navigation }: any) {
   };
 
   const handleSave = async () => {
+    if (isSavingRef.current) return;
     if (selectedVitals.length === 0) {
       Alert.alert('Select Vitals', 'Please select at least one vital to log.');
       return;
@@ -128,6 +142,7 @@ export function VitalsScreen({ navigation }: any) {
       return;
     }
 
+    isSavingRef.current = true;
     setSaving(true);
     try {
       const parsedBpSys = tryParseInt(bpSys);
@@ -206,7 +221,7 @@ export function VitalsScreen({ navigation }: any) {
 
       setSaving(false);
       setSaved(true);
-      setTimeout(() => {
+      saveTimerRef.current = setTimeout(() => {
         setSaved(false);
         resetForm();
       }, 2000);
@@ -214,6 +229,8 @@ export function VitalsScreen({ navigation }: any) {
       console.error(err);
       Alert.alert('Error', 'Failed to save vitals. Please try again.');
       setSaving(false);
+    } finally {
+      isSavingRef.current = false;
     }
   };
 

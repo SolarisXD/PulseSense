@@ -24,7 +24,7 @@ export const useAlertStore = create<AlertState>((set) => ({
 
   setActiveAlerts: (activeAlerts) => set({ activeAlerts }),
   addAlert: (alert) =>
-    set((state) => ({ activeAlerts: [alert, ...state.activeAlerts] })),
+    set((state) => ({ activeAlerts: [alert, ...state.activeAlerts].slice(0, 100) })),
   removeAlert: (id) =>
     set((state) => ({
       activeAlerts: state.activeAlerts.filter((a) => a.id !== id),

@@ -57,6 +57,9 @@ export async function backupDatabase(): Promise<string> {
   };
 
   const json = JSON.stringify(backup, null, 2);
+  if (json.length > 50 * 1024 * 1024) {
+    throw new Error('Backup too large (exceeds 50MB limit)');
+  }
   const fileName = `PulseSense_Backup_${formatTimestamp()}.json`;
   const file = new File(Paths.cache, fileName);
   file.write(json);
@@ -97,7 +100,8 @@ export async function restoreDatabase(): Promise<{ success: boolean; message: st
   let backup: BackupData;
   try {
     backup = JSON.parse(content);
-  } catch {
+  } catch (err) {
+    console.warn('backupService: restore invalid JSON', err);
     return { success: false, message: 'Invalid backup file: not valid JSON' };
   }
 
@@ -119,6 +123,9 @@ export async function restoreDatabase(): Promise<{ success: boolean; message: st
     await db.execAsync('BEGIN TRANSACTION');
 
     try {
+      // Disable FK checks during restore to avoid constraint errors
+      await db.execAsync('PRAGMA foreign_keys = OFF');
+
       // Clear all tables in reverse dependency order
       const clearOrder = [...ALL_TABLES].reverse();
       for (const tableName of clearOrder) {
@@ -153,8 +160,10 @@ export async function restoreDatabase(): Promise<{ success: boolean; message: st
         }
       }
 
+      await db.execAsync('PRAGMA foreign_keys = ON');
       await db.execAsync('COMMIT');
     } catch (err) {
+      await db.execAsync('PRAGMA foreign_keys = ON');
       await db.execAsync('ROLLBACK');
       throw err;
     }

@@ -2,6 +2,11 @@ import { calculateAge, formatTodayDisplay, isoToDisplay } from '../utils/dateUti
 import { formatDosage } from '../utils/dosageFormatter';
 import { formatVitalHtmlCell, VITAL_HEADERS } from '../utils/vitalFormatters';
 
+function escapeHtml(s: string | null | undefined): string {
+  if (s == null) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
 const BASE_STYLES = `
   body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #1C2B3A; margin: 20px; }
   .report-header { background: #1A5F7A; color: white; border-radius: 4px; margin-bottom: 16px; padding: 14px 18px; width: 100%; }
@@ -28,7 +33,7 @@ const BASE_STYLES = `
 
 function photoCellHtml(photoUri?: string | null): string {
   if (photoUri) {
-    return `<td class="header-photo-cell" rowspan="2"><img src="${photoUri}" alt="Profile" class="header-photo" /></td>`;
+    return `<td class="header-photo-cell" rowspan="2"><img src="${escapeHtml(photoUri)}" alt="Profile" class="header-photo" /></td>`;
   }
   return `<td class="header-photo-cell" rowspan="2"><div class="header-photo-placeholder">&#9787;</div></td>`;
 }
@@ -38,12 +43,12 @@ function headerHtml(name: string, dob: string, bloodGroup: string | null, sex: s
     <div class="report-header">
       <table style="width:100%; border: none; margin: 0;"><tr>
         <td style="padding:0; border:none; vertical-align:top;">
-          <h1>Medical Record — ${name}</h1>
+          <h1>Medical Record — ${escapeHtml(name)}</h1>
           <table class="header-info" style="border:none; margin:0;"><tr>
-            <td style="padding:2px 16px 2px 0; border:none;"><span class="label">DOB:</span> ${dob}</td>
+            <td style="padding:2px 16px 2px 0; border:none;"><span class="label">DOB:</span> ${escapeHtml(dob)}</td>
             <td style="padding:2px 16px 2px 0; border:none;"><span class="label">Age:</span> ${calculateAge(dob)}</td>
-            <td style="padding:2px 16px 2px 0; border:none;"><span class="label">Blood:</span> ${bloodGroup || 'Unknown'}</td>
-            <td style="padding:2px 16px 2px 0; border:none;"><span class="label">Sex:</span> ${sex || 'Not specified'}</td>
+            <td style="padding:2px 16px 2px 0; border:none;"><span class="label">Blood:</span> ${escapeHtml(bloodGroup) || 'Unknown'}</td>
+            <td style="padding:2px 16px 2px 0; border:none;"><span class="label">Sex:</span> ${escapeHtml(sex) || 'Not specified'}</td>
           </tr></table>
           <div class="header-generated">Report generated: ${formatTodayDisplay()}</div>
         </td>
@@ -54,7 +59,7 @@ function headerHtml(name: string, dob: string, bloodGroup: string | null, sex: s
 }
 
 function sectionTitle(title: string) {
-  return `<div class="section-title">${title}</div>`;
+  return `<div class="section-title">${escapeHtml(title)}</div>`;
 }
 
 function disclaimerHtml() {
@@ -93,25 +98,25 @@ function buildMedicalIdSections(
   const conditionsHtml = conditions.length > 0
     ? conditions.map((c) => {
         const severityBadge = c.severity
-          ? `<span class="badge-${c.severity === 'severe' ? 'danger' : c.severity === 'moderate' ? 'warning' : 'normal'}">${c.severity}</span>`
+          ? `<span class="badge-${c.severity === 'severe' ? 'danger' : c.severity === 'moderate' ? 'warning' : 'normal'}">${escapeHtml(c.severity)}</span>`
           : '';
-        return `<tr><td>${c.name}</td><td>${c.type || '-'}</td><td>${c.diagnosed_date || '-'}</td><td>${severityBadge}</td><td>${c.notes || '-'}</td></tr>`;
+        return `<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.type) || '-'}</td><td>${escapeHtml(c.diagnosed_date) || '-'}</td><td>${severityBadge}</td><td>${escapeHtml(c.notes) || '-'}</td></tr>`;
       }).join('')
     : '<tr><td colspan="5" style="text-align:center; color:#9CA3AF;">No conditions recorded</td></tr>';
 
   const allergiesHtml = allergies.length > 0
     ? allergies.map((a) => {
         const sevBadge = a.severity
-          ? `<span class="badge-${a.severity === 'life-threatening' || a.severity === 'severe' ? 'danger' : a.severity === 'moderate' ? 'warning' : 'normal'}">${a.severity}</span>`
+          ? `<span class="badge-${a.severity === 'life-threatening' || a.severity === 'severe' ? 'danger' : a.severity === 'moderate' ? 'warning' : 'normal'}">${escapeHtml(a.severity)}</span>`
           : '';
-        return `<tr><td>${a.name}</td><td>${sevBadge}</td><td>${a.reaction || '-'}</td></tr>`;
+        return `<tr><td>${escapeHtml(a.name)}</td><td>${sevBadge}</td><td>${escapeHtml(a.reaction) || '-'}</td></tr>`;
       }).join('')
     : '<tr><td colspan="3" style="text-align:center; color:#9CA3AF;">No allergies recorded</td></tr>';
 
   const contactsHtml = contacts.length > 0
     ? contacts.map((c) => {
         const typeLabel = c.contact_type === 'doctor' ? 'Doctor' : 'Emergency';
-        return `<tr><td>${c.name}</td><td>${c.relationship || '-'}</td><td>${typeLabel}</td><td>${c.phone}</td></tr>`;
+        return `<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.relationship) || '-'}</td><td>${typeLabel}</td><td>${escapeHtml(c.phone)}</td></tr>`;
       }).join('')
     : '<tr><td colspan="4" style="text-align:center; color:#9CA3AF;">No emergency contacts</td></tr>';
 
@@ -131,11 +136,11 @@ function buildMedicationsSections(
   const medsHtml = medications.map((m) => {
     const itemsHtml = m.items.map((i) => {
       const dose = formatDosage(i.dose_morning, i.dose_afternoon, i.dose_night);
-      return `<tr><td>${i.medicine_name}</td><td>${i.strength || '-'}</td><td>${dose} (M-A-N)</td><td>${i.timing || '-'}</td><td>${i.duration || '-'}</td></tr>`;
+      return `<tr><td>${escapeHtml(i.medicine_name)}</td><td>${escapeHtml(i.strength) || '-'}</td><td>${dose} (M-A-N)</td><td>${escapeHtml(i.timing) || '-'}</td><td>${escapeHtml(i.duration) || '-'}</td></tr>`;
     }).join('');
     const status = m.is_active ? 'Active' : 'Inactive';
     return `
-      <tr style="background:#EEF4F7;"><td colspan="5"><strong>Rx: ${m.prescription_date}</strong> | Dr: ${m.prescribing_doctor || '-'} | ${status} | ${m.diagnosis_notes || ''}</td></tr>
+      <tr style="background:#EEF4F7;"><td colspan="5"><strong>Rx: ${escapeHtml(m.prescription_date)}</strong> | Dr: ${escapeHtml(m.prescribing_doctor) || '-'} | ${escapeHtml(status)} | ${escapeHtml(m.diagnosis_notes) || ''}</td></tr>
       ${itemsHtml}
     `;
   }).join('');
@@ -152,7 +157,7 @@ function buildAlertsSections(
   const alertsHtml = alerts.length > 0
     ? alerts.map((a) => {
         const badgeClass = a.severity_level === 'EMERGENCY_NOW' ? 'danger' : a.severity_level === 'URGENT_SAME_DAY' ? 'warning' : 'normal';
-        return `<tr><td>${a.created_at ? isoToDisplay(a.created_at) : a.created_at}</td><td><span class="badge-${badgeClass}">${a.severity_level}</span></td><td>${a.title}</td><td>${a.message}</td></tr>`;
+        return `<tr><td>${a.created_at ? isoToDisplay(a.created_at) : a.created_at}</td><td><span class="badge-${badgeClass}">${escapeHtml(a.severity_level)}</span></td><td>${escapeHtml(a.title)}</td><td>${escapeHtml(a.message)}</td></tr>`;
       }).join('')
     : '<tr><td colspan="4" style="text-align:center; color:#9CA3AF;">No emergency alerts recorded</td></tr>';
 
@@ -203,7 +208,7 @@ export function buildVitalsReportHtml(
       const normalizedType = type === 'temperature' ? 'temp' : type;
       return formatVitalHtmlCell(normalizedType, v);
     });
-    const notesCell = showNotes ? `<td class="notes-cell">${v.notes || ''}</td>` : '';
+    const notesCell = showNotes ? `<td class="notes-cell">${escapeHtml(v.notes) || ''}</td>` : '';
     return `<tr><td>${v.logged_at_display}</td>${cells.map((c) => `<td>${c}</td>`).join('')}${notesCell}</tr>`;
   }).join('');
 
@@ -247,7 +252,7 @@ function buildAlertsRows(
   }
   return alerts.map((a) => {
     const badgeClass = a.severity_level === 'EMERGENCY_NOW' ? 'danger' : a.severity_level === 'URGENT_SAME_DAY' ? 'warning' : 'normal';
-    return `<tr><td>${a.created_at ? isoToDisplay(a.created_at) : a.created_at}</td><td><span class="badge-${badgeClass}">${a.severity_level}</span></td><td>${a.title}</td><td>${a.message}</td></tr>`;
+    return `<tr><td>${a.created_at ? isoToDisplay(a.created_at) : a.created_at}</td><td><span class="badge-${badgeClass}">${escapeHtml(a.severity_level)}</span></td><td>${escapeHtml(a.title)}</td><td>${escapeHtml(a.message)}</td></tr>`;
   }).join('');
 }
 

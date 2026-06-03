@@ -19,29 +19,29 @@ import { AlertsScreen } from '../screens/tabs/AlertsScreen';
 
 const Tab = createBottomTabNavigator();
 
-function HomeTabScreen(props: any) {
-  return <ErrorBoundary iconName="home-outline" title="Home Error"><HomeScreen {...props} /></ErrorBoundary>;
-}
-
-function VitalsTabScreen(props: any) {
-  return <ErrorBoundary iconName="pulse-outline" title="Vitals Error"><VitalsScreen {...props} /></ErrorBoundary>;
-}
-
-function HistoryTabScreen(props: any) {
-  return <ErrorBoundary iconName="bar-chart-outline" title="History Error"><HistoryScreen {...props} /></ErrorBoundary>;
-}
-
-function ProfileTabScreen(props: any) {
-  return <ErrorBoundary iconName="person-circle-outline" title="Profile Error"><ProfileScreen {...props} /></ErrorBoundary>;
-}
-
-function AlertsTabScreen(props: any) {
-  return <ErrorBoundary iconName="notifications-outline" title="Alerts Error"><AlertsScreen {...props} /></ErrorBoundary>;
-}
-
 export function TabNavigator() {
   const isDark = useThemeStore((s) => s.isDark);
   const activeColors = useMemo(() => (isDark ? { ...colors, ...colorsDark } : colors), [isDark]);
+
+  const homeTabScreen = useMemo(() => (props: any) => (
+    <ErrorBoundary colors={activeColors} iconName="home-outline" title="Home Error"><HomeScreen {...props} /></ErrorBoundary>
+  ), [activeColors]);
+
+  const vitalsTabScreen = useMemo(() => (props: any) => (
+    <ErrorBoundary colors={activeColors} iconName="pulse-outline" title="Vitals Error"><VitalsScreen {...props} /></ErrorBoundary>
+  ), [activeColors]);
+
+  const historyTabScreen = useMemo(() => (props: any) => (
+    <ErrorBoundary colors={activeColors} iconName="bar-chart-outline" title="History Error"><HistoryScreen {...props} /></ErrorBoundary>
+  ), [activeColors]);
+
+  const profileTabScreen = useMemo(() => (props: any) => (
+    <ErrorBoundary colors={activeColors} iconName="person-circle-outline" title="Profile Error"><ProfileScreen {...props} /></ErrorBoundary>
+  ), [activeColors]);
+
+  const alertsTabScreen = useMemo(() => (props: any) => (
+    <ErrorBoundary colors={activeColors} iconName="notifications-outline" title="Alerts Error"><AlertsScreen {...props} /></ErrorBoundary>
+  ), [activeColors]);
   const insets = useSafeAreaInsets();
   const fontScale = useSettingsStore((s) => s.fontScale);
   const fs = FONT_SCALE_MULTIPLIERS[fontScale];
@@ -104,11 +104,11 @@ export function TabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="HomeTab" component={HomeTabScreen} options={{ title: 'Home', headerShown: false }} />
-      <Tab.Screen name="VitalsTab" component={VitalsTabScreen} options={{ title: 'Log Vitals' }} />
-      <Tab.Screen name="HistoryTab" component={HistoryTabScreen} options={{ title: 'History' }} />
-      <Tab.Screen name="ProfileTab" component={ProfileTabScreen} options={{ title: 'Profile' }} />
-      <Tab.Screen name="AlertsTab" component={AlertsTabScreen} options={{ title: 'Alerts' }} />
+      <Tab.Screen name="HomeTab" component={homeTabScreen} options={{ title: 'Home', headerShown: false }} />
+      <Tab.Screen name="VitalsTab" component={vitalsTabScreen} options={{ title: 'Log Vitals' }} />
+      <Tab.Screen name="HistoryTab" component={historyTabScreen} options={{ title: 'History' }} />
+      <Tab.Screen name="ProfileTab" component={profileTabScreen} options={{ title: 'Profile' }} />
+      <Tab.Screen name="AlertsTab" component={alertsTabScreen} options={{ title: 'Alerts' }} />
     </Tab.Navigator>
   );
 }

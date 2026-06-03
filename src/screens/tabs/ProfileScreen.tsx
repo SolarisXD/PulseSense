@@ -44,13 +44,7 @@ export function ProfileScreen({ navigation }: any) {
     [isDark],
   );
 
-  useFocusEffect(
-    React.useCallback(() => {
-      reloadData();
-    }, [])
-  );
-
-  const reloadData = async () => {
+  const reloadData = useCallback(async () => {
     setLoading(true);
     try {
       const db = await getDB();
@@ -60,7 +54,13 @@ export function ProfileScreen({ navigation }: any) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadData();
+    }, [reloadData])
+  );
 
   const handleArchiveCondition = (id: number) => {
     Alert.alert('Archive Condition', 'Move this condition to archive?', [
@@ -96,7 +96,8 @@ export function ProfileScreen({ navigation }: any) {
   };
 
   const handleCall = useCallback((phone: string) => {
-    const url = Platform.OS === 'android' ? `tel:${phone}` : `telprompt:${phone}`;
+    const sanitized = phone.replace(/[^0-9+\-() ]/g, '');
+    const url = Platform.OS === 'android' ? `tel:${sanitized}` : `telprompt:${sanitized}`;
     Linking.canOpenURL(url).then((supported) => {
       if (supported) {
         Linking.openURL(url);

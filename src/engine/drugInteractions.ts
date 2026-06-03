@@ -122,14 +122,27 @@ const DB: InteractionEntry[] = [
 ];
 
 export function checkDrugInteractions(medicationNames: string[]): InteractionResult[] {
+  if (!Array.isArray(medicationNames)) return [];
+  if (medicationNames.length < 2) return [];
+
   const results: InteractionResult[] = [];
   const seen = new Set<string>();
 
   const lowerNames = medicationNames.map((n) => n.toLowerCase().trim());
+  const nameMap = new Map<string, number>();
+  lowerNames.forEach((n, i) => {
+    if (!nameMap.has(n)) nameMap.set(n, i);
+  });
+
+  const findIndex = (drug: string): number => {
+    const exact = nameMap.get(drug);
+    if (exact !== undefined) return exact;
+    return lowerNames.findIndex((n) => n.includes(drug));
+  };
 
   for (const entry of DB) {
-    const matchA = lowerNames.findIndex((n) => n.includes(entry.drug1) || entry.drug1.includes(n));
-    const matchB = lowerNames.findIndex((n) => n.includes(entry.drug2) || entry.drug2.includes(n));
+    const matchA = findIndex(entry.drug1);
+    const matchB = findIndex(entry.drug2);
 
     if (matchA !== -1 && matchB !== -1 && matchA !== matchB) {
       const key = [Math.min(matchA, matchB), Math.max(matchA, matchB)].join('-');

@@ -8,6 +8,10 @@ export function calculateAge(dob: string): string {
   const [day, month, year] = parts.map(Number);
   if (isNaN(day) || isNaN(month) || isNaN(year)) return '';
   const birthDate = new Date(year, month - 1, day);
+  if (isNaN(birthDate.getTime())) return '';
+  if (birthDate.getDate() !== day) {
+    birthDate.setDate(0);
+  }
   const today = new Date();
 
   let years = today.getFullYear() - birthDate.getFullYear();
@@ -34,6 +38,7 @@ export function formatTodayDisplay(): string {
 
 export function formatDateTimeDisplay(iso: string): string {
   const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
@@ -47,8 +52,12 @@ export function displayToIso(display: string): string {
   // Output: YYYY-MM-DDTHH:MM:00 (local time — no timezone conversion)
   // Store as local ISO so that string-based date-range queries
   // and displays are consistent across the app.
+  if (!display || typeof display !== 'string') return '';
   const [datePart, timePart] = display.split(' ');
-  const [day, month, year] = datePart.split('/');
+  if (!datePart) return '';
+  const dateParts = datePart.split('/');
+  if (dateParts.length !== 3) return '';
+  const [day, month, year] = dateParts;
   const [hours, minutes] = timePart ? timePart.split(':') : ['00', '00'];
   const dd = String(Number(day)).padStart(2, '0');
   const mm = String(Number(month)).padStart(2, '0');
@@ -59,6 +68,7 @@ export function displayToIso(display: string): string {
 
 export function isoToDisplay(iso: string): string {
   const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
@@ -86,18 +96,26 @@ export function nowIso(): string {
 
 export function isFutureDate(display: string): boolean {
   // Parse the display string directly as local date (no timezone conversion)
+  if (!display) return false;
   const [datePart, timePart] = display.split(' ');
-  const [day, month, year] = datePart.split('/');
+  if (!datePart) return false;
+  const parts = datePart.split('/');
+  if (parts.length !== 3) return false;
+  const [day, month, year] = parts;
   const [hours, minutes] = timePart ? timePart.split(':') : ['00', '00'];
   const inputDate = new Date(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes));
+  if (isNaN(inputDate.getTime())) return false;
   return inputDate > new Date();
 }
 
 export function formatDisplayDate(display: string): string {
   // DD/MM/YYYY HH:MM -> DD/MM/YY (for table display)
+  if (!display) return '';
   const [datePart] = display.split(' ');
-  if (!datePart) return display;
-  const [d, m, y] = datePart.split('/');
+  if (!datePart) return '';
+  const parts = datePart.split('/');
+  if (parts.length !== 3) return display;
+  const [d, m, y] = parts;
   const shortYear = y.slice(2);
   return `${d}/${m}/${shortYear}`;
 }

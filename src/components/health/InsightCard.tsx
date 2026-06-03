@@ -26,7 +26,7 @@ interface InsightCardProps {
   index?: number;
 }
 
-export function InsightCard({ insight, index = 0 }: InsightCardProps) {
+export const InsightCard = React.memo(function InsightCard({ insight, index = 0 }: InsightCardProps) {
   const c = useColors();
   const typeColors: Record<HealthInsight['type'], { icon: string; bg: string; badge: string }> = {
     warning: { icon: c.warning, bg: c.warningSurface, badge: c.warning },
@@ -72,7 +72,7 @@ export function InsightCard({ insight, index = 0 }: InsightCardProps) {
       </View>
     </Animated.View>
   );
-}
+});
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 

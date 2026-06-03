@@ -17,7 +17,7 @@ interface AlertRowProps {
   onPress?: () => void;
 }
 
-export function AlertRow({ title, message, severity, timestamp, isResolved, onPress }: AlertRowProps) {
+export const AlertRow = React.memo(function AlertRow({ title, message, severity, timestamp, isResolved, onPress }: AlertRowProps) {
   const c = useColors();
   const severityConfig: Record<SeverityLevel, { icon: keyof typeof Ionicons.glyphMap; color: string; bg: string }> = {
     EMERGENCY_NOW: { icon: 'alert-circle', color: c.danger, bg: c.dangerSurface },
@@ -43,7 +43,7 @@ export function AlertRow({ title, message, severity, timestamp, isResolved, onPr
       <Text style={[styles.timestamp, { color: c.textDisabled }]}>{timestamp}</Text>
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

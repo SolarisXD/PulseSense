@@ -57,7 +57,7 @@ export function formatVitalCell(type: string, row: VitalLogRow): VitalCell {
 
 export function formatVitalRawValue(type: string, row: VitalLogRow): string | null {
   switch (type) {
-    case 'bp': return row.bp_sys ? `${row.bp_sys}/${row.bp_dia}` : null;
+    case 'bp': return row.bp_sys != null && row.bp_dia != null ? `${row.bp_sys}/${row.bp_dia}` : null;
     case 'pulse': return row.pulse != null ? String(row.pulse) : null;
     case 'spo2': return row.spo2 != null ? `${row.spo2}%` : null;
     case 'glucose': return row.glucose_value != null ? `${row.glucose_value} ${row.glucose_unit || 'mg/dL'}${row.glucose_context ? ` (${row.glucose_context})` : ''}` : null;
@@ -77,7 +77,7 @@ export function formatVitalHtmlCell(type: string, row: {
   pain_level?: number | null; pain_location?: string | null;
 }): string {
   switch (type) {
-    case 'bp': return row.bp_sys ? `${row.bp_sys}/${row.bp_dia} mmHg` : '-';
+    case 'bp': return row.bp_sys != null && row.bp_dia != null ? `${row.bp_sys}/${row.bp_dia} mmHg` : '-';
     case 'pulse': return row.pulse != null ? `${row.pulse} bpm` : '-';
     case 'spo2': return row.spo2 != null ? `${row.spo2}%` : '-';
     case 'glucose': return row.glucose_value != null ? `${row.glucose_value} ${row.glucose_unit || 'mg/dL'}${row.glucose_context ? ` (${row.glucose_context})` : ''}` : '-';

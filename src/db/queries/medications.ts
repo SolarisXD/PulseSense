@@ -89,35 +89,38 @@ export async function insertMedication(
   data: MedicationInput,
   items: MedicationItemInput[]
 ): Promise<number> {
-  const medResult = await db.runAsync(
-    `INSERT INTO medications (prescription_date, prescribing_doctor, diagnosis_notes)
-     VALUES (?, ?, ?)`,
-    [data.prescription_date, data.prescribing_doctor ?? null, data.diagnosis_notes ?? null]
-  );
-  const medicationId = medResult.lastInsertRowId;
-
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    await db.runAsync(
-      `INSERT INTO medication_items (medication_id, medicine_name, dose_morning, dose_afternoon, dose_night, timing, timing_custom, duration, strength, notes, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        medicationId,
-        item.medicine_name,
-        item.dose_morning ?? 0,
-        item.dose_afternoon ?? 0,
-        item.dose_night ?? 0,
-        item.timing ?? null,
-        item.timing_custom ?? null,
-        item.duration ?? null,
-        item.strength ?? null,
-        item.notes ?? null,
-        i,
-      ]
+  await db.runAsync('BEGIN TRANSACTION');
+  try {
+    const medResult = await db.runAsync(
+      `INSERT INTO medications (prescription_date, prescribing_doctor, diagnosis_notes)
+       VALUES (?, ?, ?)`,
+      [data.prescription_date, data.prescribing_doctor ?? null, data.diagnosis_notes ?? null]
     );
-  }
+    const medicationId = medResult.lastInsertRowId;
 
-  return medicationId;
+    if (items.length > 0) {
+      const placeholders = items.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(',');
+      const values: any[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        values.push(
+          medicationId, item.medicine_name, item.dose_morning ?? 0, item.dose_afternoon ?? 0,
+          item.dose_night ?? 0, item.timing ?? null, item.timing_custom ?? null,
+          item.duration ?? null, item.strength ?? null, item.notes ?? null, i
+        );
+      }
+      await db.runAsync(
+        `INSERT INTO medication_items (medication_id, medicine_name, dose_morning, dose_afternoon, dose_night, timing, timing_custom, duration, strength, notes, sort_order) VALUES ${placeholders}`,
+        values
+      );
+    }
+
+    await db.runAsync('COMMIT');
+    return medResult.lastInsertRowId;
+  } catch (e) {
+    await db.runAsync('ROLLBACK');
+    throw e;
+  }
 }
 
 export async function updateMedication(
@@ -145,26 +148,31 @@ export async function updateMedicationItems(
   medicationId: number,
   items: MedicationItemInput[]
 ): Promise<void> {
-  await db.runAsync('DELETE FROM medication_items WHERE medication_id = ?', [medicationId]);
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    await db.runAsync(
-      `INSERT INTO medication_items (medication_id, medicine_name, dose_morning, dose_afternoon, dose_night, timing, timing_custom, duration, strength, notes, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        medicationId,
-        item.medicine_name,
-        item.dose_morning ?? 0,
-        item.dose_afternoon ?? 0,
-        item.dose_night ?? 0,
-        item.timing ?? null,
-        item.timing_custom ?? null,
-        item.duration ?? null,
-        item.strength ?? null,
-        item.notes ?? null,
-        i,
-      ]
-    );
+  await db.runAsync('BEGIN TRANSACTION');
+  try {
+    await db.runAsync('DELETE FROM medication_items WHERE medication_id = ?', [medicationId]);
+
+    if (items.length > 0) {
+      const placeholders = items.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(',');
+      const values: any[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        values.push(
+          medicationId, item.medicine_name, item.dose_morning ?? 0, item.dose_afternoon ?? 0,
+          item.dose_night ?? 0, item.timing ?? null, item.timing_custom ?? null,
+          item.duration ?? null, item.strength ?? null, item.notes ?? null, i
+        );
+      }
+      await db.runAsync(
+        `INSERT INTO medication_items (medication_id, medicine_name, dose_morning, dose_afternoon, dose_night, timing, timing_custom, duration, strength, notes, sort_order) VALUES ${placeholders}`,
+        values
+      );
+    }
+
+    await db.runAsync('COMMIT');
+  } catch (e) {
+    await db.runAsync('ROLLBACK');
+    throw e;
   }
 }
 

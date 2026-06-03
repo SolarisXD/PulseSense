@@ -11,31 +11,8 @@ import { initializeNotificationHandler } from './src/services/notificationServic
 import { useThemeStore } from './src/store/themeStore';
 
 // Disable system font scaling globally to prevent layout distortion on large accessibility settings
-const disableFontScaling = (Component: any) => {
-  if (!Component) return;
-  if (Component.render) {
-    const originalRender = Component.render;
-    Component.render = function (props: any, ref: any) {
-      return originalRender({ allowFontScaling: false, ...props }, ref);
-    };
-  } else if (Component.prototype && Component.prototype.render) {
-    const originalRender = Component.prototype.render;
-    Component.prototype.render = function () {
-      const origin = originalRender.call(this);
-      if (origin) {
-        return React.cloneElement(origin, { allowFontScaling: false });
-      }
-      return origin;
-    };
-  } else {
-    // Fallback for older React Native or simple components
-    Component.defaultProps = Component.defaultProps || {};
-    Component.defaultProps.allowFontScaling = false;
-  }
-};
-
-disableFontScaling(Text);
-disableFontScaling(TextInput);
+(Text as any).defaultProps = { ...(Text as any).defaultProps, allowFontScaling: false };
+(TextInput as any).defaultProps = { ...(TextInput as any).defaultProps, allowFontScaling: false };
 
 SplashScreenExpo.preventAutoHideAsync();
 

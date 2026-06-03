@@ -203,7 +203,7 @@ export async function generateCsv(options: ExportOptions): Promise<string> {
 
   const fileName = `PulseSense_${options.type}_${Date.now()}.csv`;
   const csvFile = new File(Paths.cache, fileName);
-  csvFile.write(csvContent);
+  csvFile.write('\uFEFF' + csvContent);
   return csvFile.uri;
 }
 

@@ -21,7 +21,7 @@ interface VitalCardProps {
   index?: number;
 }
 
-export function VitalCard({ name, value, unit, status, timeAgo, iconName, onPress, index = 0 }: VitalCardProps) {
+export const VitalCard = React.memo(function VitalCard({ name, value, unit, status, timeAgo, iconName, onPress, index = 0 }: VitalCardProps) {
   const c = useColors();
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(16);
@@ -55,7 +55,7 @@ export function VitalCard({ name, value, unit, status, timeAgo, iconName, onPres
       </Animated.View>
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

@@ -26,7 +26,7 @@ interface ButtonProps {
   accessibilityLabel?: string;
 }
 
-export function Button({
+export const Button = React.memo(function Button({
   title,
   onPress,
   variant = 'primary',
@@ -120,7 +120,7 @@ export function Button({
       </Animated.View>
     </TouchableWithoutFeedback>
   );
-}
+});
 
 const styles = StyleSheet.create({
   base: {

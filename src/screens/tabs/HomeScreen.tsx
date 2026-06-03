@@ -45,6 +45,31 @@ import { useSettingsStore, FONT_SCALE_MULTIPLIERS } from '../../store/settingsSt
 
 const { width } = Dimensions.get('window');
 
+const quickActions = [
+  { icon: 'pulse-outline' as const, label: 'Log Vital', color: null as any, nav: 'VitalsTab' },
+  { icon: 'medkit-outline' as const, label: 'Emergency', color: null as any, nav: 'EmergencyCheck' },
+  { icon: 'bar-chart-outline' as const, label: 'History', color: null as any, nav: 'HistoryTab' },
+];
+
+const vitalCardConfigs: Array<{
+  dataKey: string;
+  cardKey: string;
+  name: string;
+  getValue: (data: any) => string;
+  getStatus: (data: any) => VitalStatus;
+  iconName: keyof typeof Ionicons.glyphMap;
+  getUnit?: (data: any) => string | undefined;
+  staticUnit?: string;
+}> = [
+  { dataKey: 'bp', cardKey: 'bp', name: 'BP', iconName: 'heart-half', getValue: (d) => `${d.bp_sys ?? '--'}/${d.bp_dia ?? '--'}`, getStatus: (d) => getBpStatus(d.bp_sys, d.bp_dia) },
+  { dataKey: 'pulse', cardKey: 'pulse', name: 'Pulse', staticUnit: 'bpm', iconName: 'pulse', getValue: (d) => String(d.pulse), getStatus: (d) => getPulseStatus(d.pulse) },
+  { dataKey: 'spo2', cardKey: 'spo2', name: 'SpO2', staticUnit: '%', iconName: 'analytics-outline', getValue: (d) => String(d.spo2), getStatus: (d) => getSpo2Status(d.spo2) },
+  { dataKey: 'glucose', cardKey: 'glucose', name: 'Glucose', iconName: 'water-outline', getValue: (d) => String(d.glucose_value), getStatus: (d) => getGlucoseStatus(d.glucose_value, d.glucose_context), getUnit: (d) => d.glucose_unit || 'mg/dL' },
+  { dataKey: 'temperature', cardKey: 'temp', name: 'Temp', staticUnit: '°C', iconName: 'thermometer-outline', getValue: (d) => String(d.temp_value), getStatus: (d) => getTempStatus(d.temp_value) },
+  { dataKey: 'weight', cardKey: 'weight', name: 'Weight', staticUnit: 'kg', iconName: 'scale-outline', getValue: (d) => String(d.weight_value), getStatus: () => 'normal' as VitalStatus },
+  { dataKey: 'pain', cardKey: 'pain', name: 'Pain', iconName: 'bandage-outline', getValue: (d) => `${d.pain_level}/10`, getStatus: (d) => getPainStatus(d.pain_level) },
+];
+
 export function HomeScreen({ navigation }: any) {
   const c = useColors();
   const isDark = useThemeStore((s) => s.isDark);
@@ -109,7 +134,9 @@ export function HomeScreen({ navigation }: any) {
     const now = new Date();
     const d = new Date(iso);
     const diffMs = now.getTime() - d.getTime();
+    if (diffMs < 0) return 'Just now';
     const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours}h ago`;
@@ -144,54 +171,35 @@ export function HomeScreen({ navigation }: any) {
     });
   }, [insights]);
 
-  const quickActions = [
-    { icon: 'pulse-outline' as const, label: 'Log Vital', color: c.primary, nav: 'VitalsTab' },
-    { icon: 'medkit-outline' as const, label: 'Emergency', color: c.danger, nav: 'EmergencyCheck' },
-    { icon: 'bar-chart-outline' as const, label: 'History', color: c.primaryLight, nav: 'HistoryTab' },
-  ];
-
-  const vitalCardConfigs: Array<{
-    dataKey: string;
-    cardKey: string;
-    name: string;
-    getValue: (data: any) => string;
-    getStatus: (data: any) => VitalStatus;
-    iconName: keyof typeof Ionicons.glyphMap;
-    getUnit?: (data: any) => string | undefined;
-    staticUnit?: string;
-  }> = [
-    { dataKey: 'bp', cardKey: 'bp', name: 'BP', iconName: 'heart-half', getValue: (d) => `${d.bp_sys ?? '--'}/${d.bp_dia ?? '--'}`, getStatus: (d) => getBpStatus(d.bp_sys, d.bp_dia) },
-    { dataKey: 'pulse', cardKey: 'pulse', name: 'Pulse', staticUnit: 'bpm', iconName: 'pulse', getValue: (d) => String(d.pulse), getStatus: (d) => getPulseStatus(d.pulse) },
-    { dataKey: 'spo2', cardKey: 'spo2', name: 'SpO2', staticUnit: '%', iconName: 'analytics-outline', getValue: (d) => String(d.spo2), getStatus: (d) => getSpo2Status(d.spo2) },
-    { dataKey: 'glucose', cardKey: 'glucose', name: 'Glucose', iconName: 'water-outline', getValue: (d) => String(d.glucose_value), getStatus: (d) => getGlucoseStatus(d.glucose_value, d.glucose_context), getUnit: (d) => d.glucose_unit || 'mg/dL' },
-    { dataKey: 'temperature', cardKey: 'temp', name: 'Temp', staticUnit: '°C', iconName: 'thermometer-outline', getValue: (d) => String(d.temp_value), getStatus: (d) => getTempStatus(d.temp_value) },
-    { dataKey: 'weight', cardKey: 'weight', name: 'Weight', staticUnit: 'kg', iconName: 'scale-outline', getValue: (d) => String(d.weight_value), getStatus: () => 'normal' as VitalStatus },
-    { dataKey: 'pain', cardKey: 'pain', name: 'Pain', iconName: 'bandage-outline', getValue: (d) => `${d.pain_level}/10`, getStatus: (d) => getPainStatus(d.pain_level) },
-  ];
-
-  const vitalCards: Array<{ key: string; component: React.ReactNode }> = [];
-
-  vitalCardConfigs.forEach((config) => {
-    const data = latestVitals[config.dataKey];
-    if (!data) return;
-    const unit = config.getUnit ? config.getUnit(data) : config.staticUnit;
-    vitalCards.push({
-      key: config.cardKey,
-      component: (
-        <VitalCard
-          key={config.cardKey}
-          name={config.name}
-          value={config.getValue(data)}
-          unit={unit}
-          status={config.getStatus(data)}
-          timeAgo={getTimeAgo(data.logged_at_iso)}
-          iconName={config.iconName}
-          onPress={() => navigation.navigate('HistoryTab')}
-          index={vitalCards.length}
-        />
-      ),
+  const vitalCards = useMemo(() => {
+    const cards: Array<{ key: string; component: React.ReactNode }> = [];
+    const actionColor = { primary: c.primary, danger: c.danger, primaryLight: c.primaryLight };
+    quickActions[0].color = actionColor.primary;
+    quickActions[1].color = actionColor.danger;
+    quickActions[2].color = actionColor.primaryLight;
+    vitalCardConfigs.forEach((config) => {
+      const data = latestVitals[config.dataKey];
+      if (!data) return;
+      const unit = config.getUnit ? config.getUnit(data) : config.staticUnit;
+      cards.push({
+        key: config.cardKey,
+        component: (
+          <VitalCard
+            key={config.cardKey}
+            name={config.name}
+            value={config.getValue(data)}
+            unit={unit}
+            status={config.getStatus(data)}
+            timeAgo={getTimeAgo(data.logged_at_iso)}
+            iconName={config.iconName}
+            onPress={() => navigation.navigate('HistoryTab')}
+            index={cards.length}
+          />
+        ),
+      });
     });
-  });
+    return cards;
+  }, [latestVitals, navigation, c.primary, c.danger, c.primaryLight]);
 
   if (loading) {
     return (

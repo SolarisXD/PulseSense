@@ -95,20 +95,38 @@ export async function insertRuleTriggers(
   symptomEventId: number,
   results: RuleResult[]
 ): Promise<void> {
+  if (results.length === 0) return;
+  const placeholders = results.map(() => '(?, ?, ?, ?, ?, ?, ?)').join(',');
+  const values: any[] = [];
   for (const r of results) {
-    await db.runAsync(
-      `INSERT INTO rule_triggers (symptom_event_id, rule_id, rule_category, severity_level, triggered_conditions, user_message, action_steps)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        symptomEventId,
-        r.ruleId,
-        r.category,
-        r.severity,
-        JSON.stringify(r.triggeredBy),
-        r.message,
-        JSON.stringify(r.actionSteps),
-      ]
+    values.push(
+      symptomEventId, r.ruleId, r.category, r.severity,
+      JSON.stringify(r.triggeredBy), r.message, JSON.stringify(r.actionSteps)
     );
+  }
+  await db.runAsync(
+    `INSERT INTO rule_triggers (symptom_event_id, rule_id, rule_category, severity_level, triggered_conditions, user_message, action_steps) VALUES ${placeholders}`,
+    values
+  );
+}
+
+export async function saveEmergencyEvent(
+  db: SQLiteDatabase,
+  input: SymptomInput,
+  occurredAt: string,
+  ruleResults: RuleResult[],
+  alertData: Omit<AlertRow, 'id' | 'created_at' | 'resolved_at' | 'is_resolved'>
+): Promise<{ eventId: number; alertId: number }> {
+  await db.runAsync('BEGIN TRANSACTION');
+  try {
+    const eventId = await insertSymptomEvent(db, input, occurredAt);
+    await insertRuleTriggers(db, eventId, ruleResults);
+    const alertId = await insertAlert(db, alertData);
+    await db.runAsync('COMMIT');
+    return { eventId, alertId };
+  } catch (e) {
+    await db.runAsync('ROLLBACK');
+    throw e;
   }
 }
 
